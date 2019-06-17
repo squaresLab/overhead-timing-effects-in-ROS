@@ -17,7 +17,7 @@ def main():
     rsw = roswire.ROSWire()
 
     # builds a description of the ROS application
-    desc = rsw.descriptions.load_or_build(NAME_IMAGE)
+    desc = rsw.descriptions.load(NAME_IMAGE)
     db_type = desc.types
     db_fmt = desc.formats
     print(desc)
@@ -29,7 +29,7 @@ def main():
         # sut.files.write('/foo/bar', 'blah')
 
         # optionally, build via catkin
-        catkin = sut.catkin_make(DIR_ROS_WS)
+        catkin = sut.catkin(DIR_ROS_WS)
         # catkin.clean()
         catkin.build()
 
@@ -41,7 +41,7 @@ def main():
             sut.shell.non_blocking_execute(cmd)
 
             # launch MAVROS and connect to SITL
-            roscore.launch('mavros', 'apm.launch',
+            roscore.launch('/ros_ws/src/mavros/mavros/launch/apm.launch',
                            args={'fcu_url': 'tcp://127.0.0.1:5760@5760'})
             time.sleep(10)
 
@@ -51,7 +51,7 @@ def main():
             # import message type from mavros
             SetModeRequest = db_type['mavros_msgs/SetModeRequest']
             message = SetModeRequest(base_mode=64, custom_mode='')
-            response = roscore.services['/mavros/set_mode'](message)
+            response = roscore.services['/mavros/set_mode'].call(message)
             assert res.response
 
             # let's record to a rosbag!
