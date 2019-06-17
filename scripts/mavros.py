@@ -52,7 +52,7 @@ def main():
             SetModeRequest = db_type['mavros_msgs/SetModeRequest']
             message = SetModeRequest(base_mode=64, custom_mode='')
             response = roscore.services['/mavros/set_mode'].call(message)
-            assert res.response
+            assert response.response
 
             # let's record to a rosbag!
             with roscore.record('some_local_path') as recorder:
