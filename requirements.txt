@@ -1,0 +1,1 @@
+git+git://github.com/ChrisTimperley/roswire@bc7b89be182e9468835f9c7bbfcdfac4f66824dc#egg=roswire
