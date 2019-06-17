@@ -1,0 +1,19 @@
+FROM ubuntu:14.04
+
+RUN echo "deb http://us.archive.ubuntu.com/ubuntu/ trusty universe" >> /etc/apt/sources.list \
+ && apt-get -y update && apt-get install -y \
+    autoconf \
+    automake \
+    git \
+    g++ \
+    libc6-dbg \
+    make \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN git clone https://github.com/squaresLab/valgrind-tools /tmp/valgrind-tools \
+ && cd /tmp/valgrind-tools \
+ && ./autogen.sh \
+ && ./configure --prefix=/opt/valgrind \
+ && make install \
+ && rm -rf /tmp/*
