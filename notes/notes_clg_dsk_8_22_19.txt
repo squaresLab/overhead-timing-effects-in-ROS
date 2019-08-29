@@ -1,0 +1,72 @@
+Whiteboard transcription (with extra notes):
+
+Dynamic instrumentation on CPS 4QA:
+-feasible in distributed robotics systems
+->because we can "hide" the timing delays in the particular runtime/deployment "architecture" (or better word for dynamic architecture)
+(triangle) good application domain
+
+simulate effects of instrumentation delay by injecting artificial timing delays
+-comparing coverage (whether/how often program points get hit with and without the delays)
+--the coverage matters because missing program points signifies overhead altered behavior
+--the "how often" part matters because there are sometimes constraints on timing of, e.g., loops, or things don't happen on the first go-around but sometimes the third
+
+--outside idea: can we also measure the order in which these program points are hit with and without? Time-series comparisions?
+
+Two things of interest:
+-how much delay is tolerable?
+-which program points/modules are particularly sensitive?
+
+topic level? inject at topic API calls
+
+lines
+at various syntactic structures
+at communications boundaries
+startup versus other phases?
+-points in the higher-level control loop
+actuator commands (sense vs. actuator vs. other)
+
+Setup dataset of test data for ArduPilot & ROS
+Systems:
+MAVROS, ArduPilot, TurtleBot? One more?
+
+Test data:
+-Chris's system?
+
+1. Systems (current)
+2. Coverage measurement
+3. Test data (from Chris)
+4. code injection  -- possibly use COMBY (R's system)? Chris's tools?
+5. experimental setup to vary instrumentation points, amount of delay, run, compute
+
+--------
+Additional notes:
+
+semantic meaning of program points
+-better than just lines
+
+-> go from "loops" to semantic meaning
+
+-communications between nodes of different v???
+-module level
+-component level
+-topic level
+--before read from
+--before send
+
+-communication boundaries
+-program phases
+-higher-level control loop
+-get one system going to get pipeline set up
+
+Try out different options for code injection
+-comby --Rijnard's work
+-mutation infrastructure
+
+make it configurable. don't do it by hand
+-try on one file in one system first and figure out which way of instrumenting works the best
+
+set up one system to dummy test data
+
+Ask Chris what's existing on using his pipeline
+
+Actual tgest data
