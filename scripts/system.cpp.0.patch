@@ -1,0 +1,11 @@
+--- ArduCopter/system.cpp
++++ ArduCopter/system.cpp
+@@ -323,7 +323,7 @@
+ {
+     if (!ahrs.have_inertial_nav()) {
+         // do not allow navigation with dcm position
+-        return false;
++        {sleep 0.5; return false;}
+     }
+
+     // with EKF use filter status and ekf check
