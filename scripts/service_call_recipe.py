@@ -9,7 +9,8 @@ FN_PARAMS = '/ros_ws/src/ArduPilot/copter.parm'
 
 rsw = roswire.ROSWire()
 with rsw.launch('roswire/example:mavros') as system:
-    # Fetch the dynamically generated types for the messages that we want to send
+    # Fetch the dynamically generated types for the messages that we
+    # want to send
     SetModeRequest = system.messages['mavros_msgs/SetModeRequest']
     CommandBoolRequest = system.messages['mavros_msgs/CommandBoolRequest']
     CommandTOLRequest = system.messages['mavros_msgs/CommandTOLRequest']
@@ -17,13 +18,15 @@ with rsw.launch('roswire/example:mavros') as system:
     # launch a temporary ROS session inside the app container
     # once the context is closed, the ROS session will be terminated and all
     # of its associated nodes will be automatically killed.
-    ps_sitl = system.shell.popen(f'{FN_SITL} --model copter --defaults {FN_PARAMS}')
+    ps_sitl = \
+        system.shell.popen(f'{FN_SITL} --model copter --defaults {FN_PARAMS}')
     with system.roscore() as ros:
         # for this example, we need to separately launch a software-in-the-loop
         # simulator for the robot platform
 
         # use roslaunch to launch the application inside the ROS session
-        ros.launch('apm.launch', package='mavros', args={'fcu_url': 'tcp://127.0.0.1:5760@5760'})
+        ros.launch('apm.launch', package='mavros',
+                   args={'fcu_url': 'tcp://127.0.0.1:5760@5760'})
 
         # let's wait some time for the copter to become armable
         time.sleep(60)
@@ -44,7 +47,8 @@ with rsw.launch('roswire/example:mavros') as system:
                                             latitude=0.0,
                                             longitude=0.0,
                                             altitude=50.0)
-        response_takeoff = ros.services['/mavros/cmd/takeoff'].call(request_takeoff)
+        response_takeoff = \
+            ros.services['/mavros/cmd/takeoff'].call(request_takeoff)
         assert response_takeoff.success
 
         # wait for the copter to reach the target altitude

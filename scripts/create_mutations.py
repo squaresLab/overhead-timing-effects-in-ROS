@@ -6,7 +6,6 @@ import sys
 # This script takes in a set of files and generates source code
 # mutations according to the chosen strategy
 
-# also binary mutations?
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -41,12 +40,12 @@ def mutate_returns(files):
         with open(diff_fn, 'w') as diff_file:
             diff_file.writelines(diff)
 
+
 def main():
     args = parse_args()
 
     if args.returns and args.files:
         mutations = mutate_returns(args.files)
-
 
 
 if __name__ == '__main__':

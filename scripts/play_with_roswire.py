@@ -90,10 +90,10 @@ def main():
     docker_image = get_docker_image(args)
 
     # apply the diff file to the docker container
-    try:
-        mutation_database = MutationDatabase.from_file(diff_fn)
-    except:
-        mutation = Mutation(base_version, diff)
+    # try:
+    mutation_database = MutationDatabase.from_file(diff_fn)
+    # except:
+    #    mutation = Mutation(base_version, diff)
 
     for mutation in mutation_database:
         diff = mutation.diff

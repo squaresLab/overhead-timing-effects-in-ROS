@@ -37,7 +37,8 @@ def main():
         with sut.roscore() as roscore:
 
             # start ArduPilot SITL
-            cmd = '/ros_ws/src/ArduPilot/build/sitl/bin/arducopter --model copter'
+            cmd = \
+                '/ros_ws/src/ArduPilot/build/sitl/bin/arducopter --model copter'
             sut.shell.non_blocking_execute(cmd)
 
             # launch MAVROS and connect to SITL
