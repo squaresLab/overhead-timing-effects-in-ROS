@@ -6,6 +6,8 @@ import time
 
 import roswire
 
+import build_waypoint
+
 FN_SITL = '/ros_ws/src/ArduPilot/build/sitl/bin/arducopter'
 FN_PARAMS = '/ros_ws/src/ArduPilot/copter.parm'
 
@@ -14,11 +16,13 @@ def get_docker_image(args: argparse.Namespace) -> str:
     return "roswire/example:mavros"
 
 
-def run_commands(system: roswire.system.System) -> None:
+def run_commands(system: roswire.system.System, mission) -> None:
     # Fetch the dynamically generated types for the messages that we want to send
     SetModeRequest = system.messages['mavros_msgs/SetModeRequest']
     CommandBoolRequest = system.messages['mavros_msgs/CommandBoolRequest']
     CommandTOLRequest = system.messages['mavros_msgs/CommandTOLRequest']
+    print(list(system.messages))
+    WaypointPushRequest = system.messages['mavros_msgs/WaypointPushRequest']
 
     # launch a temporary ROS session inside the app container
     # once the context is closed, the ROS session will be terminated and all
@@ -65,7 +69,15 @@ def run_commands(system: roswire.system.System) -> None:
         print("finished waiting")
 
         # Execute a mission??
-        # DSK 11-4-19 -- you left off here
+        print(WaypointPushRequest.format.to_dict())
+        print("mission:\n%s\n" % str(mission))
+        request_waypoint = WaypointPushRequest(waypoints=mission)
+        print("request_waypoint:\n%s\n\n" % str(request_waypoint))
+        response_waypoint = ros.services['/mavros/mission/push'].call(request_waypoint)
+        assert response_waypoint.success
+        print("waiting for copter to execute waypoints")
+        time.sleep(60)
+        print("finished waiting for waypoints")
 
         # kill the simulator
         ps_sitl.kill()
@@ -82,6 +94,9 @@ def parse_args() -> argparse.Namespace:
                         default='/roswire/example:mavros')
     parser.add_argument('--context', type=str,
                         default='/ros_ws/src/ArduPilot/')
+    parser.add_argument('--mission_files', action='append', type=str,
+                        help='Specify the mission files to convert',
+                        default=['/usr0/home/dskatz/Documents/dsk-ardu-experimental-tools/good_missions/ba164dab.wpl'])
     args = parser.parse_args()
     return args
 
@@ -99,38 +114,46 @@ def main() -> None:
     patch_fns = args.patches
     context = '/ros_ws/src/ArduPilot'
 
-    for patch_fn in patch_fns:
-        with open(patch_fn) as f:
-            diff = f.read()
-        print("applying patch...")
+    missions = []
+    for mission_fn in args.mission_files:
+        waypoints = build_waypoint.convert_mission(mission_fn)
+        missions.append(waypoints)
 
-        print("\n\nlaunching docker image: %s" % docker_image)
+    for mission in missions:
+        for patch_fn in patch_fns:
+            with open(patch_fn) as f:
+                diff = f.read()
+            print("applying patch...")
 
-        # rebuild the docker container
-        with rsw.launch(docker_image) as system:
-            context = '/ros_ws/src/ArduPilot'
+            print("\n\nlaunching docker image: %s" % docker_image)
 
-            print("printing diff")
-            print(diff)
+            rebuild = False
+            # rebuild the docker container
+            with rsw.launch(docker_image) as system:
+                context = '/ros_ws/src/ArduPilot'
 
-            print("printing context")
-            print(context)
+                if rebuild:
+                    print("printing diff")
+                    print(diff)
 
-            print("applying patch")
-            system.files.patch(context, diff)
-            print("patch applied")
+                    print("printing context")
+                    print(context)
 
-            print("rebuilding...")
-            dir_workspace = '/ros_ws'
+                    print("applying patch")
+                    system.files.patch(context, diff)
+                    print("patch applied")
 
-            catkin = system.catkin(dir_workspace)
-            catkin.build()
-            print("rebuilt")
+                    print("rebuilding...")
+                    dir_workspace = '/ros_ws'
 
-            run_commands(system)
+                    catkin = system.catkin(dir_workspace)
+                    catkin.build()
+                    print("rebuilt")
+
+                run_commands(system, mission=mission)
 
 
-        # run tests via service calls (inputs, with and without instrumentation
+            # run tests via service calls (inputs, with and without instrumentation
 
 
     # extract logs via rosbag
