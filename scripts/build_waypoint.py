@@ -67,6 +67,8 @@ def convert_mission(mission_fn):
     for command in commands:
         waypoint = convert_waypoint(command, db_type)
         waypoints.append(waypoint)
+    WaypointList = db_type['mavros_msgs/WaypointList']
+    waypoint_list = WaypointList(waypoints=waypoints)
     return waypoints
 
 
@@ -112,7 +114,7 @@ def main():
     args = parse_args()
     for mission_fn in args.mission_files:
         waypoints = convert_mission(mission_fn)
-
+        print(type(waypoints))
     # test_waypoint_encode_decode(mission_fn)
 
 
