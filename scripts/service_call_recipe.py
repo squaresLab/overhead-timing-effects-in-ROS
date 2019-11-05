@@ -2,7 +2,7 @@ import time
 import logging
 import roswire
 
-logging.basicConfig()
+logging.basicConfig(filename='service_call_recipe.log')
 
 FN_SITL = '/ros_ws/src/ArduPilot/build/sitl/bin/arducopter'
 FN_PARAMS = '/ros_ws/src/ArduPilot/copter.parm'
