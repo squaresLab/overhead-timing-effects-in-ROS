@@ -2,18 +2,19 @@ import argparse
 import logging
 import os
 import sqlite3
+import time
 from typing import List, Dict, Any, Optional
+import uuid
 
 import roswire
 from roswire.definitions import FormatDatabase, TypeDatabase
 
 DIR_TEST = \
     '/usr0/home/dskatz/Documents/overhead-timing-effects-in-ROS/roswire/test/'
+FN_SITL = '/ros_ws/src/ArduPilot/build/sitl/bin/arducopter'
+FN_PARAMS = '/ros_ws/src/ArduPilot/copter.parm'
 
-
-def access_bag_db(db_fn: str) -> sqlite3.Cursor:
-    pass
-
+bag_dir = '/usr0/home/dskatz/Documents/overhead-timing-effects-in-ROS/bags/'
 
 def load_mavros_type_db():
     fn_db_format = os.path.join(DIR_TEST,
@@ -100,10 +101,116 @@ def build_patched_system(system, diff: str, context: str):
     catkin = system.catkin(dir_workspace)
     catkin.build()
     logging.debug("rebuilt")
+    return system
 
 
-def run_commands(system, mission: List[Any]) -> None:
+def run_commands(system, mission: List[Any], bag_fn: str) -> None:
+    # Fetch dynamically generated types for the messages that we want to send
+    SetModeRequest = system.messages['mavros_msgs/SetModeRequest']
+    CommandBoolRequest = system.messages['mavros_msgs/CommandBoolRequest']
+    CommandTOLRequest = system.messages['mavros_msgs/CommandTOLRequest']
+    WaypointPushRequest = system.messages['mavros_msgs/WaypointPushRequest']
+
+    # launch a temporary ROS session inside the app container
+    # once the context is closed, the ROS session will be terminated and all
+    # of its associated nodes will be automatically killed.
+    logging.debug("Running roscore")
+    with system.roscore() as ros:
+
+        # separately launch a software-in-the-loop simulator
+        logging.debug("Opening sitl")
+        sitl_cmd = ("%s --model copter --defaults %s" % (FN_SITL, FN_PARAMS))
+        ps_sitl = system.shell.popen(sitl_cmd)
+
+        # use roslaunch to launch the application inside the ROS session
+        ros.launch('apm.launch', package='mavros',
+                   args={'fcu_url': 'tcp://127.0.0.1:5760@5760'})
+
+        os.makedirs(bag_dir, exist_ok=True)
+        with ros.record(os.path.join(bag_dir, bag_fn)) as recorder:
+            # let's wait some time for the copter to become armable
+            time.sleep(60)
+
+            # arm the copter
+            request_arm = CommandBoolRequest(value=True)
+            response_arm = ros.services['/mavros/cmd/arming'].call(request_arm)
+            assert response_arm.success
+            logging.debug("arm successful")
+
+            # wait for the copter
+            logging.debug("waiting...")
+            time.sleep(30)
+            logging.debug("finished waiting")
+
+            request_auto = SetModeRequest(base_mode=0,
+                                          custom_mode='AUTO')
+            response_auto = ros.services['/mavros/set_mode'].call(request_auto)
+
+            # Execute a mission
+            logging.debug(WaypointPushRequest.format.to_dict())
+            logging.debug("mission:\n%s\n" % str(mission))
+            request_waypoint = WaypointPushRequest(waypoints=mission)
+            logging.debug("request_waypoint:\n%s\n\n" % str(request_waypoint))
+            response_waypoint = ros.services['/mavros/mission/push'].call(request_waypoint)
+            assert response_waypoint.success
+
+
+            logging.debug("waiting for copter to execute waypoints")
+            logging.debug("Waiting for copter to execute waypoints.")
+            time.sleep(120)
+            logging.debug("Finished waiting for waypoints.")
+            logging.debug("finished waiting for waypoints")
+
+        # Did we get to waypoints?
+
+        # kill the simulator
+        ps_sitl.kill()
+
+
+def access_bag_db(db_fn: str) -> sqlite3.Cursor:
+
+    # Check if there's the appropriate table. If not, make it
+    sql_create_bagfns_table = """CREATE TABLE IF NOT EXISTS bagfns (
+           bag_fn text PRIMARY KEY,
+           image_sha text,
+           image_name text,
+           mission_sha text,
+           context text
+       ); """
+
+    conn = sqlite3.connect(db_fn)
+
+    if conn is not None:
+        c = conn.cursor()
+    else:
+        raise("Error! Cannot create database connection!")
+
+    try:
+        c.execute(sql_create_bagfns_table)
+    except sqlite3.Error as e:
+        print(e)
+
+    return c
+
+
+def store_bag_fn(system, cursor, mission: str,
+                 docker_image: str, context: str, bag_fn: str) -> None:
+    docker_image_sha = system.description.sha256
+
     pass
+
+
+def get_bag_fn() -> str:
+    name = uuid.uuid4().hex
+    while os.path.exists(os.path.join(bag_dir, name)):
+        name = "%s.bag" % uuid.uuid4().hex
+    return name
+
+
+def execute_experiment(system, cursor, mission, docker_image, context):
+    bag_fn = get_bag_fn()
+    store_bag_fn(system, cursor, mission, docker_image, context, bag_fn)
+    run_commands(system, mission, bag_fn)
 
 
 def run_experiments(rsw, docker_image: str,
@@ -113,11 +220,13 @@ def run_experiments(rsw, docker_image: str,
     for mission in missions:
         with rsw.launch(docker_image) as system:
             for i in range(baseline_iterations):
-                run_commands(system, mission)
+                execute_experiment(system, cursor, mission, docker_image,
+                                   context)
             if mutate:
                 for diff in mutations:
                     system = build_patched_system(system, diff, context)
-                    run_commands(system, mission)
+                    execute_experiment(system, cursor, mission, docker_image,
+                                       context)
 
 
 def parse_args() -> argparse.Namespace:
@@ -149,7 +258,7 @@ def main() -> None:
     mutations = get_mutations(args)
     missions = get_missions(args.mission_files)
 
-    cursor = access_bag_db(args.db_file)
+    cursor = access_bag_db(args.db_fn)
 
     run_experiments(rsw, docker_image, mutations, missions, args.mutate,
                     args.context, args.baseline_iterations, cursor)
