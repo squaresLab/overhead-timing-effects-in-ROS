@@ -241,7 +241,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--log_fn', type=str, default='experiment.log')
     parser.add_argument('--mission_files', action='append', type=str,
                         help='Specify the mission files to convert',
-                        default=['/usr0/home/dskatz/Documents/dsk-ardu-experimental-tools/good_missions/ba164dab.wpl'])
+                        default=['good_missions/ba164dab.wpl'])
     parser.add_argument('--mutate', action='store_true', default=False)
     parser.add_argument('--db_fn', type=str, default='bag_db.db')
     parser.add_argument('--baseline_iterations', type=int, default=1)

@@ -1,0 +1,21 @@
+--- ArduCopter/system.cpp
++++ ArduCopter/system.cpp
+@@ -342,15 +342,15 @@
+ bool Copter::optflow_position_ok()
+ {
+ #if OPTFLOW != ENABLED && VISUAL_ODOMETRY_ENABLED != ENABLED
+-    return false;
++    {sleep 0.5; return false;}
+ #else
+-    // return immediately if EKF not used
++    // {sleep 0.5; return immediately if EKF not used
+     if (!ahrs.have_inertial_nav()) {
+         return false;
+     }
+
+     // return immediately if neither optflow nor visual odometry is enabled
+-    bool enabled = false;
++    bool enabled = false;}
+ #if OPTFLOW == ENABLED
+     if (optflow.enabled()) {
+         enabled = true;
