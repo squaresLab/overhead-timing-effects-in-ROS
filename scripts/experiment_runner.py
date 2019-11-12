@@ -92,15 +92,15 @@ def get_missions(mission_fns: List[str]) -> List[List[Any]]:
 
 
 def build_patched_system(system, diff: str, context: str):
-    logging.debug("applying patch")
+    logging.info("applying patch")
     system.files.patch(context, diff)
-    logging.debug("patch applied")
+    logging.info("patch applied")
 
     dir_workspace = '/ros_ws'
 
     catkin = system.catkin(dir_workspace)
     catkin.build()
-    logging.debug("rebuilt")
+    logging.info("rebuilt")
     return system
 
 
@@ -114,11 +114,13 @@ def run_commands(system, mission: List[Any], bag_fn: str) -> None:
     # launch a temporary ROS session inside the app container
     # once the context is closed, the ROS session will be terminated and all
     # of its associated nodes will be automatically killed.
-    logging.debug("Running roscore")
+    logging.info("Running roscore")
     with system.roscore() as ros:
+        # wait a bit for roscore
+        time.sleep(10)
 
         # separately launch a software-in-the-loop simulator
-        logging.debug("Opening sitl")
+        logging.info("Opening sitl")
         sitl_cmd = ("%s --model copter --defaults %s" % (FN_SITL, FN_PARAMS))
         ps_sitl = system.shell.popen(sitl_cmd)
 
@@ -131,35 +133,44 @@ def run_commands(system, mission: List[Any], bag_fn: str) -> None:
             # let's wait some time for the copter to become armable
             time.sleep(60)
 
+            #request_manual = SetModeRequest(base_mode=0,
+            #                              custom_mode='MANUAL')
+            #response_manual = ros.services['/mavros/set_mode'].call(request_manual)
+            #assert response_manual.success, str(response_manual)
+            #logging.info("set_mode MANUAL successful")
+
+
             # arm the copter
             request_arm = CommandBoolRequest(value=True)
             response_arm = ros.services['/mavros/cmd/arming'].call(request_arm)
             assert response_arm.success
-            logging.debug("arm successful")
+            logging.info("arm successful")
 
             # wait for the copter
-            logging.debug("waiting...")
+            logging.info("waiting...")
             time.sleep(30)
-            logging.debug("finished waiting")
+            logging.info("finished waiting")
 
             request_auto = SetModeRequest(base_mode=0,
                                           custom_mode='AUTO')
             response_auto = ros.services['/mavros/set_mode'].call(request_auto)
+            assert response_auto.success
+            logging.info("set_mode AUTO successful")
 
             # Execute a mission
-            logging.debug(WaypointPushRequest.format.to_dict())
-            logging.debug("mission:\n%s\n" % str(mission))
+            logging.info(WaypointPushRequest.format.to_dict())
+            logging.info("mission:\n%s\n" % str(mission))
             request_waypoint = WaypointPushRequest(waypoints=mission)
-            logging.debug("request_waypoint:\n%s\n\n" % str(request_waypoint))
+            logging.info("request_waypoint:\n%s\n\n" % str(request_waypoint))
             response_waypoint = ros.services['/mavros/mission/push'].call(request_waypoint)
             assert response_waypoint.success
+            logging.info("WaypointPush successful")
 
-
-            logging.debug("waiting for copter to execute waypoints")
-            logging.debug("Waiting for copter to execute waypoints.")
+            logging.info("waiting for copter to execute waypoints")
+            logging.info("Waiting for copter to execute waypoints.")
             time.sleep(120)
-            logging.debug("Finished waiting for waypoints.")
-            logging.debug("finished waiting for waypoints")
+            logging.info("Finished waiting for waypoints.")
+            logging.info("finished waiting for waypoints")
 
         # Did we get to waypoints?
 
@@ -241,7 +252,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--log_fn', type=str, default='experiment.log')
     parser.add_argument('--mission_files', action='append', type=str,
                         help='Specify the mission files to convert',
-                        default=['good_missions/ba164dab.wpl'])
+                        default=['missions/mair.mission.txt'])
     parser.add_argument('--mutate', action='store_true', default=False)
     parser.add_argument('--db_fn', type=str, default='bag_db.db')
     parser.add_argument('--baseline_iterations', type=int, default=1)
@@ -251,7 +262,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    logging.basicConfig(filename=args.log_fn)
+    format_str = "%(asctime)s:%(levelname)s:%(name)s: %(message)s"
+    date_str = '%m/%d/%Y %I:%M:%S %p'
+    logging.basicConfig(filename=args.log_fn, level=logging.DEBUG,
+                        format=format_str, datefmt=date_str)
 
     rsw = roswire.ROSWire()
     docker_image = get_docker_image(args)
