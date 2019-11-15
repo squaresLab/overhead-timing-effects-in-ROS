@@ -14,7 +14,7 @@ DIR_THIS = os.path.dirname(os.path.abspath(__file__))
 FN_SITL = '/ros_ws/src/ArduPilot/build/sitl/bin/arducopter'
 FN_PARAMS = '/ros_ws/src/ArduPilot/copter.parm'
 
-bag_dir = '/usr0/home/dskatz/Documents/overhead-timing-effects-in-ROS/bags/'
+bag_dir = '../bags/'
 
 def load_mavros_type_db():
     fn_db_format = os.path.join(DIR_THIS, '../test',
@@ -128,6 +128,7 @@ def run_commands(system, mission: List[Any], bag_fn: str) -> None:
         ros.launch('apm.launch', package='mavros',
                    args={'fcu_url': 'tcp://127.0.0.1:5760@5760'})
 
+        bag_dir = os.path.join(DIR_THIS, bag_dir)
         os.makedirs(bag_dir, exist_ok=True)
         with ros.record(os.path.join(bag_dir, bag_fn)) as recorder:
             # let's wait some time for the copter to become armable
