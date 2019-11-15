@@ -9,16 +9,16 @@ import uuid
 import roswire
 from roswire.definitions import FormatDatabase, TypeDatabase
 
-DIR_TEST = \
-    '../test/'
+DIR_THIS = os.path.dirname(os.path.abspath(__file__))
+
 FN_SITL = '/ros_ws/src/ArduPilot/build/sitl/bin/arducopter'
 FN_PARAMS = '/ros_ws/src/ArduPilot/copter.parm'
 
 bag_dir = '/usr0/home/dskatz/Documents/overhead-timing-effects-in-ROS/bags/'
 
 def load_mavros_type_db():
-    fn_db_format = os.path.join(DIR_TEST,
-                                'format-databases/mavros.formats.yml')
+    fn_db_format = os.path.join(DIR_THIS, '../test',
+                                'mavros.formats.yml')
     db_format = FormatDatabase.load(fn_db_format)
     return TypeDatabase.build(db_format)
 
@@ -248,11 +248,13 @@ def parse_args() -> argparse.Namespace:
                         default='roswire/example:mavros')
     parser.add_argument('--patches', action='append', type=str,
                         help='Specify the patches to apply',
-                        default=['patches/system.cpp.2.patch'])
+                        default=[os.path.join(DIR_THIS,
+                                              'patches/system.cpp.2.patch')])
     parser.add_argument('--log_fn', type=str, default='experiment.log')
     parser.add_argument('--mission_files', action='append', type=str,
                         help='Specify the mission files to convert',
-                        default=['missions/mair.mission.txt'])
+                        default=[os.path.join(DIR_THIS,
+                                              'missions/mair.mission.txt')])
     parser.add_argument('--mutate', action='store_true', default=False)
     parser.add_argument('--db_fn', type=str, default='bag_db.db')
     parser.add_argument('--baseline_iterations', type=int, default=1)
