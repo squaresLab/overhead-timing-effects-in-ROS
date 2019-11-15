@@ -10,7 +10,7 @@ import roswire
 from roswire.definitions import FormatDatabase, TypeDatabase
 
 DIR_TEST = \
-    '/usr0/home/dskatz/Documents/overhead-timing-effects-in-ROS/roswire/test/'
+    '../test/'
 FN_SITL = '/ros_ws/src/ArduPilot/build/sitl/bin/arducopter'
 FN_PARAMS = '/ros_ws/src/ArduPilot/copter.parm'
 
