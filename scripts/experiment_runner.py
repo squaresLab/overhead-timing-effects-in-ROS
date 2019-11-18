@@ -17,7 +17,7 @@ FN_PARAMS = '/ros_ws/src/ArduPilot/copter.parm'
 bag_dir = '../bags/'
 
 # This is arbitrary and hard-coded. Change this.
-home_tuple = (True, -35.363262, 149.165237, 0.000000)
+home_tuple = (True, 42.294464447490732, -83.7104686349630356, 270.000000)
 
 def load_mavros_type_db():
     fn_db_format = os.path.join(DIR_THIS, '../test',
@@ -107,6 +107,7 @@ def build_patched_system(system, diff: str, context: str):
     return system
 
 
+
 def run_commands(system, mission: List[Any], bag_fn: str) -> None:
     # Fetch dynamically generated types for the messages that we want to send
     SetModeRequest = system.messages['mavros_msgs/SetModeRequest']
@@ -126,7 +127,8 @@ def run_commands(system, mission: List[Any], bag_fn: str) -> None:
 
         # separately launch a software-in-the-loop simulator
         logging.info("Opening sitl")
-        sitl_cmd = ("%s --model copter --defaults %s" % (FN_SITL, FN_PARAMS))
+        sitl_cmd = ("%s --model copter --defaults %s" %
+                    (FN_SITL, FN_PARAMS))
         ps_sitl = system.shell.popen(sitl_cmd)
 
         # use roslaunch to launch the application inside the ROS session
@@ -144,18 +146,6 @@ def run_commands(system, mission: List[Any], bag_fn: str) -> None:
             #response_manual = ros.services['/mavros/set_mode'].call(request_manual)
             #assert response_manual.success, str(response_manual)
             #logging.info("set_mode MANUAL successful")
-
-
-            # arm the copter
-            request_arm = CommandBoolRequest(value=True)
-            response_arm = ros.services['/mavros/cmd/arming'].call(request_arm)
-            assert response_arm.success
-            logging.info("arm successful")
-
-            # wait for the copter
-            logging.info("waiting...")
-            time.sleep(10)
-            logging.info("finished waiting")
 
             request_home = CommandHomeRequest(*home_tuple)
             response_home = ros.services['/mavros/cmd/set_home'].call(request_home)
@@ -181,6 +171,16 @@ def run_commands(system, mission: List[Any], bag_fn: str) -> None:
             time.sleep(10)
             logging.info("finished waiting")
 
+            # arm the copter
+            request_arm = CommandBoolRequest(value=True)
+            response_arm = ros.services['/mavros/cmd/arming'].call(request_arm)
+            assert response_arm.success
+            logging.info("arm successful")
+
+            # wait for the copter
+            logging.info("waiting...")
+            time.sleep(2)
+            logging.info("finished waiting")
             request_auto = SetModeRequest(base_mode=0,
                                           custom_mode='AUTO')
             response_auto = ros.services['/mavros/set_mode'].call(request_auto)
@@ -189,14 +189,14 @@ def run_commands(system, mission: List[Any], bag_fn: str) -> None:
 
             # wait for the copter
             logging.info("waiting...")
-            time.sleep(10)
+            time.sleep(2)
             logging.info("finished waiting")
 
             request_long = CommandLongRequest(
             0, 300, 0, 1, len(mission) + 1, 0, 0, 0, 0, 4)
             # 0, 0, 300, 0, 1, len(mission) + 1, 0, 0, 0, 0, 4)
             response_long = ros.services['/mavros/cmd/command'].call(request_long)
-            assert response_long.success, response_long
+            #assert response_long.success, response_long
 
             logging.info("waiting for copter to execute waypoints")
             logging.info("Waiting for copter to execute waypoints.")
@@ -282,18 +282,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--docker_image', type=str,
                         default='roswire/example:mavros')
     parser.add_argument('--patches', action='append', type=str,
-                        help='Specify the patches to apply',
-                        default=[os.path.join(DIR_THIS,
-                                              'patches/system.cpp.2.patch')])
+                        help='Specify the patches to apply')
     parser.add_argument('--log_fn', type=str, default='experiment.log')
     parser.add_argument('--mission_files', action='append', type=str,
-                        help='Specify the mission files to convert',
-                        default=[os.path.join(DIR_THIS,
-                                              'missions/mair.mission.txt')])
+                        help='Specify the mission files to convert')
     parser.add_argument('--mutate', action='store_true', default=False)
     parser.add_argument('--db_fn', type=str, default='bag_db.db')
     parser.add_argument('--baseline_iterations', type=int, default=1)
     args = parser.parse_args()
+
+    if not args.patches:
+        args.patches = [os.path.join(DIR_THIS, 'patches/system.cpp.2.patch')]
+    if not args.mission_files:
+        args.mission_files = [os.path.join(DIR_THIS,
+                                           'missions/mair.mission.txt')]
     return args
 
 
