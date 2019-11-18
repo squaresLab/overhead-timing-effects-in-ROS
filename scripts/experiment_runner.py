@@ -16,6 +16,9 @@ FN_PARAMS = '/ros_ws/src/ArduPilot/copter.parm'
 
 bag_dir = '../bags/'
 
+# This is arbitrary and hard-coded. Change this.
+home_tuple = (True, -35.363262, 149.165237, 0.000000)
+
 def load_mavros_type_db():
     fn_db_format = os.path.join(DIR_THIS, '../test',
                                 'mavros.formats.yml')
@@ -109,7 +112,9 @@ def run_commands(system, mission: List[Any], bag_fn: str) -> None:
     SetModeRequest = system.messages['mavros_msgs/SetModeRequest']
     CommandBoolRequest = system.messages['mavros_msgs/CommandBoolRequest']
     CommandTOLRequest = system.messages['mavros_msgs/CommandTOLRequest']
+    CommandHomeRequest = system.messages['mavros_msgs/CommandHomeRequest']
     WaypointPushRequest = system.messages['mavros_msgs/WaypointPushRequest']
+    CommandLongRequest = system.messages['mavros_msgs/CommandLongRequest']
 
     # launch a temporary ROS session inside the app container
     # once the context is closed, the ROS session will be terminated and all
@@ -128,9 +133,9 @@ def run_commands(system, mission: List[Any], bag_fn: str) -> None:
         ros.launch('apm.launch', package='mavros',
                    args={'fcu_url': 'tcp://127.0.0.1:5760@5760'})
 
-        bag_dir = os.path.join(DIR_THIS, bag_dir)
-        os.makedirs(bag_dir, exist_ok=True)
-        with ros.record(os.path.join(bag_dir, bag_fn)) as recorder:
+        bag_dr = os.path.join(DIR_THIS, bag_dir)
+        os.makedirs(bag_dr, exist_ok=True)
+        with ros.record(os.path.join(bag_dr, bag_fn)) as recorder:
             # let's wait some time for the copter to become armable
             time.sleep(60)
 
@@ -149,14 +154,18 @@ def run_commands(system, mission: List[Any], bag_fn: str) -> None:
 
             # wait for the copter
             logging.info("waiting...")
-            time.sleep(30)
+            time.sleep(10)
             logging.info("finished waiting")
 
-            request_auto = SetModeRequest(base_mode=0,
-                                          custom_mode='AUTO')
-            response_auto = ros.services['/mavros/set_mode'].call(request_auto)
-            assert response_auto.success
-            logging.info("set_mode AUTO successful")
+            request_home = CommandHomeRequest(*home_tuple)
+            response_home = ros.services['/mavros/cmd/set_home'].call(request_home)
+            assert response_home.success
+            logging.info("successfully set home")
+
+            # wait for the copter
+            logging.info("waiting...")
+            time.sleep(10)
+            logging.info("finished waiting")
 
             # Execute a mission
             logging.info(WaypointPushRequest.format.to_dict())
@@ -167,11 +176,36 @@ def run_commands(system, mission: List[Any], bag_fn: str) -> None:
             assert response_waypoint.success
             logging.info("WaypointPush successful")
 
+            # wait for the copter
+            logging.info("waiting...")
+            time.sleep(10)
+            logging.info("finished waiting")
+
+            request_auto = SetModeRequest(base_mode=0,
+                                          custom_mode='AUTO')
+            response_auto = ros.services['/mavros/set_mode'].call(request_auto)
+            assert response_auto.success
+            logging.info("set_mode AUTO successful")
+
+            # wait for the copter
+            logging.info("waiting...")
+            time.sleep(10)
+            logging.info("finished waiting")
+
+            request_long = CommandLongRequest(
+            0, 300, 0, 1, len(mission) + 1, 0, 0, 0, 0, 4)
+            # 0, 0, 300, 0, 1, len(mission) + 1, 0, 0, 0, 0, 4)
+            response_long = ros.services['/mavros/cmd/command'].call(request_long)
+            assert response_long.success, response_long
+
             logging.info("waiting for copter to execute waypoints")
             logging.info("Waiting for copter to execute waypoints.")
             time.sleep(120)
             logging.info("Finished waiting for waypoints.")
             logging.info("finished waiting for waypoints")
+
+
+
 
         # Did we get to waypoints?
 
