@@ -17,7 +17,8 @@ FN_PARAMS = '/ros_ws/src/ArduPilot/copter.parm'
 bag_dir = '../bags/'
 
 # This is arbitrary and hard-coded. Change this.
-home_tuple = (True, 42.294464447490732, -83.7104686349630356, 270.000000)
+home_tuple = (True, 42.2944644474907321, -83.7104686349630356,
+              274.709991455078125)
 
 def load_mavros_type_db():
     fn_db_format = os.path.join(DIR_THIS, '../test',
