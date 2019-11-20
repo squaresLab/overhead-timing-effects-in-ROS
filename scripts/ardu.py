@@ -252,7 +252,7 @@ class SITL:
     model: str = attr.ib()
     parameters_filename: str = attr.ib()
     home: Tuple[float, float, float, float] = \
-        attr.ib(default=(-35.363262, 149.165237, 0.000000, 0.00))
+        attr.ib(default=(-5, 5, 0.000000, 0.00))
     speedup: int = attr.ib(default=1)
     _process: Optional[subprocess.Popen] = attr.ib(default=None, repr=False)
     binary: str = attr.ib(init=False)
