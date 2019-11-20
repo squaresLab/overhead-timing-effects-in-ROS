@@ -234,13 +234,6 @@ def run_dronekit(mission):
     vehicle = dronekit.connect(connection_string, heartbeat_timeout=100,
                                wait_ready=True)
     print("Connected")
-
-    # Create a set home command?
-    #set_home = dronekit.Command(0,0,0, mavutil.mavlink.MAV_FRAME_GLOBAL,
-    #                            mavutil.mavlink.SET_HOME_POSITION, 0, 0,
-    #                            42.2944644474907321, -83.7104686349630356,
-    #                            274.709991455078125,0)
-
     mission_fn = mission[0]
     wpl_mission = ardu.Mission.from_file(mission_fn)
 
