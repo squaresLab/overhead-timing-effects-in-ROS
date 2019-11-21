@@ -150,7 +150,7 @@ def run_commands(system, mission: List[Any], bag_fn: str, home: Dict[str, float]
             # This is the somewhat inexplicable format compatible with mavros
             # http://docs.ros.org/api/mavros_msgs/html/srv/CommandHome.html
             #request_home = CommandHomeRequest(True, home['lat'], home['long'],
-                                              home['alt'])
+            #                                  home['alt'])
             #response_home = ros.services['/mavros/cmd/set_home'].call(request_home)
             #assert response_home.success
             #logging.info("successfully set home")
