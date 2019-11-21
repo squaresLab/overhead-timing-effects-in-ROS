@@ -1,11 +1,14 @@
 import argparse
+from contextlib import closing, ExitStack
 import logging
 import os
 import sqlite3
 import time
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 import uuid
 
+import ardu
+import dronekit
 import roswire
 from roswire.definitions import FormatDatabase, TypeDatabase
 
@@ -73,7 +76,7 @@ def convert_waypoint(command: Dict[str, str]) -> Any:
     return waypoint
 
 
-def convert_mission(mission_fn: str) -> List[Any]:
+def convert_mission(mission_fn: str) -> Tuple[str, List['Waypoint']]:
     with open(mission_fn, 'r') as mission_file:
         wps = [x.strip() for x in mission_file.readlines()]
     commands = get_commands(wps)
@@ -81,14 +84,14 @@ def convert_mission(mission_fn: str) -> List[Any]:
     for command in commands:
         waypoint = convert_waypoint(command)
         waypoints.append(waypoint)
-    return waypoints
+    return (mission_fn, waypoints)
 
 
-def get_missions(mission_fns: List[str]) -> List[List[Any]]:
+def get_missions(mission_fns: List[str]) -> List[Tuple[str, List[Any]]]:
     missions = []
     for mission_fn in mission_fns:
         waypoints = convert_mission(mission_fn)
-        missions.append(waypoints)
+        missions.append((mission_fn, waypoints))
     return missions
 
 
@@ -105,7 +108,7 @@ def build_patched_system(system, diff: str, context: str):
     return system
 
 
-def run_mavros(system, mission):
+def run_mavros(system, mission, ros):
 
     # use roslaunch to launch mavros inside the ROS session
     ros.launch('apm.launch', package='mavros',
@@ -192,12 +195,33 @@ def run_mavros(system, mission):
     logging.info("finished waiting for waypoints")
 
 
-def run_dronekit(system, mission: List['Waypoint']):
-    url = system.container.ip_address
+def run_dronekit(system, mission_fn: str):
+    with ExitStack() as exit_stack:
 
-    pass
+        print(mission_fn)
 
-def run_commands(system, mission: List[Any], bag_fn: str,
+        ip = system.container.ip_address
+
+        port = 5760
+
+        url = "tcp:%s:%d" % (ip, port)
+
+        vehicle = exit_stack.enter_context(
+            closing(dronekit.connect(url, heartbeat_timeout=15)))
+
+        print(vehicle.heading)
+        time.sleep(90)
+        print(vehicle.heading)
+        print(vehicle.mode)
+
+        wpl_mission = ardu.Mission.from_file(mission_fn)
+
+        try:
+            wpl_mission.execute(vehicle, timeout_mission=500)
+        except TimeoutError:
+            logger.debug("mission timed out")
+
+def run_commands(system, mission_fn: str, bag_fn: str,
                  home: Dict[str, float], use_dronekit) -> None:
 
     # launch a temporary ROS session inside the app container
@@ -216,14 +240,15 @@ def run_commands(system, mission: List[Any], bag_fn: str,
                      home['alt'], 270.0, FN_PARAMS))
         ps_sitl = system.shell.popen(sitl_cmd)
 
-        bag_dr = os.path.join(DIR_THIS, bag_dir)
-        os.makedirs(bag_dr, exist_ok=True)
-        with ros.record(os.path.join(bag_dr, bag_fn)) as recorder:
+        bag_dir_abs = os.path.join(DIR_THIS, bag_dir)
+        os.makedirs(bag_dir_abs, exist_ok=True)
 
-            if use_dronekit:
-                run_dronekit(system, mission)
-            else:
-                run_mavros(system, mission)
+        if use_dronekit:
+            run_dronekit(system, mission_fn)
+        else:
+            raise NotImplementedError("the mission filename")
+            with ros.record(os.path.join(bag_dir_abs, bag_fn)) as recorder:
+                run_mavros(system, mission, ros)
 
         # Did we get to waypoints?
 
@@ -257,11 +282,10 @@ def access_bag_db(db_fn: str) -> sqlite3.Cursor:
     return c
 
 
-def store_bag_fn(system, cursor, mission: str,
+def store_bag_fn(system, cursor, mission_fn: str,
                  docker_image: str, context: str, bag_fn: str) -> None:
     docker_image_sha = system.description.sha256
-
-    pass
+    print("TODO: IMPLEMENT STORE BAG FILENAME")
 
 
 def get_bag_fn() -> str:
@@ -271,26 +295,27 @@ def get_bag_fn() -> str:
     return name
 
 
-def execute_experiment(system, cursor, mission, docker_image, context, home,
+def execute_experiment(system, cursor, mission_fn: str,
+                       docker_image, context, home,
                        use_dronekit: bool):
     bag_fn = get_bag_fn()
-    store_bag_fn(system, cursor, mission, docker_image, context, bag_fn)
-    run_commands(system, mission, bag_fn, home, use_dronekit)
+    store_bag_fn(system, cursor, mission_fn, docker_image, context, bag_fn)
+    run_commands(system, mission_fn, bag_fn, home, use_dronekit)
 
 
 def run_experiments(rsw, docker_image: str,
-                    mutations: List[str], missions: List[List[Any]],
+                    mutations: List[str], mission_files: List[str],
                     mutate: bool, context: str, baseline_iterations: int,
                     cursor, home, use_dronekit: bool) -> None:
-    for mission in missions:
+    for mission_fn in mission_files:
         with rsw.launch(docker_image) as system:
             for i in range(baseline_iterations):
-                execute_experiment(system, cursor, mission, docker_image,
+                execute_experiment(system, cursor, mission_fn, docker_image,
                                    context, home, use_dronekit)
             if mutate:
                 for diff in mutations:
                     system = build_patched_system(system, diff, context)
-                    execute_experiment(system, cursor, mission, docker_image,
+                    execute_experiment(system, cursor, mission_fn, docker_image,
                                        context, home, use_donekit)
 
 
@@ -337,7 +362,8 @@ def main() -> None:
     cursor = access_bag_db(args.db_fn)
 
     home = dict((('lat', args.home_lat), ('long', args.home_long), ('alt', args.home_alt)))
-    run_experiments(rsw, docker_image, mutations, missions, args.mutate,
+    run_experiments(rsw, docker_image, mutations, args.mission_files,
+                    args.mutate,
                     args.context, args.baseline_iterations, cursor, home,
                     args.use_dronekit)
 
