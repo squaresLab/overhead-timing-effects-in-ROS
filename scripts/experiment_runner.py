@@ -16,9 +16,6 @@ FN_PARAMS = '/ros_ws/src/ArduPilot/copter.parm'
 
 bag_dir = '../bags/'
 
-# This is arbitrary and hard-coded. Change this.
-home_tuple = (True, 42.2944644474907321, -83.7104686349630356,
-              274.709991455078125)
 
 def load_mavros_type_db():
     fn_db_format = os.path.join(DIR_THIS, '../test',
@@ -109,7 +106,7 @@ def build_patched_system(system, diff: str, context: str):
 
 
 
-def run_commands(system, mission: List[Any], bag_fn: str) -> None:
+def run_commands(system, mission: List[Any], bag_fn: str, home: Dict[str, float]) -> None:
     # Fetch dynamically generated types for the messages that we want to send
     SetModeRequest = system.messages['mavros_msgs/SetModeRequest']
     CommandBoolRequest = system.messages['mavros_msgs/CommandBoolRequest']
@@ -123,13 +120,15 @@ def run_commands(system, mission: List[Any], bag_fn: str) -> None:
     # of its associated nodes will be automatically killed.
     logging.info("Running roscore")
     with system.roscore() as ros:
+
         # wait a bit for roscore
         time.sleep(10)
 
         # separately launch a software-in-the-loop simulator
         logging.info("Opening sitl")
-        sitl_cmd = ("%s --model copter --defaults %s" %
-                    (FN_SITL, FN_PARAMS))
+        sitl_cmd = ("%s --model copter --home %f,%f,%f,%f --defaults %s" %
+                    (FN_SITL, home['lat'], home['long'],
+                     home['alt'], 270.0, FN_PARAMS))
         ps_sitl = system.shell.popen(sitl_cmd)
 
         # use roslaunch to launch the application inside the ROS session
@@ -148,10 +147,13 @@ def run_commands(system, mission: List[Any], bag_fn: str) -> None:
             #assert response_manual.success, str(response_manual)
             #logging.info("set_mode MANUAL successful")
 
-            request_home = CommandHomeRequest(*home_tuple)
-            response_home = ros.services['/mavros/cmd/set_home'].call(request_home)
-            assert response_home.success
-            logging.info("successfully set home")
+            # This is the somewhat inexplicable format compatible with mavros
+            # http://docs.ros.org/api/mavros_msgs/html/srv/CommandHome.html
+            #request_home = CommandHomeRequest(True, home['lat'], home['long'],
+                                              home['alt'])
+            #response_home = ros.services['/mavros/cmd/set_home'].call(request_home)
+            #assert response_home.success
+            #logging.info("successfully set home")
 
             # wait for the copter
             logging.info("waiting...")
@@ -254,26 +256,26 @@ def get_bag_fn() -> str:
     return name
 
 
-def execute_experiment(system, cursor, mission, docker_image, context):
+def execute_experiment(system, cursor, mission, docker_image, context, home):
     bag_fn = get_bag_fn()
     store_bag_fn(system, cursor, mission, docker_image, context, bag_fn)
-    run_commands(system, mission, bag_fn)
+    run_commands(system, mission, bag_fn, home)
 
 
 def run_experiments(rsw, docker_image: str,
                     mutations: List[str], missions: List[List[Any]],
                     mutate: bool, context: str, baseline_iterations: int,
-                    cursor) -> None:
+                    cursor, home) -> None:
     for mission in missions:
         with rsw.launch(docker_image) as system:
             for i in range(baseline_iterations):
                 execute_experiment(system, cursor, mission, docker_image,
-                                   context)
+                                   context, home)
             if mutate:
                 for diff in mutations:
                     system = build_patched_system(system, diff, context)
                     execute_experiment(system, cursor, mission, docker_image,
-                                       context)
+                                       context, home)
 
 
 def parse_args() -> argparse.Namespace:
@@ -290,6 +292,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--mutate', action='store_true', default=False)
     parser.add_argument('--db_fn', type=str, default='bag_db.db')
     parser.add_argument('--baseline_iterations', type=int, default=1)
+    parser.add_argument('--home_lat', type=float, default=42.2944644474907321)
+    parser.add_argument('--home_long', type=float, default=-83.7104686349630356)
+    parser.add_argument('--home_alt', type=float, default=274.709991455078125)
     args = parser.parse_args()
 
     if not args.patches:
@@ -314,8 +319,9 @@ def main() -> None:
 
     cursor = access_bag_db(args.db_fn)
 
+    home = dict((('lat', args.home_lat), ('long', args.home_long), ('alt', args.home_alt)))
     run_experiments(rsw, docker_image, mutations, missions, args.mutate,
-                    args.context, args.baseline_iterations, cursor)
+                    args.context, args.baseline_iterations, cursor, home)
 
 
 if __name__ == '__main__':
