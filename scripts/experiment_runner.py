@@ -87,14 +87,6 @@ def convert_mission(mission_fn: str) -> Tuple[str, List[Any]]:
     return (mission_fn, waypoints)
 
 
-def get_missions(mission_fns: List[str]) -> List[Tuple[str, List[Any]]]:
-    missions = []
-    for mission_fn in mission_fns:
-        waypoints = convert_mission(mission_fn)
-        missions.append(waypoints)
-    return missions
-
-
 def build_patched_system(system, diff: str, context: str):
     logging.info("applying patch")
     system.files.patch(context, diff)
@@ -345,7 +337,8 @@ def main() -> None:
     rsw = roswire.ROSWire()
     docker_image = get_docker_image(args)
     mutations = get_mutations(args)
-    missions = get_missions(args.mission_files)
+    missions = [convert_mission(fn) for fn in args.mission_files]
+
 
     cursor = access_bag_db(args.db_fn)
 
