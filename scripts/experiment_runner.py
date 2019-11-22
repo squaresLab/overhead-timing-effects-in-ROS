@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import logging
 import os
 import sqlite3
@@ -223,7 +224,9 @@ def access_bag_db(db_fn: str) -> sqlite3.Cursor:
            bag_fn text PRIMARY KEY,
            image_sha text,
            image_name text,
+           container_uuid text,
            mission_sha text,
+           mission_fn text,
            context text
        ); """
 
@@ -245,8 +248,20 @@ def access_bag_db(db_fn: str) -> sqlite3.Cursor:
 def store_bag_fn(system, cursor, mission: str,
                  docker_image: str, context: str, bag_fn: str) -> None:
     docker_image_sha = system.description.sha256
-
-    pass
+    cointainer_uuid = system.uuid
+    BLOCKSIZE = 65536
+    hasher = hashlib.sha1()
+    with open(mission, 'rb') as afile:
+        buf = afile.read(BLOCKSIZE)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = afile.read(BLOCKSIZE)
+    mission_sha = hasher.hexdigest()
+    print("TODO: IMPLEMENT STORE BAG FILENAME")
+    command = "INSERT INTO bagfns VALUES (?, ?, ?, ?, ?, ?, ?)"
+    values = (bag_fn, docker_image_sha, docker_image, container_uuid,
+              mission_sha, mission, context)
+    cursor.execute(command, values)
 
 
 def get_bag_fn() -> str:
