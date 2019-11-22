@@ -76,7 +76,7 @@ def convert_waypoint(command: Dict[str, str]) -> Any:
     return waypoint
 
 
-def convert_mission(mission_fn: str) -> Tuple[str, List['Waypoint']]:
+def convert_mission(mission_fn: str) -> Tuple[str, List[Any]]:
     with open(mission_fn, 'r') as mission_file:
         wps = [x.strip() for x in mission_file.readlines()]
     commands = get_commands(wps)
@@ -91,7 +91,7 @@ def get_missions(mission_fns: List[str]) -> List[Tuple[str, List[Any]]]:
     missions = []
     for mission_fn in mission_fns:
         waypoints = convert_mission(mission_fn)
-        missions.append((mission_fn, waypoints))
+        missions.append(waypoints)
     return missions
 
 
@@ -114,8 +114,6 @@ def run_mavros(system, mission, ros):
     ros.launch('apm.launch', package='mavros',
                args={'fcu_url': 'tcp://127.0.0.1:5760@5760'})
 
-
-
     # Fetch dynamically generated types for the messages that we want to send
     SetModeRequest = system.messages['mavros_msgs/SetModeRequest']
     CommandBoolRequest = system.messages['mavros_msgs/CommandBoolRequest']
@@ -124,23 +122,8 @@ def run_mavros(system, mission, ros):
     WaypointPushRequest = system.messages['mavros_msgs/WaypointPushRequest']
     CommandLongRequest = system.messages['mavros_msgs/CommandLongRequest']
 
-
     # let's wait some time for the copter to become armable
     time.sleep(60)
-
-    #request_manual = SetModeRequest(base_mode=0,
-    #                              custom_mode='MANUAL')
-    #response_manual = ros.services['/mavros/set_mode'].call(request_manual)
-    #assert response_manual.success, str(response_manual)
-    #logging.info("set_mode MANUAL successful")
-
-    # This is the somewhat inexplicable format compatible with mavros
-    # http://docs.ros.org/api/mavros_msgs/html/srv/CommandHome.html
-    #request_home = CommandHomeRequest(True, home['lat'], home['long'],
-    #                                  home['alt'])
-    #response_home = ros.services['/mavros/cmd/set_home'].call(request_home)
-    #assert response_home.success
-    #logging.info("successfully set home")
 
     # wait for the copter
     logging.info("waiting...")
@@ -152,7 +135,8 @@ def run_mavros(system, mission, ros):
     logging.info("mission:\n%s\n" % str(mission))
     request_waypoint = WaypointPushRequest(waypoints=mission)
     logging.info("request_waypoint:\n%s\n\n" % str(request_waypoint))
-    response_waypoint = ros.services['/mavros/mission/push'].call(request_waypoint)
+    wp_service = '/mavros/mission/push'
+    response_waypoint = ros.services[wp_service].call(request_waypoint)
     assert response_waypoint.success
     logging.info("WaypointPush successful")
 
@@ -183,10 +167,10 @@ def run_mavros(system, mission, ros):
     logging.info("finished waiting")
 
     request_long = CommandLongRequest(
-    0, 300, 0, 1, len(mission) + 1, 0, 0, 0, 0, 4)
+        0, 300, 0, 1, len(mission) + 1, 0, 0, 0, 0, 4)
     # 0, 0, 300, 0, 1, len(mission) + 1, 0, 0, 0, 0, 4)
     response_long = ros.services['/mavros/cmd/command'].call(request_long)
-    #assert response_long.success, response_long
+    assert response_long.success, response_long
 
     logging.info("waiting for copter to execute waypoints")
     logging.info("Waiting for copter to execute waypoints.")
@@ -219,7 +203,8 @@ def run_dronekit(system, mission_fn: str):
         try:
             wpl_mission.execute(vehicle, timeout_mission=500)
         except TimeoutError:
-            logger.debug("mission timed out")
+            logging.debug("mission timed out")
+
 
 def run_commands(system, mission_fn: str, bag_fn: str,
                  home: Dict[str, float], use_dronekit) -> None:
@@ -248,7 +233,7 @@ def run_commands(system, mission_fn: str, bag_fn: str,
         else:
             raise NotImplementedError("the mission filename")
             with ros.record(os.path.join(bag_dir_abs, bag_fn)) as recorder:
-                run_mavros(system, mission, ros)
+                run_mavros(system, mission_fn, ros)
 
         # Did we get to waypoints?
 
@@ -297,7 +282,7 @@ def get_bag_fn() -> str:
 
 def execute_experiment(system, cursor, mission_fn: str,
                        docker_image, context, home,
-                       use_dronekit: bool):
+                       use_dronekit: bool) -> None:
     bag_fn = get_bag_fn()
     store_bag_fn(system, cursor, mission_fn, docker_image, context, bag_fn)
     run_commands(system, mission_fn, bag_fn, home, use_dronekit)
@@ -315,8 +300,9 @@ def run_experiments(rsw, docker_image: str,
             if mutate:
                 for diff in mutations:
                     system = build_patched_system(system, diff, context)
-                    execute_experiment(system, cursor, mission_fn, docker_image,
-                                       context, home, use_donekit)
+                    execute_experiment(system, cursor, mission_fn,
+                                       docker_image, context, home,
+                                       use_dronekit)
 
 
 def parse_args() -> argparse.Namespace:
@@ -333,8 +319,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--mutate', action='store_true', default=False)
     parser.add_argument('--db_fn', type=str, default='bag_db.db')
     parser.add_argument('--baseline_iterations', type=int, default=1)
-    parser.add_argument('--home_lat', type=float, default=42.2944644474907321)
-    parser.add_argument('--home_long', type=float, default=-83.7104686349630356)
+    parser.add_argument('--home_lat', type=float,
+                        default=42.2944644474907321)
+    parser.add_argument('--home_long', type=float,
+                        default=-83.7104686349630356)
     parser.add_argument('--home_alt', type=float, default=274.709991455078125)
     parser.add_argument('--use_dronekit', default=False, action='store_true')
     args = parser.parse_args()
@@ -361,7 +349,8 @@ def main() -> None:
 
     cursor = access_bag_db(args.db_fn)
 
-    home = dict((('lat', args.home_lat), ('long', args.home_long), ('alt', args.home_alt)))
+    home = dict((('lat', args.home_lat), ('long', args.home_long),
+                 ('alt', args.home_alt)))
     run_experiments(rsw, docker_image, mutations, args.mission_files,
                     args.mutate,
                     args.context, args.baseline_iterations, cursor, home,

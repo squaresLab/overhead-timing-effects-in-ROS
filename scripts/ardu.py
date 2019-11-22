@@ -180,7 +180,7 @@ class Mission(Sequence[dronekit.Command]):
                 *,
                 timeout_setup: float = 90.0,
                 timeout_mission: float = 120.0
-                ) -> bool:
+                ) -> None:
         """Executes this mission on a given vehicle.
 
         Parameters
