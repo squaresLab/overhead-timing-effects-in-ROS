@@ -174,22 +174,12 @@ def run_mavros(system, mission, ros):
 def run_dronekit(system, mission_fn: str):
     with ExitStack() as exit_stack:
 
-        print(mission_fn)
-
         ip = system.container.ip_address
-
         port = 5760
-
         url = "tcp:%s:%d" % (ip, port)
 
         vehicle = exit_stack.enter_context(
             closing(dronekit.connect(url, heartbeat_timeout=15)))
-
-        print(vehicle.heading)
-        time.sleep(90)
-        print(vehicle.heading)
-        print(vehicle.mode)
-
         wpl_mission = ardu.Mission.from_file(mission_fn)
 
         try:
