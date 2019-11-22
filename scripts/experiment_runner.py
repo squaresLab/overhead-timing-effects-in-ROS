@@ -178,6 +178,7 @@ def run_dronekit(system, mission_fn: str, mission_timeout=500):
         ip = system.container.ip_address
         port = 5760
         url = "tcp:%s:%d" % (ip, port)
+        print("url: %s" % url)
 
         vehicle = exit_stack.enter_context(
             closing(dronekit.connect(url, heartbeat_timeout=15)))
@@ -248,7 +249,7 @@ def access_bag_db(db_fn: str) -> sqlite3.Cursor:
     try:
         c.execute(sql_create_bagfns_table)
     except sqlite3.Error as e:
-        print(e)
+        logger.warning(e)
 
     return c
 
@@ -256,7 +257,8 @@ def access_bag_db(db_fn: str) -> sqlite3.Cursor:
 def store_bag_fn(system, cursor, mission_fn: str,
                  docker_image: str, context: str, bag_fn: str) -> None:
     docker_image_sha = system.description.sha256
-    container_uuid = system.uuid
+    container_uuid = str(system.uuid)
+    print(container_uuid)
     BLOCKSIZE = 65536
     hasher = hashlib.sha1()
     with open(mission_fn, 'rb') as afile:
