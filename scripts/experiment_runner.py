@@ -77,7 +77,7 @@ def convert_waypoint(command: Dict[str, str]) -> Any:
     return waypoint
 
 
-def convert_mission(mission_fn: str) -> Tuple[str, List[Any]]:
+def convert_mission(mission_fn: str) -> List[Any]:
     with open(mission_fn, 'r') as mission_file:
         wps = [x.strip() for x in mission_file.readlines()]
     commands = get_commands(wps)
@@ -85,7 +85,7 @@ def convert_mission(mission_fn: str) -> Tuple[str, List[Any]]:
     for command in commands:
         waypoint = convert_waypoint(command)
         waypoints.append(waypoint)
-    return (mission_fn, waypoints)
+    return waypoints
 
 
 def build_patched_system(system, diff: str, context: str):
@@ -203,9 +203,10 @@ def run_commands(system, mission_fn: str, bag_fn: str,
 
         # separately launch a software-in-the-loop simulator
         logging.info("Opening sitl")
-        sitl_cmd = ("%s --model copter --home %f,%f,%f,%f --defaults %s" %
-                    (FN_SITL, home['lat'], home['long'],
-                     home['alt'], 270.0, FN_PARAMS))
+        sitl_cmd = ("%s --help" % FN_SITL)
+        # sitl_cmd = ("%s --model copter --home %f,%f,%f,%f --defaults %s" %
+        #             (FN_SITL, home['lat'], home['long'],
+        #              home['alt'], 270.0, FN_PARAMS))
         ps_sitl = system.shell.popen(sitl_cmd)
 
         bag_dir_abs = os.path.join(DIR_THIS, bag_dir)
@@ -255,10 +256,10 @@ def access_bag_db(db_fn: str) -> sqlite3.Cursor:
 def store_bag_fn(system, cursor, mission_fn: str,
                  docker_image: str, context: str, bag_fn: str) -> None:
     docker_image_sha = system.description.sha256
-    cointainer_uuid = system.uuid
+    container_uuid = system.uuid
     BLOCKSIZE = 65536
     hasher = hashlib.sha1()
-    with open(mission, 'rb') as afile:
+    with open(mission_fn, 'rb') as afile:
         buf = afile.read(BLOCKSIZE)
         while len(buf) > 0:
             hasher.update(buf)
@@ -267,7 +268,7 @@ def store_bag_fn(system, cursor, mission_fn: str,
     print("TODO: IMPLEMENT STORE BAG FILENAME")
     command = "INSERT INTO bagfns VALUES (?, ?, ?, ?, ?, ?, ?)"
     values = (bag_fn, docker_image_sha, docker_image, container_uuid,
-              mission_sha, mission, context)
+              mission_sha, mission_fn, context)
     cursor.execute(command, values)
 
 
