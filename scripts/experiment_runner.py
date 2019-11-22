@@ -171,7 +171,7 @@ def run_mavros(system, mission, ros):
     logging.info("finished waiting for waypoints")
 
 
-def run_dronekit(system, mission_fn: str):
+def run_dronekit(system, mission_fn: str, mission_timeout=500):
     with ExitStack() as exit_stack:
 
         ip = system.container.ip_address
@@ -183,7 +183,7 @@ def run_dronekit(system, mission_fn: str):
         wpl_mission = ardu.Mission.from_file(mission_fn)
 
         try:
-            wpl_mission.execute(vehicle, timeout_mission=500)
+            wpl_mission.execute(vehicle, timeout_mission=mission_timeout)
         except TimeoutError:
             logging.debug("mission timed out")
 
@@ -328,7 +328,6 @@ def main() -> None:
     docker_image = get_docker_image(args)
     mutations = get_mutations(args)
     missions = [convert_mission(fn) for fn in args.mission_files]
-
 
     cursor = access_bag_db(args.db_fn)
 
