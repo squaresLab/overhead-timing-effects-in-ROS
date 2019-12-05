@@ -21,3 +21,16 @@ Obvious next step:
 -start docker container manually. Run the `/ros_ws/src/ArduPilot/build/sitl/bin/arducopter` command with various arguments to try to figure out what arguments it will accept
 
 Try to replicate the mavros procedure that Chris used for trmo??
+
+Notes on mavproxy/trmo
+-structure code to support multiple mavproxy instances (factory, object pool -- allocate instances)
+--but don't write it yet trmo python - off the shelf code that I can use to run mavproxy on my machine
+---specify which ports it uses -- to begin with, hard code one port number
+
+-makes setup more complex
+--mavproxy needs to be installed somewhere, only works in python2
+--have a script that creates a static binary called mavproxy
+--need to specify a path for the binary -- easier because we just have a collection of scripts and not a package.
+(1) set up the mavproxy binary
+(2) copy across the SITL class
+-mavproxy produces telemetry logs
