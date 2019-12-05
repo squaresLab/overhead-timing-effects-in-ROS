@@ -1,0 +1,23 @@
+Notes on debugging steps taken to find logs when running Ardupilot with Dronekit using Roswire:
+
+Tried:
+1) run container as usual through Roswire with extra time inserted ("Waiting for copter to execute waypoints" to 300 seconds: experiment_runner.py:170)
+--while container is running, `docker ps` to get docker ID, then `docker exec -it $DOCKERID bash`
+--search for anything resembling a log file, including going to the root and running `find . | grep logs | grep rdu` but not finding anything that looks relevant
+
+2) start docker container manually: `docker run -it roswire/example:mavros`
+--start sitl manually from within the docker container
+`/ros_ws/src/ArduPilot/build/sitl/bin/arducopter --model copter --home 42.294464,-83.710469,274.709991,270.000000 --defaults /ros_ws/src/ArduPilot/copter.parm`
+--look for logs using similar strategy to (1). Did not find anything that looked relevant.
+
+3) run container through Roswire with extra time inserted as in (1)
+--change arducopter sitl command (in (2)) to try to find out which arguments it would accept
+--crashed the process and did not generate useful output
+
+
+4) scoured various web sites for help.
+
+Obvious next step:
+-start docker container manually. Run the `/ros_ws/src/ArduPilot/build/sitl/bin/arducopter` command with various arguments to try to figure out what arguments it will accept
+
+Try to replicate the mavros procedure that Chris used for trmo??
