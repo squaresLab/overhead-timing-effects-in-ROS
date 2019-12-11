@@ -10,8 +10,11 @@ import uuid
 
 import ardu
 import dronekit
+import docker
 import roswire
 from roswire.definitions import FormatDatabase, TypeDatabase
+from roswire.proxy import ShellProxy as ROSWireShell
+from roswire.util import Stopwatch
 
 DIR_THIS = os.path.dirname(os.path.abspath(__file__))
 
@@ -19,6 +22,16 @@ FN_SITL = '/ros_ws/src/ArduPilot/build/sitl/bin/arducopter'
 FN_PARAMS = '/ros_ws/src/ArduPilot/copter.parm'
 
 bag_dir = '../bags/'
+
+def build_shell(client_docker: docker.DockerClient,
+                api_docker: docker.APIClient,
+                uid_container: str
+                ) -> ROSWireShell:
+    container = client_docker.containers.get(uid_container)
+    info = api_docker.inspect_container(uid_container)
+    host_pid = int(info['State']['Pid'])
+    return ROSWireShell(api_docker, container, host_pid)
+
 
 
 def load_mavros_type_db():
@@ -167,7 +180,7 @@ def run_mavros(system, mission, ros):
 
     logging.info("waiting for copter to execute waypoints")
     logging.info("Waiting for copter to execute waypoints.")
-    time.sleep(120)
+    time.sleep(300)
     logging.info("Finished waiting for waypoints.")
     logging.info("finished waiting for waypoints")
 
@@ -189,9 +202,72 @@ def run_dronekit(system, mission_fn: str, mission_timeout=500):
         except TimeoutError:
             logging.debug("mission timed out")
 
+def mavproxy(system, mission_fn: str, exit_stack, timeout = 1000) -> None:
+    # Code to work with mavproxy, adapted from trmo code
+    uid_container = str(system.uuid)
+    api_client = exit_stack.enter_context(
+        closing(docker.APIClient(base_url='unix://var/run/docker.sock')))
+    client_docker = exit_stack.enter_context(
+        closing(docker.DockerClient(base_url='unix://var/run/docker.sock')))
+
+    shell = build_shell(client_docker, api_client, uid_container)
+    model = "copter"
+    speedup = 1
+    ports = (5761, 5762, 5763)
+    wpl_mission = ardu.Mission.from_file(mission_fn)
+    sitl_kwargs = {'ip_address': system.container.ip_address,
+                   'model': model,
+                   'parameters_filename': FN_PARAMS,
+                   'home': wpl_mission.home_location,
+                   'speedup': speedup,
+                   'ports': ports}
+    url_dronekit, url_attacker, url_monitor = \
+        exit_stack.enter_context(ardu.SITL.launch_with_mavproxy(shell, **sitl_kwargs))
+
+    logging.debug("allocated DroneKit URL: %s", url_dronekit)
+    logging.debug("allocated attacker URL: %s", url_attacker)
+    logging.debug("allocated monitor URL: %s", url_monitor)
+
+    # connect via DroneKit
+    vehicle = exit_stack.enter_context(
+        closing(dronekit.connect(url_dronekit, heartbeat_timeout=150)))
+
+
+    # attach the monitor
+    #monitor.attach_to(url_monitor)
+    #exit_stack.enter_context(monitor)
+
+    # execute the mission
+    timer = Stopwatch()
+    timer.start()
+    try:
+        wpl_mission.execute(vehicle, timeout_mission=timeout)
+    except TimeoutError:
+        logging.debug("mission timed out after %.2f seconds",
+                     timer.duration)
+        passed = False
+    # allow a small amount of time for the message to arrive
+    else:
+        #monitor.notify_mission_end()
+        #passed = monitor.is_ok()
+        time.sleep(100)
+    timer.stop()
+
+
+def build_shell(client_docker: docker.DockerClient,
+                api_docker: docker.APIClient,
+                uid_container: str
+                ) -> ROSWireShell:
+    container = client_docker.containers.get(uid_container)
+    info = api_docker.inspect_container(uid_container)
+    host_pid = int(info['State']['Pid'])
+    return ROSWireShell(api_docker, container, host_pid)
+
+
 
 def run_commands(system, mission_fn: str, bag_fn: str,
-                 home: Dict[str, float], use_dronekit) -> None:
+                 home: Dict[str, float], use_dronekit: bool,
+                 use_mavproxy: bool) -> None:
 
     # launch a temporary ROS session inside the app container
     # once the context is closed, the ROS session will be terminated and all
@@ -199,31 +275,37 @@ def run_commands(system, mission_fn: str, bag_fn: str,
     logging.info("Running roscore")
     with system.roscore() as ros:
 
-        # wait a bit for roscore
-        time.sleep(10)
+        with ExitStack() as exit_stack:
 
-        # separately launch a software-in-the-loop simulator
-        logging.info("Opening sitl")
-        sitl_cmd = ("%s --help" % FN_SITL)
-        # sitl_cmd = ("%s --model copter --home %f,%f,%f,%f --defaults %s" %
-        #             (FN_SITL, home['lat'], home['long'],
-        #              home['alt'], 270.0, FN_PARAMS))
-        ps_sitl = system.shell.popen(sitl_cmd)
+            # wait a bit for roscore
+            time.sleep(10)
 
-        bag_dir_abs = os.path.join(DIR_THIS, bag_dir)
-        os.makedirs(bag_dir_abs, exist_ok=True)
+            if use_mavproxy:
+                mavproxy(system, mission_fn, exit_stack)
 
-        if use_dronekit:
-            run_dronekit(system, mission_fn)
-        else:
-            raise NotImplementedError("the mission filename")
-            with ros.record(os.path.join(bag_dir_abs, bag_fn)) as recorder:
-                run_mavros(system, mission_fn, ros)
+            else:
+                # separately launch a software-in-the-loop simulator
+                logging.info("Opening sitl")
+                sitl_cmd = ("%s --model copter --home %f,%f,%f,%f --defaults %s" %
+                            (FN_SITL, home['lat'], home['long'],
+                             home['alt'], 270.0, FN_PARAMS))
+                print(sitl_cmd)
+                ps_sitl = system.shell.popen(sitl_cmd)
 
-        # Did we get to waypoints?
+                bag_dir_abs = os.path.join(DIR_THIS, bag_dir)
+                os.makedirs(bag_dir_abs, exist_ok=True)
 
-        # kill the simulator
-        ps_sitl.kill()
+                if use_dronekit:
+                    run_dronekit(system, mission_fn)
+                else:
+                    raise NotImplementedError("the mission filename")
+                    with ros.record(os.path.join(bag_dir_abs, bag_fn)) as recorder:
+                        run_mavros(system, mission_fn, ros)
+
+                # Did we get to waypoints?
+
+                # kill the simulator
+                ps_sitl.kill()
 
 
 def access_bag_db(db_fn: str) -> sqlite3.Cursor:
@@ -283,27 +365,28 @@ def get_bag_fn() -> str:
 
 def execute_experiment(system, cursor, mission_fn: str,
                        docker_image, context, home,
-                       use_dronekit: bool) -> None:
+                       use_dronekit: bool, use_mavproxy: bool) -> None:
     bag_fn = get_bag_fn()
     store_bag_fn(system, cursor, mission_fn, docker_image, context, bag_fn)
-    run_commands(system, mission_fn, bag_fn, home, use_dronekit)
+    run_commands(system, mission_fn, bag_fn, home, use_dronekit, use_mavproxy)
 
 
 def run_experiments(rsw, docker_image: str,
                     mutations: List[str], mission_files: List[str],
                     mutate: bool, context: str, baseline_iterations: int,
-                    cursor, home, use_dronekit: bool) -> None:
+                    cursor, home, use_dronekit: bool,
+                    use_mavproxy: bool) -> None:
     for mission_fn in mission_files:
         with rsw.launch(docker_image) as system:
             for i in range(baseline_iterations):
                 execute_experiment(system, cursor, mission_fn, docker_image,
-                                   context, home, use_dronekit)
+                                   context, home, use_dronekit, use_mavproxy)
             if mutate:
                 for diff in mutations:
                     system = build_patched_system(system, diff, context)
                     execute_experiment(system, cursor, mission_fn,
                                        docker_image, context, home,
-                                       use_dronekit)
+                                       use_dronekit, use_mavproxy)
 
 
 def parse_args() -> argparse.Namespace:
@@ -326,6 +409,7 @@ def parse_args() -> argparse.Namespace:
                         default=-83.7104686349630356)
     parser.add_argument('--home_alt', type=float, default=274.709991455078125)
     parser.add_argument('--use_dronekit', default=False, action='store_true')
+    parser.add_argument('--use_mavproxy', default=False, action='store_true')
     args = parser.parse_args()
 
     if not args.patches:
@@ -355,7 +439,7 @@ def main() -> None:
     run_experiments(rsw, docker_image, mutations, args.mission_files,
                     args.mutate,
                     args.context, args.baseline_iterations, cursor, home,
-                    args.use_dronekit)
+                    args.use_dronekit, args.use_mavproxy)
 
 
 if __name__ == '__main__':
