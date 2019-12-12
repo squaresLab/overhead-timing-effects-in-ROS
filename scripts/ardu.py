@@ -269,6 +269,7 @@ class SITL:
                              parameters_filename: str,
                              home: Tuple[float, float, float, float],
                              ports: Tuple[int, ...],
+                             logfile_name: str,
                              *,
                              speedup: int = 1
                              ) -> Iterator[Tuple[str, ...]]:
@@ -281,7 +282,7 @@ class SITL:
                   speedup=speedup
         ) as sitl:
             logger.debug("started SITL: %s", sitl)
-            with sitl.mavproxy(*ports) as urls:
+            with sitl.mavproxy(*ports, logfile_name=logfile_name) as urls:
                 yield urls
 
     @property
@@ -294,13 +295,15 @@ class SITL:
         return cmd
 
     @contextlib.contextmanager
-    def mavproxy(self, *ports: int) -> Iterator[Tuple[str, ...]]:
+    def mavproxy(self, *ports: int, logfile_name="HELLO_LOG.tlog") -> Iterator[Tuple[str, ...]]:
         url_master = f'tcp:{self.ip_address}:5760'
         url_sitl = f'tcp:{self.ip_address}:5501'
         urls_out = tuple(f'udp:127.0.0.1:{p}' for p in ports)
         cmd_args = [f'{BIN_MAVPROXY} --daemon --master={url_master}']
         cmd_args += [f'--out {url}' for url in urls_out]
-        cmd_args += [f'--logfile HELLO_LOG.tlog']
+        if not logfile_name.endswith(".tlog"):
+            logfile_name += ".tlog"
+        cmd_args += [f'--logfile {logfile_name}']
         cmd = ' '.join(cmd_args)
 
         logger.debug("launching mavproxy: %s", cmd)

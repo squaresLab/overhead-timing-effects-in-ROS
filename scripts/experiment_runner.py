@@ -202,7 +202,8 @@ def run_dronekit(system, mission_fn: str, mission_timeout=500):
         except TimeoutError:
             logging.debug("mission timed out")
 
-def mavproxy(system, mission_fn: str, exit_stack, timeout = 1000) -> None:
+def mavproxy(system, mission_fn: str, logfile_name: str,
+             exit_stack, timeout = 1000) -> None:
     # Code to work with mavproxy, adapted from trmo code
     uid_container = str(system.uuid)
     api_client = exit_stack.enter_context(
@@ -220,7 +221,8 @@ def mavproxy(system, mission_fn: str, exit_stack, timeout = 1000) -> None:
                    'parameters_filename': FN_PARAMS,
                    'home': wpl_mission.home_location,
                    'speedup': speedup,
-                   'ports': ports}
+                   'ports': ports,
+                   'logfile_name': logfile_name}
     url_dronekit, url_attacker, url_monitor = \
         exit_stack.enter_context(ardu.SITL.launch_with_mavproxy(shell, **sitl_kwargs))
 
@@ -250,7 +252,7 @@ def mavproxy(system, mission_fn: str, exit_stack, timeout = 1000) -> None:
     else:
         #monitor.notify_mission_end()
         #passed = monitor.is_ok()
-        time.sleep(100)
+        time.sleep(10)
     timer.stop()
 
 
@@ -280,8 +282,13 @@ def run_commands(system, mission_fn: str, bag_fn: str,
             # wait a bit for roscore
             time.sleep(10)
 
+            bag_dir_abs = os.path.join(DIR_THIS, bag_dir)
+            os.makedirs(bag_dir_abs, exist_ok=True)
+            bag_fn_abs = os.path.join(bag_dir_abs, bag_fn)
+
+
             if use_mavproxy:
-                mavproxy(system, mission_fn, exit_stack)
+                mavproxy(system, mission_fn, bag_fn_abs, exit_stack)
 
             else:
                 # separately launch a software-in-the-loop simulator
@@ -292,14 +299,11 @@ def run_commands(system, mission_fn: str, bag_fn: str,
                 print(sitl_cmd)
                 ps_sitl = system.shell.popen(sitl_cmd)
 
-                bag_dir_abs = os.path.join(DIR_THIS, bag_dir)
-                os.makedirs(bag_dir_abs, exist_ok=True)
-
                 if use_dronekit:
                     run_dronekit(system, mission_fn)
                 else:
                     raise NotImplementedError("the mission filename")
-                    with ros.record(os.path.join(bag_dir_abs, bag_fn)) as recorder:
+                    with ros.record(bag_fn_abs) as recorder:
                         run_mavros(system, mission_fn, ros)
 
                 # Did we get to waypoints?
@@ -340,7 +344,7 @@ def store_bag_fn(system, cursor, mission_fn: str,
                  docker_image: str, context: str, bag_fn: str) -> None:
     docker_image_sha = system.description.sha256
     container_uuid = str(system.uuid)
-    print(container_uuid)
+    print("container_uuid: %s" % container_uuid)
     BLOCKSIZE = 65536
     hasher = hashlib.sha1()
     with open(mission_fn, 'rb') as afile:
@@ -377,12 +381,14 @@ def run_experiments(rsw, docker_image: str,
                     cursor, home, use_dronekit: bool,
                     use_mavproxy: bool) -> None:
     for mission_fn in mission_files:
-        with rsw.launch(docker_image) as system:
-            for i in range(baseline_iterations):
+        for i in range(baseline_iterations):
+            with rsw.launch(docker_image) as system:
                 execute_experiment(system, cursor, mission_fn, docker_image,
                                    context, home, use_dronekit, use_mavproxy)
-            if mutate:
-                for diff in mutations:
+
+        if mutate:
+            for diff in mutations:
+                with rsw.launch(docker_image) as system:
                     system = build_patched_system(system, diff, context)
                     execute_experiment(system, cursor, mission_fn,
                                        docker_image, context, home,
