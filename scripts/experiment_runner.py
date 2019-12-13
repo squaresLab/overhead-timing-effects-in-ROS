@@ -15,6 +15,8 @@ import roswire
 from roswire.definitions import FormatDatabase, TypeDatabase
 from roswire.proxy import ShellProxy as ROSWireShell
 from roswire.util import Stopwatch
+from util import CircleIntBuffer
+
 
 DIR_THIS = os.path.dirname(os.path.abspath(__file__))
 
@@ -202,8 +204,13 @@ def run_dronekit(system, mission_fn: str, mission_timeout=500):
         except TimeoutError:
             logging.debug("mission timed out")
 
+def get_port_numbers(count, port_pool_mavlink):
+    return port_pool_mavlink.take(3)
+
 def mavproxy(system, mission_fn: str, logfile_name: str,
+             port_pool_mavlink: CircleIntBuffer,
              exit_stack, timeout = 1000) -> None:
+
     # Code to work with mavproxy, adapted from trmo code
     uid_container = str(system.uuid)
     api_client = exit_stack.enter_context(
@@ -214,7 +221,8 @@ def mavproxy(system, mission_fn: str, logfile_name: str,
     shell = build_shell(client_docker, api_client, uid_container)
     model = "copter"
     speedup = 1
-    ports = (5761, 5762, 5763)
+    ports = get_port_numbers(3, port_pool_mavlink)
+    print("ports: %s" % str(ports))
     wpl_mission = ardu.Mission.from_file(mission_fn)
     sitl_kwargs = {'ip_address': system.container.ip_address,
                    'model': model,
@@ -269,7 +277,8 @@ def build_shell(client_docker: docker.DockerClient,
 
 def run_commands(system, mission_fn: str, bag_fn: str,
                  home: Dict[str, float], use_dronekit: bool,
-                 use_mavproxy: bool) -> None:
+                 use_mavproxy: bool,
+                 port_pool_mavlink: CircleIntBuffer) -> None:
 
     # launch a temporary ROS session inside the app container
     # once the context is closed, the ROS session will be terminated and all
@@ -288,7 +297,8 @@ def run_commands(system, mission_fn: str, bag_fn: str,
 
 
             if use_mavproxy:
-                mavproxy(system, mission_fn, bag_fn_abs, exit_stack)
+                mavproxy(system, mission_fn, bag_fn_abs, port_pool_mavlink,
+                         exit_stack)
 
             else:
                 # separately launch a software-in-the-loop simulator
@@ -369,10 +379,12 @@ def get_bag_fn() -> str:
 
 def execute_experiment(system, cursor, mission_fn: str,
                        docker_image, context, home,
-                       use_dronekit: bool, use_mavproxy: bool) -> None:
+                       use_dronekit: bool, use_mavproxy: bool,
+                       port_pool_mavlink: CircleIntBuffer) -> None:
     bag_fn = get_bag_fn()
     store_bag_fn(system, cursor, mission_fn, docker_image, context, bag_fn)
-    run_commands(system, mission_fn, bag_fn, home, use_dronekit, use_mavproxy)
+    run_commands(system, mission_fn, bag_fn, home, use_dronekit, use_mavproxy,
+                 port_pool_mavlink)
 
 
 def run_experiments(rsw, docker_image: str,
@@ -380,11 +392,14 @@ def run_experiments(rsw, docker_image: str,
                     mutate: bool, context: str, baseline_iterations: int,
                     cursor, home, use_dronekit: bool,
                     use_mavproxy: bool) -> None:
+    port_pool_mavlink = CircleIntBuffer(13000, 135000)
+
     for mission_fn in mission_files:
         for i in range(baseline_iterations):
             with rsw.launch(docker_image) as system:
                 execute_experiment(system, cursor, mission_fn, docker_image,
-                                   context, home, use_dronekit, use_mavproxy)
+                                   context, home, use_dronekit, use_mavproxy,
+                                   port_pool_mavlink)
 
         if mutate:
             for diff in mutations:
@@ -392,7 +407,8 @@ def run_experiments(rsw, docker_image: str,
                     system = build_patched_system(system, diff, context)
                     execute_experiment(system, cursor, mission_fn,
                                        docker_image, context, home,
-                                       use_dronekit, use_mavproxy)
+                                       use_dronekit, use_mavproxy,
+                                       port_pool_mavlink)
 
 
 def parse_args() -> argparse.Namespace:
