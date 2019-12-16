@@ -25,6 +25,7 @@ FN_PARAMS = '/ros_ws/src/ArduPilot/copter.parm'
 
 bag_dir = '../bags/'
 
+
 def build_shell(client_docker: docker.DockerClient,
                 api_docker: docker.APIClient,
                 uid_container: str
@@ -33,7 +34,6 @@ def build_shell(client_docker: docker.DockerClient,
     info = api_docker.inspect_container(uid_container)
     host_pid = int(info['State']['Pid'])
     return ROSWireShell(api_docker, container, host_pid)
-
 
 
 def load_mavros_type_db():
@@ -204,12 +204,14 @@ def run_dronekit(system, mission_fn: str, mission_timeout=500):
         except TimeoutError:
             logging.debug("mission timed out")
 
+
 def get_port_numbers(count, port_pool_mavlink):
     return port_pool_mavlink.take(3)
 
+
 def mavproxy(system, mission_fn: str, logfile_name: str,
              port_pool_mavlink: CircleIntBuffer,
-             exit_stack, timeout = 1000) -> None:
+             exit_stack, timeout=1000) -> None:
 
     # Code to work with mavproxy, adapted from trmo code
     uid_container = str(system.uuid)
@@ -232,7 +234,8 @@ def mavproxy(system, mission_fn: str, logfile_name: str,
                    'ports': ports,
                    'logfile_name': logfile_name}
     url_dronekit, url_attacker, url_monitor = \
-        exit_stack.enter_context(ardu.SITL.launch_with_mavproxy(shell, **sitl_kwargs))
+        exit_stack.enter_context(ardu.SITL.launch_with_mavproxy(shell,
+                                                                **sitl_kwargs))
 
     logging.debug("allocated DroneKit URL: %s", url_dronekit)
     logging.debug("allocated attacker URL: %s", url_attacker)
@@ -242,11 +245,6 @@ def mavproxy(system, mission_fn: str, logfile_name: str,
     vehicle = exit_stack.enter_context(
         closing(dronekit.connect(url_dronekit, heartbeat_timeout=150)))
 
-
-    # attach the monitor
-    #monitor.attach_to(url_monitor)
-    #exit_stack.enter_context(monitor)
-
     # execute the mission
     timer = Stopwatch()
     timer.start()
@@ -254,25 +252,12 @@ def mavproxy(system, mission_fn: str, logfile_name: str,
         wpl_mission.execute(vehicle, timeout_mission=timeout)
     except TimeoutError:
         logging.debug("mission timed out after %.2f seconds",
-                     timer.duration)
+                      timer.duration)
         passed = False
     # allow a small amount of time for the message to arrive
     else:
-        #monitor.notify_mission_end()
-        #passed = monitor.is_ok()
         time.sleep(10)
     timer.stop()
-
-
-def build_shell(client_docker: docker.DockerClient,
-                api_docker: docker.APIClient,
-                uid_container: str
-                ) -> ROSWireShell:
-    container = client_docker.containers.get(uid_container)
-    info = api_docker.inspect_container(uid_container)
-    host_pid = int(info['State']['Pid'])
-    return ROSWireShell(api_docker, container, host_pid)
-
 
 
 def run_commands(system, mission_fn: str, bag_fn: str,
@@ -295,7 +280,6 @@ def run_commands(system, mission_fn: str, bag_fn: str,
             os.makedirs(bag_dir_abs, exist_ok=True)
             bag_fn_abs = os.path.join(bag_dir_abs, bag_fn)
 
-
             if use_mavproxy:
                 mavproxy(system, mission_fn, bag_fn_abs, port_pool_mavlink,
                          exit_stack)
@@ -303,7 +287,8 @@ def run_commands(system, mission_fn: str, bag_fn: str,
             else:
                 # separately launch a software-in-the-loop simulator
                 logging.info("Opening sitl")
-                sitl_cmd = ("%s --model copter --home %f,%f,%f,%f --defaults %s" %
+                sitl_cmd = (("%s --model copter --home %f,%f,%f,%f" +
+                            " --defaults %s") %
                             (FN_SITL, home['lat'], home['long'],
                              home['alt'], 270.0, FN_PARAMS))
                 print(sitl_cmd)
@@ -345,7 +330,7 @@ def access_bag_db(db_fn: str) -> sqlite3.Cursor:
     try:
         c.execute(sql_create_bagfns_table)
     except sqlite3.Error as e:
-        logger.warning(e)
+        logging.warning(e)
 
     return c
 
