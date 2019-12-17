@@ -3,7 +3,7 @@
 This module provides interfaces and data structures for interacting with
 ArduPilot via Dronekit and MAVLink.
 """
-__all__ = ('Mission',)
+__all__ = ('Mission', 'SITL')
 
 from typing import Sequence, Tuple, Optional, Iterator, FrozenSet
 import os
@@ -21,6 +21,9 @@ import roswire
 from bugzoo import Container as BugZooContainer
 from roswire.util import Stopwatch
 from roswire.proxy.container import ShellProxy as ROSWireShell
+
+BIN_MAVPROXY = \
+    pkg_resources.resource_filename(__name__, 'src/darjeeling_cmt/data/mavproxy')
 
 logger = logging.getLogger(__name__)  # type: logging.Logger
 logger.setLevel(logging.DEBUG)
@@ -237,3 +240,115 @@ class Mission(Sequence[dronekit.Command]):
         connection.add_message_listener('STATUSTEXT', listener_statustext)
         logger.debug('removed STATUSTEXT listener')
         logger.debug("mission terminated")
+
+@attr.s
+class SITL:
+    _shell: ROSWireShell = attr.ib(repr=False)
+    ip_address: str = attr.ib()
+    model: str = attr.ib()
+    parameters_filename: str = attr.ib()
+    home: Tuple[float, float, float, float] = \
+        attr.ib(default=(-35.363262, 149.165237, 0.000000, 0.00))
+    speedup: int = attr.ib(default=1)
+    _process: Optional[subprocess.Popen] = attr.ib(default=None, repr=False)
+    binary: str = attr.ib(init=False)
+
+    def __attrs_post_init__(self) -> None:
+        binary_name = ({
+            'copter': 'arducopter',
+            'rover': 'ardurover',
+            'plane': 'arduplane'
+        })[self.model]
+        self.binary = f'/ros_ws/src/ArduPilot/build/sitl/bin/{binary_name}'
+
+    @staticmethod
+    @contextlib.contextmanager
+    def launch_with_mavproxy(shell: ROSWireShell,
+                             ip_address: str,
+                             model: str,
+                             parameters_filename: str,
+                             home: Tuple[float, float, float, float],
+                             ports: Tuple[int, ...],
+                             logfile_name: str,
+                             *,
+                             speedup: int = 1
+                             ) -> Iterator[Tuple[str, ...]]:
+        logger.debug("launching SITL with MAVProxy...")
+        with SITL(shell,
+                  ip_address=ip_address,
+                  model=model,
+                  parameters_filename=parameters_filename,
+                  home=home,
+                  speedup=speedup
+        ) as sitl:
+            logger.debug("started SITL: %s", sitl)
+            with sitl.mavproxy(*ports, logfile_name=logfile_name) as urls:
+                yield urls
+
+    @property
+    def command(self) -> str:
+        """The command that should be used to launch this SITL."""
+        arg_home = ",".join(map(str, self.home))
+        fn_param = self.parameters_filename
+        fn_script = '/opt/ardupilot/Tools/autotest/sim_vehicle.py'
+        cmd = f'{self.binary} --speedup {self.speedup} --model {self.model} --home {arg_home} --defaults {fn_param}'
+        return cmd
+
+    @contextlib.contextmanager
+    def mavproxy(self, *ports: int, logfile_name="HELLO_LOG.tlog") -> Iterator[Tuple[str, ...]]:
+        url_master = f'tcp:{self.ip_address}:5760'
+        url_sitl = f'tcp:{self.ip_address}:5501'
+        urls_out = tuple(f'udp:127.0.0.1:{p}' for p in ports)
+        cmd_args = [f'{BIN_MAVPROXY} --daemon --master={url_master}']
+        cmd_args += [f'--out {url}' for url in urls_out]
+        if not logfile_name.endswith(".tlog"):
+            logfile_name += ".tlog"
+        cmd_args += [f'--logfile {logfile_name}']
+        cmd = ' '.join(cmd_args)
+
+        logger.debug("launching mavproxy: %s", cmd)
+        p = None
+        try:
+            p = subprocess.Popen(cmd,
+                                 encoding='utf-8',
+                                 stdin=subprocess.DEVNULL,
+                                 stderr=subprocess.DEVNULL,
+                                 stdout=subprocess.DEVNULL,
+                                 preexec_fn=os.setsid,
+                                 shell=True)
+            yield urls_out
+        finally:
+            if p:
+                os.killpg(p.pid, signal.SIGTERM)
+                p.wait(2)
+                logger.debug("mavproxy exited with code %d", p.returncode)
+
+    def open(self) -> 'SITL':
+        """Launches this SITL."""
+        command = self.command
+        logger.debug('launching SITL: %s', command)
+        self._process = self._shell.popen(command)
+        time.sleep(5)
+        return self
+
+    def close(self) -> None:
+        """Closes this SITL."""
+        # FIXME temporary workaround for problems with .terminate
+        # self._process.terminate()
+        cmd_kill = f'killall -15 {self.binary}'
+        self._shell.execute(cmd_kill, user='root')
+        try:
+            retcode = self._process.wait(0.5)
+        except subprocess.TimeoutExpired:
+            logger.debug("force killing SITL process")
+            self._process.kill()
+            retcode = self._process.wait()
+        out = '\n'.join(self._process.stream)
+        logger.debug('SITL output [%d]:\n%s', retcode, out)
+
+    def __enter__(self) -> 'SITL':
+        self.open()
+        return self
+
+    def __exit__(self, exc_type, exc, exc_tb):
+        self.close()
