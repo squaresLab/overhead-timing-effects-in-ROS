@@ -12,6 +12,7 @@ mavros:
 arducopter:
 	docker build \
 	-f Dockerfile.ardu \
-	-t dskatz/ardu:copter
+	-t dskatz/ardu:copter \
+	.
 
 .PHONY: mavros
