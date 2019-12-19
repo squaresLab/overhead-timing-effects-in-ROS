@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # This is a setup file to set up the overhead timing effects in ROS experiments
 # Deby Katz 2019
 
@@ -22,7 +23,7 @@ def main():
  
     # Create a pipenv
     # Install the requirements
-    cmd = "pipenv --python 3.6 && pipenv shell && pip install -r requirements.txt"
+    cmd = "pipenv --python 3.6 shell && pip install -r requirements.txt"
     args = shlex.split(cmd)
     subprocess.Popen(args, shell=True)
     
