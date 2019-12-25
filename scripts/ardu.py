@@ -23,7 +23,7 @@ from roswire.util import Stopwatch
 from roswire.proxy.container import ShellProxy as ROSWireShell
 
 BIN_MAVPROXY = \
-    pkg_resources.resource_filename(__name__, 'src/darjeeling_cmt/data/mavproxy')
+    pkg_resources.resource_filename(__name__, 'src/mavproxy')
 
 logger = logging.getLogger(__name__)  # type: logging.Logger
 logger.setLevel(logging.DEBUG)

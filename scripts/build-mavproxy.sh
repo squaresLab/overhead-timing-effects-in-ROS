@@ -5,7 +5,7 @@
 #
 FN_SCRIPT=$(readlink -f "$0")
 DIR_SCRIPT=$(dirname "${FN_SCRIPT}")
-DIR_OUT="${DIR_SCRIPT}/src/darjeeling_cmt/data"
+DIR_OUT="${DIR_SCRIPT}/src/"
 NAME_BINARY="mavproxy"
 FN_OUT="${DIR_OUT}/${NAME_BINARY}"
 
