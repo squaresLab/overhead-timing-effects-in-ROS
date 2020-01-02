@@ -4,6 +4,7 @@
 
 import shlex
 import subprocess
+import os.path
 
 def main():
 
@@ -13,8 +14,10 @@ def main():
     # cmd = "`python -m site --user-base`/bin"
     
     # Build Mavproxy
-    cmd = "./scripts/build-mavproxy.sh"
-    subprocess.Popen(cmd)
+    DIR_THIS = os.path.dirname(os.path.abspath(__file__))
+    if not os.path.exists(os.path.join(DIR_THIS, "scripts/bin/mavproxy")):
+        cmd = "./scripts/build-mavproxy.sh"
+        subprocess.Popen(cmd)
     
     # Build the relevant Docker files
     cmd = "make -C ./docker arducopter"
