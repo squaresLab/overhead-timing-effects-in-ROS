@@ -1,0 +1,15 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+roswire = {git = "git://github.com/ChrisTimperley/roswire",ref = "841d7d608796e5c856e37ed363adc4b2940c9c77"}
+bugzoo = "*"
+dronekit = "*"
+attr = "*"
+
+[requires]
+python_version = "3.6"

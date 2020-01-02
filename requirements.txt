@@ -1,1 +1,5 @@
 git+git://github.com/ChrisTimperley/roswire@841d7d608796e5c856e37ed363adc4b2940c9c77#egg=roswire
+bugzoo
+dronekit
+attr
+fluffycow

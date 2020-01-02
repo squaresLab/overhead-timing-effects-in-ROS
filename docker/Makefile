@@ -9,4 +9,10 @@ mavros:
 	  -t dskatz/mavros:example \
 	  .
 
+arducopter:
+	docker build \
+	-f Dockerfile.ardu \
+	-t dskatz/ardu:copter \
+	.
+
 .PHONY: mavros
