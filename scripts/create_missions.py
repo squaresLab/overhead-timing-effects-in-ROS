@@ -108,8 +108,10 @@ def make_mission_file(home_location, waypoints, file_location='missions/auto'):
                        f"{lon}\t{alt}\t{autocontinue}\n")
     accept_radius = 0
     hold_time = 2
+    cmd = 16
     # print the waypoints to the file
     for waypoint in waypoints:
+        index = index + 1
         lat = waypoint.lat
         lon = waypoint.lon
         mission_file.write(f"{index}\t{current_wp}\t{frame}\t{cmd}" +
