@@ -32,7 +32,8 @@ def mutate_files(files, returns=False, delay=0.5):
     for fn in files:
         with open(fn) as old:
             source_old = old.read()
-            source_new = comby.rewrite(source_old, match, rewrite)
+            source_new = comby.rewrite(source_old, match, rewrite,
+                                       language=".cpp")
             fn_new = "%s_%f.new" % (fn, delay)
             with open(fn_new, 'w') as file_new:
                 file_new.write(source_new)
