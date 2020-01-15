@@ -317,6 +317,8 @@ def access_bag_db(db_fn: str) -> sqlite3.Cursor:
            container_uuid text,
            mission_sha text,
            mission_fn text,
+           mutation_sha txt,
+           mutation_fn txt,
            context text
        ); """
 
@@ -351,7 +353,7 @@ def store_bag_fn(system, cursor, mission_fn: str,
     print("TODO: IMPLEMENT STORE BAG FILENAME")
     command = "INSERT INTO bagfns VALUES (?, ?, ?, ?, ?, ?, ?)"
     values = (bag_fn, docker_image_sha, docker_image, container_uuid,
-              mission_sha, mission_fn, context)
+              mission_sha, mission_fn, mutation_sha, mutation_fn, context)
     cursor.execute(command, values)
 
 
