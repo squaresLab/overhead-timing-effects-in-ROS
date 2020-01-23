@@ -7,6 +7,7 @@ import shlex
 import shutil
 import subprocess
 import tempfile
+import uuid
 
 random.seed(42)
 
@@ -33,8 +34,21 @@ def parse_args():
     return args
 
 
+def get_fns(fn, delay, output="one_diff", weight=1.0):
+    if output == "coin_flip":
+        fn_new = f"{fn}_d{delay}_w{weight}.new"
+        diff_fn = f"{fn}_d{delay}_w{weight}.diff"
+    elif output == "one_diff":
+        fn_new = "%s_all.new" % fn
+        diff_fn = "%s_all.diff" % fn
+    else:
+        raise NotImplemented
+
+    return diff_fn, fn_new
+
+
 def mutate_files(files, returns=False, delay=0.5, weight=1.0,
-                 output="coin_flip", old_dir="."):
+                 output="coin_flip", old_dir=".", big_diff=False):
     old_dir = os.path.abspath(old_dir)
     comby = Comby()
     if returns:
@@ -45,8 +59,14 @@ def mutate_files(files, returns=False, delay=0.5, weight=1.0,
 
     diff_fns = []
     new_fns = []
-    print(files)
+    #print(files)
+
+
+
     for fn in files:
+        diff_fn, new_fn = get_fns(fn, delay, output=output, weight=weight)
+        if os.path.isfile(new_fn) and os.path.isfile(diff_fn):
+            continue
         with open(fn) as old:
 
             # source_old = old.read()
@@ -69,22 +89,33 @@ def mutate_files(files, returns=False, delay=0.5, weight=1.0,
                 source_old += line_old
             #print(source_new)
 
-        output_fn, new_fn = create_output(fn, source_old, source_new, delay,
-                                          output=output,
-                                          weight=weight)
-        diff_fns.append(output_fn)
+        diff_fn, new_fn = create_output(fn, source_old, source_new, delay,
+                                           new_fn,
+                                           diff_fn,
+                                           output=output,
+                                           weight=weight)
+        diff_fns.append(diff_fn)
         new_fns.append(new_fn)
     # Make a temp directory, put all the new_fns in it, then diff the
     # whole thing
-    big_diff_fn = os.path.join(old_dir, "dir.diff")
-    with tempfile.TemporaryDirectory() as dir_name:
+    if big_diff:
+        bdfn = f'dir_d{delay}_w{weight}.diff'
+        big_diff_fn = os.path.join(old_dir, bdfn)
+        dir_name = os.path.abspath(os.path.join('.', uuid.uuid4().hex))
+        os.makedirs(dir_name)
+        # with tempfile.TemporaryDirectory() as dir_name:
         #dir_name = tmpdir.name
         for fn in new_fns:
             shutil.copy(fn, dir_name)
         cmd = f"diff -uN {old_dir} {dir_name}"
         with open(big_diff_fn, 'w') as big_diff:
+            print(f"executing cmd: {cmd}")
             subprocess.Popen(shlex.split(cmd), stdout=big_diff)
             print("output to %s" % big_diff_fn)
+            print("tempdir: %s" % dir_name)
+    #print("about to remove: %s" % dir_name)
+    #shutil.rmtree(dir_name)
+    #print("removed: %s" % dir_name)
 
 def coin_flip(weight):
     if random.random() < weight:
@@ -92,17 +123,11 @@ def coin_flip(weight):
     else:
         return False
 
-def create_output(fn, source_old, source_new, delay, output="one_diff",
+def create_output(fn, source_old, source_new, delay, fn_new, diff_fn,
+                  output="one_diff",
                   weight=1.0):
 
-    if output == "coin_flip":
-        fn_new = "%s_d%f_w%f.new" % (fn, delay, weight)
-        diff_fn = "%s_d%f_w%f.diff" % (fn, delay, weight)
-    elif output == "one_diff":
-        fn_new = "%s_all.new" % fn
-        diff_fn = "%s_all.diff" % fn
-    else:
-        raise NotImplemented
+    print("create_output: %s" % fn)
 
     with open(fn_new, 'w') as file_new:
         file_new.write(source_new)
@@ -112,8 +137,10 @@ def create_output(fn, source_old, source_new, delay, output="one_diff",
         tolines = new.readlines()
 
     # if output == "one_diff":
+    print("calling unified_diff")
     diff = difflib.unified_diff(fromlines, tolines, fn, fn)
     with open(diff_fn, 'w') as diff_file:
+        print("writing to %s" % diff_fn)
         diff_file.writelines(diff)
 
 
@@ -169,17 +196,17 @@ def main():
         cpp_files = [x for x in contents if x.endswith(".cpp")]
         files.extend([os.path.join(args.dir, x) for x in cpp_files])
 
-    print(files)
+    #print(files)
 
     if files:
         if args.sweep:
-            weights = [x/10 for x in range(0, 10)]
-            delays = [(1/pow(2, x)) for x in range(16)]
+            weights = [x/10 for x in range(0, 10, 1)]
+            delays = [(1/pow(2, x)) for x in range(10)]
 
             print(weights)
             print(delays)
 
-            print(files)
+            #print(files)
             for weight in weights:
                 for delay in delays:
                     mutations = mutate_files(files, returns=args.returns,

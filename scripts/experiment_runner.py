@@ -336,22 +336,31 @@ def access_bag_db(db_fn: str) -> sqlite3.Cursor:
 
     return c
 
-
-def store_bag_fn(system, cursor, mission_fn: str,
-                 docker_image: str, context: str, bag_fn: str) -> None:
-    docker_image_sha = system.description.sha256
-    container_uuid = str(system.uuid)
-    print("container_uuid: %s" % container_uuid)
+def file_hash(filename: str) -> str:
     BLOCKSIZE = 65536
     hasher = hashlib.sha1()
-    with open(mission_fn, 'rb') as afile:
+    with open(filename, 'rb') as afile:
         buf = afile.read(BLOCKSIZE)
         while len(buf) > 0:
             hasher.update(buf)
             buf = afile.read(BLOCKSIZE)
-    mission_sha = hasher.hexdigest()
-    print("TODO: IMPLEMENT STORE BAG FILENAME")
-    command = "INSERT INTO bagfns VALUES (?, ?, ?, ?, ?, ?, ?)"
+    sha = hasher.hexdigest()
+    return sha
+
+
+def store_bag_fn(system, cursor, mission_fn: str,
+                 docker_image: str, context: str, bag_fn: str,
+                 mutation_fn: str) -> None:
+    docker_image_sha = system.description.sha256
+    container_uuid = str(system.uuid)
+    print("container_uuid: %s" % container_uuid)
+
+    mission_sha = file_hash(mission_fn)
+    if mutation_fn is not "None":
+        mutation_sha = file_hash(mutation_fn)
+    else:
+        mutation_sha = "None"
+    command = "INSERT INTO bagfns VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     values = (bag_fn, docker_image_sha, docker_image, container_uuid,
               mission_sha, mission_fn, mutation_sha, mutation_fn, context)
     cursor.execute(command, values)
@@ -367,9 +376,12 @@ def get_bag_fn() -> str:
 def execute_experiment(system, cursor, mission_fn: str,
                        docker_image, context, home,
                        use_dronekit: bool, use_mavproxy: bool,
-                       port_pool_mavlink: CircleIntBuffer) -> None:
+                       port_pool_mavlink: CircleIntBuffer,
+                       mutation_fn="None") -> None:
     bag_fn = get_bag_fn()
-    store_bag_fn(system, cursor, mission_fn, docker_image, context, bag_fn)
+    store_bag_fn(system=system, cursor=cursor, mission_fn=mission_fn,
+                 docker_image=docker_image, context=context, bag_fn=bag_fn,
+                 mutation_fn=mutation_fn)
     run_commands(system, mission_fn, bag_fn, home, use_dronekit, use_mavproxy,
                  port_pool_mavlink)
 
@@ -395,7 +407,7 @@ def run_experiments(rsw, docker_image: str,
                     execute_experiment(system, cursor, mission_fn,
                                        docker_image, context, home,
                                        use_dronekit, use_mavproxy,
-                                       port_pool_mavlink)
+                                       port_pool_mavlink, mutation_fn=diff_fn)
 
 
 def parse_args() -> argparse.Namespace:
