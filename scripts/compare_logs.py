@@ -196,6 +196,24 @@ def get_from_db(log_db: str, log_dir: str = "../bags") -> Dict[str, List[str]]:
     return log_fns
 
 
+def convert_logs(log_fns: List[str]) -> List[np.array]:
+    global_pos_lists = []
+    for log_fn in log_fns:
+        # convert the tlog to json, if it's not already json
+        log_json = get_json(log_fn)
+        #print(log_json)
+        global_pos = [x["data"] for x in log_json if x["meta"]["type"] == "GLOBAL_POSITION_INT"]
+        global_pos_list = ([(x['time_boot_ms'], x['lat'], x['lon'],
+                             x['alt'], x['relative_alt'], x['vx'],
+                             x['vy'], x['vz'], x['hdg']) for x in
+                            global_pos])
+        #print(global_pos_list)
+        global_np = np.array(global_pos_list)
+        global_pos_lists.append(global_np)
+
+    return global_pos_lists
+
+
 def get_logs(args: argparse.Namespace)-> Tuple[List[np.array], List[str]]:
     log_fns: List[np.array] = list()
     labels = list()
@@ -211,7 +229,7 @@ def get_logs(args: argparse.Namespace)-> Tuple[List[np.array], List[str]]:
 
     # Turn the log files into np.arrays of the data
     # TODO
-
+    logs_data = convert_logs(log_fns)
 
     return logs_data, labels
 
