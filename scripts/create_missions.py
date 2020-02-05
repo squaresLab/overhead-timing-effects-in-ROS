@@ -22,17 +22,17 @@ class Location:
 
 def haversine(loc1, loc2):
     """
-    Calculate the great circle distance between two points 
+    Calculate the great circle distance between two points
     on the earth (specified in decimal degrees)
     """
-    # convert decimal degrees to radians 
+    # convert decimal degrees to radians
     lon1, lat1, lon2, lat2 = map(radians, [loc1.lon, loc1.lat,
                                            loc2.lon, loc2.lat])
-    # haversine formula 
-    dlon = lon2 - lon1 
-    dlat = lat2 - lat1 
+    # haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
     a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-    c = 2 * asin(sqrt(a)) 
+    c = 2 * asin(sqrt(a))
     # Radius of earth in kilometers is 6371
     km = 6371 * c
     m = 1000 * km
@@ -46,7 +46,8 @@ def generate_waypoint(prev_loc):
     return Location(lat=lat, lon=lon, alt=alt)
 
 
-def generate_waypoints(home_location, num=8, max_dist=500):
+def generate_waypoints(home_location, wp=8, max_dist=500):
+    print(f"generating {wp} waypoints")
     prev_loc = home_location
     waypoints = []
 
@@ -54,7 +55,7 @@ def generate_waypoints(home_location, num=8, max_dist=500):
                             lat=fluffycow.gauss(prev_loc.lat, 0.005),
                             lon=fluffycow.gauss(prev_loc.lon, 0.005),
                             alt=fluffycow.uniform(0, 20))
-    for i in range(num):
+    for i in range(wp):
         # Generate a proposed waypoint, based on current waypoint location
         new_waypoint = next(gen)
         # Check if it's too far away. If so, try another one.
@@ -72,9 +73,9 @@ def make_mission_file(home_location, waypoints, file_location='missions/auto'):
         file_location = os.path.abspath(file_location)
 
     os.makedirs(file_location, exist_ok=True)
-    
+
     # pick a filename
-    fn = os.path.join(file_location, "%s.wpl" % uuid.uuid4().hex)    
+    fn = os.path.join(file_location, "%s.wpl" % uuid.uuid4().hex)
 
     mission_file = open(fn, "w")
 
@@ -118,7 +119,7 @@ def make_mission_file(home_location, waypoints, file_location='missions/auto'):
                            f"\t{hold_time}\t" +
                            f"{accept_radius}\t{pass_radius}\t{yaw}\t{lat}\t" +
                            f"{lon}\t{alt}\t{autocontinue}\n")
-        
+
     index = index + 1
     cmd = 20
     hold_time = 1
@@ -129,8 +130,6 @@ def make_mission_file(home_location, waypoints, file_location='missions/auto'):
                        f"{lon}\t{alt}\t{autocontinue}\n")
 
 
-
-
 def generate_homes(iters=10):
     homes_list = []
     out_of_range_count = 0
@@ -138,7 +137,7 @@ def generate_homes(iters=10):
                             lat=fluffycow.gauss(0.0, 30.0),
                             lon=fluffycow.uniform(-180.0, 180.0),
                             alt=fluffycow.uniform(0.0, 300))
-    
+
     home_lat_gen = fluffycow.gauss(0.0, 30.0)
     home_lon_gen = fluffycow.uniform(-180.0, 180.0)
     for i in range(iters):
@@ -155,7 +154,10 @@ def generate_homes(iters=10):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--num', type=int, default=10)
+    parser.add_argument('--num', type=int, default=10,
+                        help="number of missions to generate")
+    parser.add_argument('--waypoints', type=int, default=5,
+                        help="number of waypoints per mission")
     parser.add_argument('--max_dist', type=int, default=500)
     args = parser.parse_args()
     return args
@@ -167,10 +169,12 @@ def main():
     print(home_locations)
 
     for home_location in home_locations:
-        waypoints = generate_waypoints(home_location, max_dist=500)
+        waypoints = generate_waypoints(home_location, max_dist=500,
+                                       wp=args.waypoints)
         print("\n")
         print([(x.lat, x.lon, x.alt) for x in waypoints])
         mission_fn = make_mission_file(home_location, waypoints)
-        
+
+
 if __name__ == "__main__":
     main()

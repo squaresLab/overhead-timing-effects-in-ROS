@@ -65,16 +65,13 @@ def mutate_files(files, returns=False, delay=0.5, weight=1.0,
 
     for fn in files:
         diff_fn, new_fn = get_fns(fn, delay, output=output, weight=weight)
+        diff_fns.append(diff_fn)
+        new_fns.append(new_fn)
+
         if os.path.isfile(new_fn) and os.path.isfile(diff_fn):
             continue
         with open(fn) as old:
 
-            # source_old = old.read()
-            #source_new = comby.rewrite(source_old, match, rewrite,
-            #                           language=".cpp")
-            #print(type(source_old))
-            #print("\n\n\n")
-            #print(type(source_new))
             source_old = ""
             source_new = ""
 
@@ -87,41 +84,33 @@ def mutate_files(files, returns=False, delay=0.5, weight=1.0,
                 else:
                     source_new += line_old
                 source_old += line_old
-            #print(source_new)
 
         diff_fn, new_fn = create_output(fn, source_old, source_new, delay,
                                            new_fn,
                                            diff_fn,
                                            output=output,
                                            weight=weight)
-        diff_fns.append(diff_fn)
-        new_fns.append(new_fn)
-    # Make a temp directory, put all the new_fns in it, then diff the
-    # whole thing
-    if big_diff:
-        bdfn = f'dir_d{delay}_w{weight}.diff'
-        big_diff_fn = os.path.join(old_dir, bdfn)
-        dir_name = os.path.abspath(os.path.join('.', uuid.uuid4().hex))
-        os.makedirs(dir_name)
-        # with tempfile.TemporaryDirectory() as dir_name:
-        #dir_name = tmpdir.name
-        for fn in new_fns:
-            shutil.copy(fn, dir_name)
-        cmd = f"diff -uN {old_dir} {dir_name}"
-        with open(big_diff_fn, 'w') as big_diff:
-            print(f"executing cmd: {cmd}")
-            subprocess.Popen(shlex.split(cmd), stdout=big_diff)
-            print("output to %s" % big_diff_fn)
-            print("tempdir: %s" % dir_name)
-    #print("about to remove: %s" % dir_name)
-    #shutil.rmtree(dir_name)
-    #print("removed: %s" % dir_name)
+
+    for fn in diff_fns + new_fns:
+        cmd = f"dos2unix {fn}"
+        subprocess.Popen(shlex.split(cmd))
+
+    # Cat all the diff files together
+    bdfn = f'dir_d{delay}_w{weight}.diff'
+    big_diff_fn = os.path.join("patches", bdfn)
+    cmd = "cat %s" % (" ".join(diff_fns))
+    with open(big_diff_fn, 'w') as big_diff:
+        print("running cmd: %s" % cmd)
+        subprocess.Popen(shlex.split(cmd), stdout=big_diff)
+        print("cat output to: %s" % big_diff_fn)
+
 
 def coin_flip(weight):
     if random.random() < weight:
         return True
     else:
         return False
+
 
 def create_output(fn, source_old, source_new, delay, fn_new, diff_fn,
                   output="one_diff",
@@ -136,51 +125,15 @@ def create_output(fn, source_old, source_new, delay, fn_new, diff_fn,
     with open(fn_new) as new:
         tolines = new.readlines()
 
-    # if output == "one_diff":
     print("calling unified_diff")
-    diff = difflib.unified_diff(fromlines, tolines, fn, fn)
+    diff = difflib.unified_diff(fromlines, tolines, os.path.basename(fn),
+                                os.path.basename(fn), n=4)
     with open(diff_fn, 'w') as diff_file:
         print("writing to %s" % diff_fn)
         diff_file.writelines(diff)
 
 
     return diff_fn, fn_new
-
-    #if output == "coin_flip" and weight < 1.0:
-    #    diff = difflib.unified_diff(fromlines, tolines, fn, fn)
-    #    with open(diff_fn, 'w') as diff_file:
-    #        skip_next = False
-    #        diff_line_count = 0
-    #        print_line_count = 0
-    #        to_write = []
-    #        for line in diff:
-    #            diff_line_count += 1
-    #            if not line.startswith("+"):
-    #                skip_next = False
-    #            if skip_next:
-    #                if line.startswith("+"):
-    #                    print("not print: %s" % line)
-    #                    print_line_count += 1
-    #                else:
-    #                    print("print    : %s" % line)
-    #                    #diff_file.write(line)
-    #                    to_write.append(line)
-    #                    print_line_count += 1
-
-    #            else:
-    #                if coin_flip(weight) or line.startswith("---") or not line.startswith("-"):
-    #                    print("print    : %s" % line)
-    #                    to_write.append(line)
-    #                    #diff_file.write(line)
-    #                    print_line_count += 1
-    #                else:
-    #                    skip_next = True
-    #                    print("not print: %s" % line)
-    #                    print_line_count += 1
-    #        assert(all([x.endswith("\n") for x in to_write]))
-    #        diff_file.writelines(to_write)
-    #    print("diff_line_count: %s" % diff_line_count)
-    #    print("print_line_count: %s" % print_line_count)
 
 
 def main():
