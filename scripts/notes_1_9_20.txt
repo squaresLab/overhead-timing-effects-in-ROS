@@ -1,0 +1,20 @@
+you got stuck working with create_mutations.py
+you were tryring to make it so you could select whether to instrument at each individual site
+but then you noticed that comby did this. and you want ed to know why
+has it been fixed in a new release? should you report it to R?
+
+-    // return immediately if EKF not used
++    // {sleep 0.500000; return immediately if EKF not used
+     if (!ahrs.have_inertial_nav()) {
+         return false;
+     }
+
+     // return immediately if neither optflow nor visual odometry is enabled
+-    bool enabled = false;
++    bool enabled = false;}
+ #if OPTFLOW == ENABLED
+     if (optflow.enabled()) {
+         enabled = true;
+
+are you using the right parameters with the python bindings? does it know you're working in C++?
+the relevant file is dskatz@gs12629:~/ardupilot/ArduCopter/system.diff.cpp
