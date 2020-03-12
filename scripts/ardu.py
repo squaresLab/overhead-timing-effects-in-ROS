@@ -13,20 +13,20 @@ import contextlib
 import signal
 import subprocess
 import pkg_resources
-import logging
+#import logging
 
 import attr
 import dronekit
+from loguru import logger
 import roswire
-from bugzoo import Container as BugZooContainer
 from roswire.util import Stopwatch
 from roswire.proxy.container import ShellProxy as ROSWireShell
 
 BIN_MAVPROXY = \
     pkg_resources.resource_filename(__name__, 'src/mavproxy')
 
-logger = logging.getLogger(__name__)  # type: logging.Logger
-logger.setLevel(logging.DEBUG)
+#logger = logging.getLogger('timing')  # type: logging.Logger
+#logger.setLevel(logging.DEBUG)
 
 
 def distance_metres(x: dronekit.LocationGlobal, y: dronekit.LocationGlobal) -> float:

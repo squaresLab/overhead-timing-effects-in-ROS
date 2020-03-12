@@ -1,0 +1,1920 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Invariants
+%
+% AliabadiArtinali2017, NguyenNumericalInvariants2017, ErnstDaikon2001, LorenzoliBehavioral2008, HangalIodine2005, BeschastnikhTemporal2011, RatcliffInvariants2011, ErnstDaikon2005
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{AliabadiArtinali2017,
+  author    = {Aliabadi, Maryam Raiyat and Kamath, Amita Ajith and Gascon-Samson, Julien and Pattabiraman, Karthik},
+  title     = {{ARTINALI}: Dynamic Invariant Detection for Cyber-physical System Security},
+  booktitle = {Joint Meeting of the European Software Engineering Conference and the Symposium on The Foundations of Software Engineering},
+  series    = {ESEC/FSE '17},
+  year      = {2017},
+  pages     = {349--361},
+  dsk_notes = {intrusion detection systems for CPS -- dynamically gather invariants. Add time as a relevant factor (in addition to data and events). Claim that specification-based IDS are better than anomaly based for CPS because "incur considerable overhead to learn the system model at runtime, and also suffer from high rates of false-positives" and resource constraints. (We can argue that resource considerations have shifted.}
+}
+
+@inproceedings{NguyenNumericalInvariants2017,
+  author    = {Nguyen, ThanhVu and Antonopoulos, Timos and Ruef, Andrew and Hicks, Michael},
+  title     = {Counterexample-guided Approach to Finding Numerical Invariants},
+  booktitle = {Joint Meeting of the European Software Engineering Conference and the Symposium on The Foundations of Software Engineering},
+  series    = {ESEC/FSE '17},
+  year      = {2017},
+  pages     = {605--615},
+  dsk_notes = {"infers candidate invariants from program traces and then checks them against the program source code using the KLEE test-input generation tool." Limited in complexity of program and complexity of type of invariant.}
+}
+
+@article{ErnstDaikon2001,
+  author    = {Michael D. Ernst and Jake Cockrell and William G. Griswold and David Notkin},
+  journal   = {IEEE Transactions on Software Engineering},
+  title     = {Dynamically discovering likely program invariants to support program evolution},
+  year      = {2001},
+  volume    = {27},
+  number    = {2},
+  pages     = {99--123},
+  dsk_notes = {Programmers don't come up with full invariants in practice. Infer them instead.}
+}
+
+@inproceedings{LorenzoliBehavioral2008,
+  author    = {Davide Lorenzoli and Leonardo Mariani and Mauro Pezz{\`e}},
+  title     = {Automatic generation of software behavioral models},
+  booktitle = {International Conference on Software Engineering},
+  pages     = {501--510},
+  series    = {ICSE '08},
+  year      = {2008},
+  dsk_notes = {Models based on relationships between data values and components interactions.}
+}
+
+@inproceedings{HangalIodine2005,
+  author    = {Hangal, Sudheendra and Chandra, Naveen and Narayanan, Sridhar and Chakravorty, Sandeep},
+  title     = {{IODINE}: A Tool to Automatically Infer Dynamic Invariants for Hardware Designs},
+  booktitle = {Design Automation Conference},
+  series    = {DAC '05},
+  year      = {2005},
+  pages     = {775--778},
+  dsk_notes = {Dynamic invariant inference, just applied to hardware.}
+} 
+
+@inproceedings{HangalTracking2002,
+  author    = {Hangal, Sudheendra and Lam, Monica S.},
+  title     = {Tracking Down Software Bugs Using Automatic Anomaly Detection},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '02},
+  year      = {2002},
+  pages     = {291--301},
+  dsk_notes = {DIDUCE -- root causes of bugs; invariant detection and violation; Java only}
+}
+
+@article{BeschastnikhTemporal2011,
+  author    = {Ivan Beschastnikh and Yuriy Brun and Michael D. Ernst and Arvind Krishnamurthy and Thomas E. Anderson},
+  title     = {Mining temporal invariants from partially ordered logs},
+  journal   = {SIGOPS Operating Systems Review},
+  volume    = {45},
+  number    = {3},
+  pages     = {39--46},
+  year      = {2011},
+  dsk_notes = {Infers invariants about event orders from concurrent logs.}
+}
+
+@inproceedings{RatcliffInvariants2011,
+  author    = {Ratcliff, Sam and White, David R. and Clark, John A.},
+  title     = {Searching for Invariants Using Genetic Programming and Mutation Testing},
+  booktitle = {Genetic and Evolutionary Computation},
+  series    = {GECCO '11},
+  year      = {2011},
+  pages     = {1907--1914},
+  dsk_notes = {can find same invariants as Daikon with GP and mutation; ranks invariants by most interesting}
+}
+
+@article{ErnstDaikon2007,
+  author    = {Ernst, Michael D. and  Perkins, Jeff H. and Guo, Philip J. and  McCamant, Stephen and Pacheco, Carlos and Tschantz, Matthew S.  and Xiao, Chen},
+  title     = {The {Daikon} system for dynamic detection of likely invariants},
+  journal   = {Science of Computer Programming},
+  volume    = {% AliabadiArtinali2017, NguyenNumericalInvariants2017, ErnstDaikon2001, LorenzoliBehavioral2008, HangalIodine2005, BeschastnikhTemporal2011, RatcliffInvariants2011, ErnstDaikon200569},
+  issue     = {1--3},
+  year      = {2007},
+  pages     = {35--45},
+  dsk_notes = {Fuller treatment of Daikon; Daikon can do several programming languages but needs source code and to be specifically extended to new languages}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Robustness
+%
+% KroppBallista1998, HutchisonRobustness2018, CsallnerJCrasher2004
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{KroppBallista1998,
+  author    = {Nathan P. Kropp and Philip J. Koopman and Daniel P. Siewiorek},
+  booktitle = {Fault-Tolerant Computing},
+  title     = {Automated robustness testing of off-the-shelf software components},
+  year      = {1998},
+  series    = {FTCS '98},
+  pages     = {230--239},
+  month     = {June},
+  dsk_notes = {motivates testing COTS components, robustness testing}
+}
+
+@inproceedings{HutchisonRobustness2018,
+  author    = {Hutchison, Casidhe and Zizyte, Milda and Lanigan, Patrick E.  and Guttendorf, David and Wagner, Michael and {Le Goues}, Claire and Koopman, Philip},
+  title     = {Robustness Testing of Autonomy Software},
+  booktitle = {International Conference on Software Engineering - Software Engineering in Practice},
+  series    = {ICSE-SEIP '18},
+  year      = {2018},
+  pages     = {276--285},
+  dsk_notes = {astaa}
+}
+
+@article {CsallnerJCrasher2004,
+  author    = {Csallner, Christoph and Smaragdakis, Yannis},
+  title     = {JCrasher: an automatic robustness tester for Java},
+  journal   = {Software: Practice and Experience},
+  volume    = {34},
+  number    = {11},
+  publisher = {John Wiley & Sons, Ltd.},
+  issn      = {1097-024X},
+  pages     = {1025--1050},
+  year      = {2004}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Autonomous Vehicle / Robot Testing
+% SotiropoulosNavigationBugs2017, TuncaliStaliro2016, QuigleyROS2009, TimperleyArdu2018, MadrigalWaymo2017, FraadeBlanarMeasuring2018, KoopmanFramework2018, KoopmanAutonomous2017, TheisslerAutomotive2017, ForrestChallenges2014, HutchisonRobustness2018, RisterModular2007, BeschastnikhDistributed2016
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{SotiropoulosNavigationBugs2017,
+  title     = {Can Robot Navigation Bugs Be Found In Simulation? An Exploratory Study},
+  author    = {Thierry Sotiropoulos and H{\'e}l{\`e}ne Waeselynck and J{\'e}r{\'e}mie Guiochet},
+  booktitle = {Software Quality, Reliability and Security},
+  series    = {QRS '17},
+  pages     = {150--159},
+  year      = {2017},
+  dsk_notes = {Motivates simulation-based testing of robots and shows its effectiveness}
+}
+
+@inproceedings{TuncaliStaliro2016,
+  author    = {C. E. Tuncali and T. P. Pavlic and G. Fainekos},
+  booktitle = {Intelligent Transportation Systems},
+  series    = {ITSC '16},
+  title     = {Utilizing {S-TaLiRo} as an automatic test generation framework for autonomous vehicles},
+  year      = {2016},
+  pages     = {1470--1475},
+  dsk_notes = {defines a "robustness function" which measures how far a system is from violating parameters. Notibly relies on "system reqirements".}
+}
+
+@inproceedings{QuigleyROS2009,
+  title     = {ROS: an open-source Robot Operating System},
+  author    = {Quigley, Morgan and Conley, Ken and Gerkey, Brian and Faust, Josh and Foote, Tully and Leibs, Jeremy and Wheeler, Rob and Ng, Andrew Y.},
+  booktitle = {ICRA Workshop on Open Source Software},
+  year      = {2009}
+}
+
+@inproceedings{TimperleyArdu2018,
+	title     = {Crashing simulated planes is cheap: {Can} simulation detect robotics bugs early?},
+	author    = {Timperley, Christopher Steven and Afzal, Afsoon and Katz, Deborah S. and Hernandez, Jam Marcos and {Le~Goues}, Claire},
+	booktitle = {International Conference on Software Testing, Validation, and Verification},
+	series    = {ICST '18},
+	year      = {2018},
+	pages     = {331--342}
+}
+
+@article{MadrigalWaymo2017,
+	title     = {Inside {W}aymo's Secret World for Training Self-Driving Cars},
+	author    = {Alexis C. Madrigal},
+	journal   = {The Atlantic},
+	year      = {2017},
+	month     = {August},
+	day       = {23}
+}
+
+@techreport{FraadeBlanarMeasuring2018,
+  title       = {Measuring Automated Vehicle Safety: Forging a Framework},
+  author      = {Fraade-Blanar, Laura and Marjory S. Blumenthal and James M. Anderson and Nidhi Kalra},
+  year        = {2018},
+  institution = {{RAND} Corporation},
+  url         = {https://www.rand.org/pubs/research_reports/RR2662.html}
+}
+
+@inproceedings{KoopmanFramework2018,
+  author    = {Koopman, Philip and Wagner, Michael},
+  title     = {Toward a Framework for Highly Automated Vehicle Safety Validation},
+  booktitle = {WCX World Congress Experience},
+  series    = {WCX '18},
+  publisher = {SAE International},
+  year      = {2018},
+  url       = {https://doi.org/10.4271/2018-01-1071}
+}
+
+@article{KoopmanAutonomous2017,
+  title     = {Autonomous vehicle safety: An interdisciplinary challenge},
+  author    = {Koopman, Philip and Wagner, Michael},
+  journal   = {IEEE Intelligent Transportation Systems Magazine},
+  volume    = {9},
+  number    = {1},
+  pages     = {90--96},
+  year      = {2017}
+}
+
+@article{TheisslerAutomotive2017,
+  title     = {Detecting known and unknown faults in automotive systems using
+ensemble-based anomaly detection},
+  author    = {Andreas Theissler},
+  journal   = {Knowledge-Based Systems},
+  volume    = {123},
+  pages     = {163--173},
+  year      = {2017},
+  dsk_notes = {broad-based "ensemble classifier" on automotive data collected in usual course of driving. one classifer over lots of scenarios. Works on very different kinds of data and injected faults than my work. References 12-19 may be useful for anomaly detection in vehicles.}
+}
+
+@techreport{ForrestChallenges2014,
+  title     = {The Challenges of Sensing and Repairing Software Defects in Autonomous Systems},
+  author    = {Forrest, Stephanie and Westley Weimer},
+  year      = {2014},
+  institution= {Regents of the University of New Mexico}
+}
+
+@inproceedings{RisterModular2007,
+  author    = {Rister, Benjamin 
+  D. and Campbell, Jason and Pillai, Padmanabhan and Mowry, Todd C.},
+  title     = {Integrated Debugging of Large Modular Robot Ensembles},
+  booktitle = {Robotics and Automation},
+  series    = {ICRA '07},
+  year      = {2007},
+  pages     = {2227--2234},
+  dsk_notes = {Problems of distributed debugging and concurrency. Focuses on bugs in implementing parallel/distributed algorithms.}
+}
+
+@article{BeschastnikhDistributed2016,
+  title     = {Debugging distributed systems},
+  author    = {Beschastnikh, Ivan and Wang, Patty and Brun, Yuriy and Ernst, Michael D.},
+  journal   = {Queue},
+  volume    = {14},
+  number    = {2},
+  pages     = {91--110},
+  year      = {2016},
+  dsk_notes = {heterogeneity, distributed state, concurerrency, partial features. existing approaches: testing, model checking, theorem proving, tracing, log analysis, visualization. lists things wrong with each existing approach.}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Artifacts and related resources
+%
+% DoSIR2005, HutchinsSiemens1994, JustDefects4j2014, WienkePerformanceBugs2016, LeGouesManybugs2015, IntroclassBenchmarks, coreutils, zuneFAQ, TanCodeflaws2017
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@article{DoSIR2005,
+  title     = {Supporting Controlled Experimentation with Testing Techniques:
+               An Infrastructure and its Potential Impact},
+  author    = {Do, Hyunsook and Elbaum, Sebastian and Rothermel, Gregg},
+  journal   = {Empirical Software Engineering},
+  volume    = {10},
+  number    = {4},
+  pages     = {405--435},
+  year      = {2005}
+}
+
+@inproceedings{HutchinsSiemens1994,
+  author    = {Hutchins, Monica and Foster, Herb and Goradia, Tarak and Ostrand, Thomas},
+  title     = {Experiments of the Effectiveness of Dataflow- and Controlflow-based Test Adequacy Criteria},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '94},
+  year      = {1994},
+  pages     = {191--200}
+}
+
+@inproceedings{JustDefects4j2014,
+  author    = {Just, Ren{\'e} and Jalali, Darioush and Ernst, Michael D.},
+  title     = {{Defects4J}: {A} Database of Existing Faults to Enable Controlled Testing Studies for {Java} Programs},
+  booktitle = {International Symposium on Software Testing and Analysis},
+  series    = {ISSTA '14},
+  year      = {2014},
+  pages     = {437--440}
+}
+
+@inproceedings{WienkePerformanceBugs2016,
+  author    = {Wienke, Johannes and Meyer zu Borgsen, Sebastian and Wrede, Sebastian},
+  title     = {A Data Set for Fault Detection Research on Component-Based Robotic Systems},
+  series    = {TAROS '16},
+  booktitle = {Towards Autonomous Robotic Systems},
+  year      = {2016},
+  pages     = {339--350}
+}
+
+@article{LeGouesManybugs2015,
+  author    = {{Le~Goues}, Claire and Holtschulte, Neal and Smith, Edward K. and Brun, Yuriy and Devanbu, Premkumar and Forrest, Stephanie and Weimer, Westley},
+  title     = {The {ManyBugs} and {IntroClass} Benchmarks for Automated Repair of {C} Programs},
+  journal   = {{IEEE} Transactions on Software Engineering},
+  year      = {2015},
+  volume    = {41},
+  number    = {12},
+  pages     = {1236--1256}
+}
+
+@misc{introclassBenchmarks,
+  author    = {Claire {Le Goues} and Neal Holtschulte and Edward K. Smith and Yuriy Brun and Premkumar Devanbu and Stephanie Forrest and Westley Weimer},
+  title     = {Autorepair Benchmarks},
+  url = {http://dijkstra.cs.virginia.edu/genprog/resources/autorepairbenchmarks/}
+}
+
+@misc{coreutils,
+	title     = {Coreutils - GNU core utilities},
+	howpublished = "\url{http://www.gnu.org/software/coreutils/coreutils.html}"
+}
+
+@misc{zuneFAQ,
+	title     = "Zune 30 FAQ",
+		howpublished="\url{http://web.archive.org/web/20120501163732/http://www.zune.net/en-us/support/zune30.htm}",
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DBI tools
+%
+% NethercoteValgrind2007, NethercoteValgrind2004, LukPin2005
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+@inproceedings{NethercoteValgrind2007,
+  author    = {Nethercote, Nicholas and Seward, Julian},
+  title     = {Valgrind: {A} Framework for Heavyweight Dynamic Binary Instrumentation},
+  booktitle = {Programming Language Design and Implementation},
+  series    = {PLDI '07},
+  year      = {2007},
+  pages     = {89--100}
+}
+
+@techreport{NethercoteValgrind2004,
+  author      = {Nethercote, Nicholas},
+  title       = {{Dynamic binary analysis and instrumentation}},
+  year        = {2004},
+  url         = {https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-606.pdf},
+  institution = {University of Cambridge, Computer Laboratory},
+  number      = {UCAM-CL-TR-606}
+}
+
+@inproceedings{LukPin2005,
+  author    = {Luk, Chi-Keung and Cohn, Robert and Muth, Robert and Patil, Harish and Klauser, Artur and Lowney, Geoff and Wallace, Steven and Reddi, Vijay Janapa and Hazelwood, Kim},
+  title     = {Pin: {B}uilding Customized Program Analysis Tools with Dynamic Instrumentation},
+  booktitle = {Programming Language Design and Implementation},
+  series    = {PLDI '05},
+  year      = {2005},
+  pages     = {190--200}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Binary analysis
+%
+% BrumleyDeviations2007, PerkinsClearview2009, SchulteAssembly2010, SchulteRouter2015, SchulteExact2018, SchulteEmbedded2013, SchulteEnergy2014, ForrestSelf1996, DenningIntrusion1987, WagnerMimicry2002, Cylanceoptics2017, WildeReconnaissance1995, EisenbergDynamic2005
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{BrumleyDeviations2007,
+  author    = {Brumley, David and Caballero, Juan and Liang, Zhenkai and Newsome, James and Song, Dawn},
+  title     = {Towards Automatic Discovery of Deviations in Binary Implementations with Applications to Error Detection and Fingerprint Generation},
+  booktitle = {USENIX Security Symposium},
+  series    = {SS '07},
+  year      = {2007},
+  pages     = {15:1--15:16},
+  dsk_notes = {relies on two different implementations of the same specification. "our approach works on binaries directly, without access to the source code. This is important for wide applicability, since implementations may be proprietary and thus not have the source code available. In addition, the binary is what gets executed, and thus it represents the true behavior of the program."}
+} 
+
+@inproceedings{SchulteEmbedded2013,
+  author    = {Schulte, Eric and DiLorenzo, Jonathan and Weimer, Westley and Forrest, Stephanie},
+  title     = {Automated Repair of Binary and Assembly Programs for Cooperating Embedded Devices},
+  booktitle = {Architectural Support for Programming Languages and Operating Systems},
+  series    = {ASPLOS '13},
+  year      = {2013},
+  pages     = {317--328},
+  dsk_notes = {"Source code with debugging information may not be available, so statements and abstract syntax trees cannot be accurately identified to reduce search-space size (as used by [35]), and, formal pre- and post-condition annotations are unlikely to be present"; architecture independent}
+} 
+
+@inproceedings{SchulteEnergy2014,
+  author    = {Schulte, Eric and Dorn, Jonathan and Harding, Stephen and Forrest, Stephanie and Weimer, Westley},
+  title     = {Post-compiler Software Optimization for Reducing Energy},
+  booktitle = {Architectural Support for Programming Languages and Operating Systems},
+  series    = {ASPLOS '14},
+  year      = {2014},
+  pages     = {639--652},
+  dsk_notes = {Maybe in string cite -- not the most relevant}
+} 
+
+@inproceedings{PerkinsClearview2009,
+  title     = {Automatically patching errors in deployed software},
+  author    = {Perkins, Jeff H and Kim, Sunghun and Larsen, Sam and Amarasinghe, Saman and Bachrach, Jonathan and Carbin, Michael and Pacheco, Carlos and Sherwood, Frank and Sidiroglou, Stelios and Sullivan, Greg},
+  booktitle = {Proceedings of the ACM SIGOPS 22nd symposium on Operating systems principles},
+  pages     = {87--102},
+  year      = {2009},
+  dsk_notes = {infers invariants on "stripped Windows x86 binaries", monitors for violations, finds "correlated invariants", proposes patch that enforces correlated invariants and the violated one}
+}
+
+@inproceedings{SchulteAssembly2010,
+  title     = {Automated Program Repair through the Evolution of Assembly Code},
+  author    = {Eric Schulte and Stephanie Forrest and Westley Weimer},
+  booktitle = {Automated Software Engineering},
+  year      = {2010},
+  series    = {ASE '10},
+  pages     = {313--316}
+}
+
+@inproceedings{SchulteRouter2015,
+  author     = {Schulte, Eric M. and Weimer, Westley and Forrest, Stephanie},
+  title      = {Repairing COTS Router Firmware Without Access to Source Code or Test Suites: A Case Study in Evolutionary Software Repair},
+  booktitle  = {Companion Publication of the Conference on Genetic and Evolutionary Computation},
+  series     = {GECCO Companion '15},
+  year       = {2015},
+  pages      = {847--854}
+} 
+
+@inproceedings{SchulteExact2018,
+  author    = {Eric Schulte and Jason Ruchti and Matt Noonan and David Ciarletta and Alexy Loginov},
+  title     = {Evolving Exact Decompilation},
+  booktitle = {Binary Analysis Resarch},
+  series    = {BAR '18},
+  year      = {2018}
+}
+
+@phdthesis{SchulteNeutral2014,
+  title     = {Neutral networks of real-world programs and their application to automated software evolution},
+  author    = {Schulte, Eric},
+  year      = {2014}
+}
+
+@inproceedings{ForrestSelf1996,
+  author    = {Forrest, Stephanie and Hofmeyr, Steven A. and Somayaji, Anil and Longstaff, Thomas A.},
+  title     = {A Sense of Self for Unix Processes},
+  booktitle = {Symposium on Security and Privacy},
+  series    = {SOSP '96},
+  year      = {1996},
+  pages     = {120--128},
+  dsk_notes = {defines "normal" behavior in terms of short-term system call behavior, correlations in system calls}
+}
+
+@Article{DenningIntrusion1987,
+  title     = {An Intrusion-Detection Model},
+  journal   = {{IEEE} Transactions on Software Engineering},
+  author    = {Dorothy E. Denning},
+  number    = {2},
+  volume    = {13},
+  year      = {1987},
+  pages     = {222--232}
+}
+
+@inproceedings{WagnerMimicry2002,
+  title     = {Mimicry attacks on host-based intrusion detection systems},
+  author    = {Wagner, David and Soto, Paolo},
+  booktitle = {Conference on Computer and Communications Security},
+  series    = {CCS '02},
+  pages     = {255--264},
+  year      = {2002}
+}
+
+@misc{Cylanceoptics2017,
+  url       = {https://www.cylance.com/en-us/company/news-and-press/press-releases/cylance-delivers-first-ai-driven-endpoint-detection-and-response-solution-with-introduction-of-cylanceoptics.html},
+  author    = {Cylance Inc.},
+  title     = {Cylance Delivers First {AI} Driven Endpoint Detection and Response Solution with Introduction of Cylanceoptics}
+}
+
+@misc{CylanceopticsBrief2018,
+  url       = {https://s7d2.scene7.com/is/content/cylance/prod/cylance-web/en-us/resources/knowledge-center/resource-library/briefs/CylanceOPTICS_Solution_Brief.pdf},
+  author    = {Cylance Inc.},
+  title     = {Cylance({R}) Prevention-First Security with
+{CylancePROTECT}({R}) and {CylanceOPTICS}({TM})}
+}
+
+
+@article{WildeReconnaissance1995,
+  author    = {Wilde, Norman and Scully, Michael C.},
+  title     = {Software reconnaissance: Mapping program features to code},
+  journal   = {Journal of Software Maintenance: Research and Practice},
+  year      = {1995},
+  volume    = {7},
+  number    = {1},
+  pages     = {49--62}
+}
+
+@inproceedings{EisenbergDynamic2005,
+  author    = {Eisenberg, Andrew David and {De~Volder}, Kris},
+  title     = {Dynamic feature traces: Finding features in unfamiliar code},
+  booktitle = {International Conference on Software Maintenance},
+  year      = {2005},
+  pages     = {337--346},
+  series    = {ICSM '05},
+  dsk_notes = {using dynamic analysis
+to trace program functionality to its location in binary or source code.
+The implementation is limited to Java.}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Machine Learning
+%
+% HeImbalanced2009, NiteshImbalanced2005, TaylorMining2010, DomingosMachineLearning2012, KotsiantisSupervised2007, ZhangApplying2000, GuyonFeature2003, BibiSelecting2006, GaurPerformance2014, GuzellaSpam2009, SebastianiText2002, RinottSVM2012, CristianiniSVM2000, SatnikovUsing2006, HastieStatistical2009, HaranExecutionData2005, LeonVisualization2000, PedregosaScikit2011, scikit-learn-trees, scikit-learn-feature-selection, RafaelLenzLinking2013, LehmanNovelty2008
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@article{HeImbalanced2009,
+  author    = {Haibo He and Garcia, E.A.}, 
+  journal   = {IEEE Transactions on Knowledge and Data Engineering}, 
+  title     = {Learning from Imbalanced Data}, 
+  year      = {2009}, 
+  volume    = {21}, 
+  number    = {9}, 
+  pages     = {1263-1284}
+}
+
+@incollection{NiteshImbalanced2005,
+  year      = {2005},
+  isbn      = {978-0-387-24435-8},
+  booktitle = {Data Mining and Knowledge Discovery Handbook},
+  editor    = {Maimon, Oded and Rokach, Lior},
+  title     = {Data Mining for Imbalanced Datasets: An Overview},
+  author    = {Chawla, Nitesh V.},
+  pages     = {853--867}
+}
+
+@article{TaylorMining2010,
+  author    = {Taylor, Quinn and Giraud and Carrier, Christophe},
+  title     = {Applications of Data Mining in Software Engineering},
+  journal   = {International Journal of Data Analysis Techniques and Strategies},
+  volume    = {2},
+  number    = {3},
+  year      = {2010},
+  pages     = {243--257}
+}
+
+@article{DomingosMachineLearning2012,
+  author    = {Domingos, Pedro},
+  title     = {A Few Useful Things to Know About Machine Learning},
+  journal   = {Communications of the ACM},
+  volume    = {55},
+  number    = {10},
+  year      = {2012},
+  pages     = {78--87},
+  publisher = {ACM},
+  address   = {New York, NY, USA}
+}
+
+@inproceedings{KotsiantisSupervised2007,
+  title     = {Supervised machine learning: {A} review of classification techniques},
+  author    = {Kotsiantis, Sotiris B. and Zaharakis, I. and Pintelas, P.},
+  pages     = {3--24},
+  booktitle = {Emerging Artificial Intelligence Applications in Computer Engineering},
+  series    = {},
+  year      = {2007}
+}
+
+@inproceedings{ZhangApplying2000,
+  author    = {Du Zhang},
+  title     = {Applying Machine Learning Algorithms In Software Development},
+  booktitle = {Monterey Workshop on Modeling Software System Structures in a Fastly Moving Scenario},
+  year      = {2000},
+  pages     = {275--291}
+}
+
+@article{GuyonFeature2003,
+  author    = {Guyon, Isabelle and Elisseeff, Andr{\'e}},
+  title     = {An Introduction to Variable and Feature Selection},
+  journal   = {Journal of Machine Learning Research},
+  volume    = {3},
+  year      = {2003},
+  pages     = {1157--1182}
+}
+
+@incollection{BibiSelecting2006,
+  year      = {2006},
+  booktitle = {Artificial Intelligence Applications and Innovations},
+  volume    = {204},
+  series    = {IFIP International Federation for Information Processing},
+  editor = {Maglogiannis, Ilias and Karpouzis, Kostas and Bramer, Max},
+  title     = {Selecting the Appropriate Machine Learning Techniques for the Prediction of Software Development Costs},
+  author    = {Bibi, Stamatia and Stamelos, Ioannis},
+  pages     = {533-540}
+}
+
+@article{GaurPerformance2014,
+  year      = {2014},
+  journal   = {International Journal of Computer Applications},
+  volume    = {89},
+  number    = {16},
+  title     = {Performance Evaluation of Machine Learning Techniques using Software Cost Drivers},
+  author    = {Gaur, M.}
+}
+
+@article{GuzellaSpam2009,
+  author    = {Guzella, Thiago S. and Caminhas, Walmir M.},
+  title     = {A Review of Machine Learning Approaches to Spam Filtering},
+  journal   = {Expert Systems with Application},
+  volume    = {36},
+  number    = {7},
+  year      = {2009},
+  pages     = {10206--10222}
+} 
+
+@article{SebastianiText2002,
+  author    = {Sebastiani, Fabrizio},
+  title     = {Machine Learning in Automated Text Categorization},
+  journal   = {ACM Computer Survey},
+  volume    = {34},
+  number    = {1},
+  year      = {2002},
+  pages     = {1--47}
+} 
+
+@inproceedings{RinottSVM2012,
+  author    = {Rinott, Ruty and Carmeli, Boaz and Kent, Carmel and Maman, Yonatan and Rubin, Yoav and Slonim, Noam},
+  title     = {Utilizing Assigned Treatments As Labels for Supervised Machine Learning in Clinical Decision Support},
+  booktitle = {International Health Informatics Symposium},
+  series    = {IHI '12},
+  year      = {2012},
+  pages     = {493--502}
+} 
+
+@book{CristianiniSVM2000,
+  author    = {Cristianini, Nello and Shawe-Taylor, John},
+  title     = {An Introduction to Support Vector Machines: And Other Kernel-based Learning Methods},
+  year      = {2000},
+  isbn      = {0-521-78019-5}
+}
+
+@incollection{RefaeilzadehCrossvalidation2009,
+  year      = {2009},
+  isbn      = {978-0-387-35544-3},
+  booktitle = {Encyclopedia of Database Systems},
+  editor    = {Liu, Ling and \"{O}zsu, M. Tamer},
+  doi       = {10.1007/978-0-387-39940-9_565},
+  title     = {Cross-Validation},
+  author    = {Refaeilzadeh, Payam and Tang, Lei and Liu, Huan},
+  pages     = {532--538}
+}
+
+@article{SamuelSome2000,
+  title     = {Some studies in machine learning using the game of checkers},
+  author    = {Samuel, Arthur L},
+  journal   = {IBM Journal of research and development},
+  volume    = {44},
+  number    = {1.2},
+  pages     = {206--226},
+  year      = {2000}
+}
+
+@inbook{MenziesPractical2001,
+  author    = {Tim Menzies},
+  title     = {Practical machine learning for software engineering and knowledge engineering},
+  booktitle = {Handbook of Software Engineering and Knowledge Engineering},
+  chapter   = {35},
+  pages     = {837-862},
+  year      = {2001}
+}
+
+@article{SatnikovUsing2006,
+  title     = {Using SVM weight-based methods to identify causally relevant and non-causally relevant variables},
+  author    = {Statnikov, Alexander and Hardin, Douglas and Aliferis, Constantin},
+  journal   = {Sign},
+  volume    = {1},
+  pages     = {4},
+  year      = {2006}
+}
+
+@book{HastieStatistical2009,
+  title     = {The Elements of Statistical Learning: Data Mining, Inference, and Prediction, Second Edition},
+  author    = {Hastie, T. and Tibshirani, R. and Friedman, J.},
+  isbn      = {9780387848587},
+  lccn      = {2008941148},
+  series    = {Springer Series in Statistics},
+  year      = {2009}
+}
+
+@article{HaranExecutionData2005,
+  author    = {Haran, Murali and Karr, Alan and Orso, Alessandro and Porter, Adam and Sanil, Ashish},
+  title     = {Applying Classification Techniques to Remotely-collected Program Execution Data},
+  journal   = {SIGSOFT Software Engineering Notes},
+  volume    = {30},
+  number    = {5},
+  year      = {2005},
+  issn      = {0163-5948},
+  pages     = {146--155}
+} 
+
+@inproceedings{LeonVisualization2000,
+  author    = {Leon, David and Podgurski, Andy and White, Lee J.},
+  title     = {Multivariate Visualization in Observation-based Testing},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '00},
+  year      = {2000},
+  pages     = {116--125}
+} 
+
+@article{PedregosaScikit2011,
+  title     = {Scikit-learn: Machine Learning in {P}ython},
+  author    = {Pedregosa, Fabian and Varoquaux, Ga\"{e}l and Gramfort, Alexandre and Michel, Vincent and Thirion, Bertrand and Grisel, Olivier and Blondel, Mathieu and Prettenhofer, Peter and Weiss, Ron and Dubourg, Vincent and Vanderplas, Jake and Passos, Alexandre and Cournapeau, David and Brucher, Matthieu and Perrot, Matthieu and Duchesnay, \'{E}douard}, 
+  journal   = {Journal of Machine Learning Research},
+  volume    = {12},
+  number    = {Oct},
+  pages     = {2825--2830},
+  year      = {2011}
+}
+
+@misc{scikit-learn-trees,
+	title     = {Decision Trees},
+	howpublished = "\url{http://scikit-learn.org/stable/modules/tree.html}"
+}
+
+@misc{scikit-learn-feature-selection,
+	title     = {Feature Selection},
+	howpublished = "\url{http://scikit-learn.org/stable/modules/tree.html}",
+}
+
+@inproceedings{LehmanNovelty2008,
+  title     = {Exploiting Open-Endedness to Solve Problems Through the Search for Novelty},
+  author    = {Lehman, Joel and Stanley, Kenneth O.},
+  booktitle = {Artificial Life},
+  series    = {ALIFE '08},
+  pages     = {329--336},
+  year      = {2008}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Fault Localization
+%
+% CamposEntropy2013, PapadakisMetallaxis2015, YooSpectra2012, MoonMuse2014}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{CamposEntropy2013,
+  author    = {Jos{\'{e}} Campos and
+               Rui Abreu and
+               Gordon Fraser and
+               Marcelo d'Amorim},
+  title     = {Entropy-based test generation for improved fault localization},
+  booktitle = {Automated Software Engineering},
+  pages     = {257--267},
+  year      = {2013},
+  series    = {ASE '13}
+}
+
+@article{PapadakisMetallaxis2015,
+  title    = {{Metallaxis-FL}: mutation-based fault localization},
+  author   = {Papadakis, Mike and Le Traon, Yves},
+  journal  = {Software Testing, Verification and Reliability},
+  volume   = {25},
+  number   = {5-7},
+  pages    = {605--628},
+  year     = {2015},
+  keywords = {debugging; mutation analysis; fault localization}
+}
+
+@inproceedings{YooSpectra2012,
+  author    = {Yoo, Shin},
+  title     = {Evolving Human Competitive Spectra-Based Fault Localisation Techniques},
+  booktitle = {Symposium on Search Based Software Engineering},
+  series    = {SSBSE '12},
+  year      = {2012},
+  pages     = {244--258}
+}
+
+@inproceedings{MoonMuse2014,
+  title     = {Ask the Mutants: {M}utating Faulty Programs for Fault Localization},
+  booktitle = {International Conference on Software Testing, Verification and Validation},
+  series    = {ICST '14},
+  author    = {Moon, Seokhyeon and Kim, Yunho and Kim, Moonzoo and Yoo, Shin},
+  pages     = {153--162},
+  year      = {2014}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Verification
+% Formal methods
+%
+% PnueliTemporal1977, AlurTimedAutomata1994, ShanahanEvent1999, CrochemoreReactive2011, LeGallFormal1996, HieronsFormal2009, CardelliType1996, MilnerTheory1978, ZhengVerification2015, ShresthaAssertions2011, CoppitSpecification2005
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{ZhengVerification2015,
+  author    = {Xi Zheng and Christine Julien},
+  booktitle = {Software Engineering for Smart Cyber-Physical Systems},
+  title     = {Verification and Validation in Cyber Physical Systems: Research Challenges and a Way Forward},
+  year      = {2015},
+  pages     = {15--18}
+}
+
+@article{ZhengState2017,
+  author    = {Xi {Zheng} and Christine {Julien} and Miryung {Kim} and Sarfraz {Khurshid}},
+  journal   = {IEEE Systems Journal},
+  title     = {Perceptions on the State of the Art in Verification and Validation in Cyber-Physical Systems},
+  year      = {2017},
+  volume    = {11},
+  number    = {4},
+  pages     = {2614--2627},
+  month={Dec}
+}
+
+@incollection{LeGallFormal1996,
+  year      = {1996},
+  isbn      = {978-3-540-61629-0},
+  booktitle = {Recent Trends in Data Type Specification},
+  volume    = {1130},
+  series    = {Lecture Notes in Computer Science},
+  editor    = {Haveraaen, Magne and Owe, Olaf and Dahl, Ole-Johan},
+  title     = {Formal specifications and test: Correctness and oracle},
+  author    = {{Le~Gall}, Pascale and Arnould, Agnès},
+  pages     = {342--358}
+}
+
+@inproceedings{SanwalVerification2013,
+  author    = {Sanwal, Muhammad Usman and Hasan, Osman},
+  title     = {Formal Verification of Cyber-Physical Systems: Coping with Continuous Elements},
+  booktitle = {Computational Science and Its Applications},
+  series    = {ICCSA '13},
+  year      = {2013},
+  pages     = {358--371}
+}
+
+@article{KleinVerification2014,
+  author    = {Klein, Gerwin and Andronick, June and Elphinstone, Kevin and Murray, Toby and Sewell, Thomas and Kolanski, Rafal and Heiser, Gernot},
+  title     = {Comprehensive Formal Verification of an OS Microkernel},
+  journal   = {ACM Transactions on Computer Systems},
+  volume    = {32},
+  number    = {1},
+  month     = {Feb},
+  year      = {2014},
+  pages     = {2:1--2:70}
+} 
+
+@article{KleinVerification2010,
+  author    = {Klein, Gerwin and Andronick, June and Elphinstone, Kevin and Heiser, Gernot and Cock, David and Derrin, Philip and Elkaduwe, Dhammika and Engelhardt, Kai and Kolanski, Rafal and Norrish, Michael and Sewell, Thomas and Tuch, Harvey and Winwood, Simon},
+  title     = {seL4: Formal Verification of an Operating-system Kernel},
+  journal   = {Communications of the ACM},
+  volume    = {53},
+  number    = {6},
+  month     = {Jun},
+  year      = {2010},
+  pages     = {107--115}
+} 
+
+@article{HieronsFormal2009,
+  author    = {Hierons, Robert M. and Bogdanov, Kirill and Bowen, Jonathan P. and Cleaveland, Rance and Derrick, John and Dick, Jeremy and Gheorghe, Marian and Harman, Mark and Kapoor, Kalpesh and Krause, Paul and L\"{u}ttgen, Gerald and Simons, Anthony J. H. and Vilkomir, Sergiy and Woodward, Martin R. and Zedan, Hussein},
+  title     = {Using Formal Specifications to Support Testing},
+  journal   = {ACM Computing Surveys},
+  volume    = {41},
+  number    = {2},
+  year      = {2009},
+  pages     = {9:1--9:76},
+  publisher = {ACM}
+} 
+
+@inbook{BengtssonTimedAutomata2004,
+  author    = {Bengtsson, Johan and Yi, Wang},
+  editor    = {Desel, J{\"o}rg and Reisig, Wolfgang and Rozenberg, Grzegorz},
+  title     = {Timed Automata: Semantics, Algorithms and Tools},
+  booktitle = {Lectures on Concurrency and Petri Nets: Advances in Petri Nets},
+  year      = {2004},
+  address   = {Berlin, Heidelberg},
+  pages     = {87--124},
+  isbn      = {978-3-540-27755-2}
+}
+
+@article{BaetenProcessAlgebra2005,
+  author    = {Baeten, J. C. M.},
+  title     = {A Brief History of Process Algebra},
+  journal   = {Theoretical Computer Science},
+  volume    = {335},
+  number    = {2-3},
+  year      = {2005},
+  pages     = {131--146}
+} 
+
+@inproceedings{PnueliTemporal1977,
+  title     = {The temporal logic of programs},
+  author    = {Pnueli, Amir},
+  booktitle = {Foundations of Computer Science},
+  series    = {FOCS '77},
+  pages     = {46--57},
+  year      = {1977}
+}
+
+@article{AlurTimedAutomata1994,
+  title     = {A theory of timed automata},
+  author    = {Alur, Rajeev and Dill, David L},
+  journal   = {T{heoretical Computer Science}},
+  volume    = {126},
+  number    = {2},
+  pages     = {183--235},
+  year      = {1994},
+}
+
+@incollection{ShanahanEvent1999,
+  title     = {The event calculus explained},
+  author    = {Shanahan, Murray},
+  booktitle = {Artificial Intelligence Today},
+  pages     = {409--430},
+  year      = {1999}
+}
+
+@article{CrochemoreReactive2011,
+  title     = {Reactive automata},
+  author    = {Crochemore, Maxime and Gabbay, Dov M},
+  journal   = {Information and Computation},
+  volume    = {209},
+  number    = {4},
+  pages     = {692--704},
+  year      = {2011}
+}
+
+@article{CardelliType1996,
+  title     = {Type systems},
+  author    = {Cardelli, Luca},
+  journal   = {ACM Computing Surveys},
+  volume    = {28},
+  number    = {1},
+  pages     = {263--264},
+  year      = {1996}
+}
+
+@article{MilnerTheory1978,
+  title     = {A theory of type polymorphism in programming},
+  author    = {Milner, Robin},
+  journal   = {Journal of computer and system sciences},
+  volume    = {17},
+  number    = {3},
+  pages     = {348--375},
+  year      = {1978},
+  publisher= {Elsevier}
+}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Statistical program behaviors
+% Novelty / Outlier / Anomaly Detection
+% Clustering
+%
+% ZhengStatistical2006, HangalTracking2002, LiblitScalable2005, ZhengSampled2004, BrunLatent2004, BowringActive04, BenGalOutlier2010, PimentelNovelty2014, DickinsonFailure2001, DickinsonFindingFailures2001, BaahOnLine2006, BurnimLooper2009, CarbinJolt2011, LoPattern2009, MaoMarkov2005, AmerLDCOF2012, HodgeOutliers2004, HaranDeployed2007
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Statistical
+
+@inproceedings{ZhengStatistical2006,
+  author    = {Zheng, Alice X. and Jordan, Michael I. and Liblit, Ben and Naik, Mayur and Aiken, Alex},
+  title     = {Statistical Debugging: Simultaneous Identification of Multiple Bugs},
+  booktitle = {International Conference on Machine Learning},
+  series    = {ICML '06},
+  year      = {2006},
+  pages     = {1105--1112}
+}
+
+@inproceedings{ZhengSampled2004,
+  author    = {Zheng, Alice X. and Jordan, Michael I. and Liblit, Ben and Aiken, Alex},
+  title     = {Statistical Debugging of Sampled Programs},
+  booktitle = {Neural Information Processing Systems},
+  series    = {NIPS '04},
+  year      = {2004},
+  pages     = {603--610}
+}
+
+@inproceedings{LiblitScalable2005,
+  author    = {Liblit, Ben and Naik, Mayur and Zheng, Alice X. and Aiken, Alex and Jordan, Michael I.},
+  title     = {Scalable Statistical Bug Isolation},
+  booktitle = {Programming Language Design and Implementation},
+  series    = {PLDI '05},
+  year      = {2005},
+  pages     = {15--26}
+}
+
+@inproceedings{LiblitIsolation2003,
+  author    = {Liblit, Ben and Aiken, Alex and Zheng, Alice X. and Jordan, Michael I.},
+  title     = {Bug Isolation via Remote Program Sampling},
+  booktitle = {Programming Language Design and Implementation},
+  series    = {PLDI '03},
+  year      = {2003},
+  pages     = {141--154}
+}
+
+@inproceedings{DickinsonFailure2001,
+  author    = {Dickinson, William and Leon, David and Podgurski, Andy},
+  title     = {Pursuing Failure: The Distribution of Program Failures in a Profile Space},
+  booktitle = {Joint Meeting of the European Software Engineering Conference and the Symposium on The Foundations of Software Engineering},
+  series    = {ESEC/FSE '01},
+  year      = {2001},
+  pages     = {246--255}
+} 
+
+% Anomaly
+
+@inproceedings{BrunLatent2004,
+  author    = {Brun, Yuriy and Ernst, Michael D.},
+  title     = {Finding Latent Code Errors via Machine Learning over Program Executions},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '04},
+  year      = {2004},
+  pages     = {480--490}
+}
+
+@inproceedings{BaahOnLine2006,
+  author    = {Baah, George K. and Gray, Alexander and Harrold, Mary Jean},
+  title     = {On-line Anomaly Detection of Deployed Software: A Statistical Machine Learning Approach},
+  booktitle = {International Workshop on Software Quality Assurance},
+  series    = {SOQUA '06},
+  year      = {2006},
+ pages     = {70--77}
+}
+
+@inproceedings{BowringActive04,
+  author    = {Bowring, James F. and Rehg, James M. and Harrold, Mary Jean},
+  title     = {Active Learning for Automatic Classification of Software Behavior},
+  booktitle = {International Symposium on Software Testing and Analysis},
+  series    = {ISSTA '04},
+  year      = {2004},
+  pages     = {195--205}
+} 
+
+@article{PimentelNovelty2014,
+  title     = {A review of novelty detection},
+  author    = {Pimentel, Marco A. F. and Clifton, David A. and Clifton, Lei and Tarassenko, Lionel},
+  journal   = {Signal Processing},
+  volume    = {99},
+  year      = {2014},
+  pages     = {215--249}
+}
+
+@inproceedings{LoPattern2009,
+  author    = {Lo, David and Cheng, Hong and Han, Jiawei and Khoo, Siau-Cheng and Sun, Chengnian},
+  title     = {Classification of Software Behaviors for Failure Detection: A Discriminative Pattern Mining Approach},
+  booktitle = {Knowledge Discovery and Data Mining},
+  series    = {KDD '09},
+  year      = {2009},
+  pages     = {557--566}
+} 
+
+@article{HodgeOutliers2004,
+  year      = {2004},	
+  journal   = {Artificial Intelligence Review},
+  volume    = {22},
+  number    = {2},
+  title     = {A Survey of Outlier Detection Methodologies},
+  author    = {Hodge, Victoria J. and Austin, Jim},
+  pages     = {85-126}
+}
+
+@incollection{BenGalOutlier2010,
+  title     = {Outlier detection},
+  author    = {Ben-Gal, Irad},
+  booktitle = {Data mining and knowledge discovery handbook},
+  pages     = {117--130},
+  year      = {2010},
+  publisher = {Springer}
+}
+
+% Clustering
+
+@inproceedings{DickinsonFindingFailures2001,
+  author    = {Dickinson, William and Leon, David and Podgurski, Andy},
+  title     = {Finding Failures by Cluster Analysis of Execution Profiles},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '01},
+  year      = {2001},
+  pages     = {339--348}
+}
+
+@inproceedings{BurnimLooper2009,
+  title     = {Looper: {L}ightweight detection of infinite loops at runtime},
+  author    = {Burnim, Jacob and Jalbert, Nicholas and Stergiou, Christos and Sen, Koushik},
+  booktitle = {Automated Software Engineering},
+  series    = {ASE '09},
+  pages     = {161--169},
+  year      = {2009}
+}
+
+@inproceedings{CarbinJolt2011,
+  author    = {Michael Carbin and
+               Sasa Misailovic and
+               Michael Kling and
+               Martin C. Rinard},
+  title     = {Detecting and Escaping Infinite Loops with {J}olt},
+  booktitle = {European Conference on Object Oriented Programming},
+  year      = {2011},
+  pages     = {609--633}
+}
+
+@inproceedings{MaoMarkov2005,
+  author    = {Mao, Chengying and Lu, Yansheng},
+  title     = {Extracting the Representative Failure Executions via Clustering Analysis Based on {M}arkov Profile Model},
+  booktitle = {Advanced Data Mining and Applications},
+  series    = {ADMA '05},
+  year      = {2005},
+ pages     = {217--224}
+}
+
+@inproceedings{AmerLDCOF2012,
+  title     = {Nearest-neighbor and Clustering based Anomaly Detection Algorithms for {RapidMiner}},
+  author    = {Amer, Mennatallah and Goldstein, Markus},
+  booktitle = {RapidMiner Community Meeting and Conference},
+  series    = {RCOMM '12},
+  pages     = {1--12},
+  year      = {2012}
+}
+
+@article{HaranDeployed2007,
+  author    = {Haran, Murali and Karr, Alan and Last, Michael and Orso, Alessandro and Porter, Adam A. and Sanil, Ashish and Fouche, Sandro},
+  title     = {Techniques for Classifying Executions of Deployed Software to Support Software Engineering Tasks},
+  journal   = {IEEE Transactions on Software Engineering},
+  volume    = {33},
+  number    = {5},
+  year      = {2007},
+  pages     = {287--304}
+}
+
+@inproceedings{LuTiming2015,
+  author    = {Lu, Sixing and Lysecky, Roman},
+  title     = {Analysis of Control Flow Events for Timing-based Runtime Anomaly Detection},
+  booktitle = {Workshop on Embedded Systems Security},
+  series    = {WESS '15},
+  year      = {2015},
+  pages     = {3:1--3:8},
+  dsk_notes = {Reducing overhead and avoiding mimicry attacks in embedded systems.}
+} 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Oracle Problem
+%
+% BarrOracle15, KanewalaOracle2013, PezzeAutomated2014, ShresthaAssertions2011, CoppitSpecification2005, AutomatedStaats2012
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@article{BarrOracle15,
+  author    = {Barr, Earl T. and Harman, Mark and Mcminn, Phil and Shahbaz, Muzammil and Yoo, Shin},
+  journal   = {IEEE Transactions on Software Engineering}, 
+  number    = {5},
+  pages     = {507--525},
+  title     = {The Oracle Problem in Software Testing : A Survey},
+  volume    = {41},
+  year      = {2015}
+}
+
+@inproceedings{KanewalaOracle2013,
+  author    = {Kanewala, Upulee and Bieman, James M.},
+  title     = {Techniques for Testing Scientific Programs Without an Oracle},
+  booktitle = {Software Engineering for Computational Science and Engineering},
+  series    = {SE-CSE '13},
+  year      = {2013},
+  pages     = {48--57}
+}
+ 
+@article{PezzeAutomated2014,
+  title     = {Automated Test Oracles: A Survey},
+  author    = {Pezze, Mauro and Zhang, Cheng},
+  journal   = {Advances in Computers},
+  volume    = {95},
+  pages     = {1--48},
+  year      = {2014}
+}
+
+@inproceedings{ShresthaAssertions2011,
+  author    = {Shrestha, K. and Rutherford, M.J.},
+  booktitle = {Software Testing, Verification and Validation},
+  title     = {An Empirical Evaluation of Assertions as Oracles},
+  series    = {ICST '11},
+  year      = {2011},
+  pages     = {110--119}
+}
+
+@inproceedings{CoppitSpecification2005,
+  author    = {Coppit, D. and Haddox-Schatz, J.M.},
+  booktitle = {Software Engineering Workshop, 2005. 29th Annual IEEE/NASA},
+  title     = {On the Use of Specification-Based Assertions as Test Oracles},
+  year      = {2005},
+  pages     = {305--314},
+  series    = {SEW '05} 
+}
+
+
+@inproceedings{AutomatedStaats2012,
+  author    = {Staats, Matt and Gay, Gregory and Heimdahl, Mats P. E.},
+  title     = {Automated Oracle Creation Support, or: {H}ow I Learned to Stop Worrying About Fault Propagation and Love Mutation Testing},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '12},
+  year      = {2012},
+  pages     = {870--880}
+} 
+
+@article{FrounchiSegmentation2011,
+  title = {Automating image segmentation verification and validation by learning test oracles},
+  journal = {Information and Software Technology},
+  volume = {53},
+  number = {12},
+  pages = {1337--1348},
+  year = {2011},
+  author = {Kambiz Frounchi and Lionel C. Briand and Leo Grady and Yvan Labiche and Rajesh Subramanyan}
+}
+
+@article{ChanMesh2009,
+  title = {{PAT}: {A} pattern classification approach to automatic reference oracles for the testing of mesh simplification programs},
+  journal = {Journal of Systems and Software},
+  volume = {82},
+  number = {3},
+  pages = {422--434},
+  year = {2009},
+  author = {W.K. Chan and S.C. Cheung and Jeffrey C.F. Ho and T.H. Tse}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% GenProg / program repair
+%
+% ForrestGenProg2009GECCO, WeimerGenProg2009ICSE, LeGouesGenProgICSE2012, MechtaevAngelix2016, KimPar2013, LongStaged2015, LeGouesGenProg2012, TanCodeflaws2017, MartinezMining2015, TimperleyMutation2017
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{ForrestGenProg2009GECCO,
+  author    = {Forrest, Stephanie and Nguyen, ThanhVu and Weimer, Westley and {Le~Goues}, Claire},
+  title     = {A Genetic Programming Approach to Automated Software Repair},
+  booktitle = {Conference on Genetic and Evolutionary Computation},
+  series    = {GECCO '09},
+  year      = {2009},
+  pages     = {947--954}
+} 
+
+@inproceedings{WeimerGenProg2009ICSE,
+  author    = {Weimer, Westley and Nguyen, ThanhVu and Le Goues, Claire and Forrest, Stephanie},
+  title     = {Automatically Finding Patches Using Genetic Programming},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '09},
+  year      = {2009},
+  pages     = {364--374}
+} 
+
+@inproceedings{LeGouesGenProgICSE2012,
+  author    = {Claire {Le~Goues} and
+               Michael Dewey-Vogt and
+               Stephanie Forrest and
+               Westley Weimer},
+  title     = {A systematic study of automated program repair: {F}ixing 55
+               out of 105 bugs for \$8 each},
+  year      = {2012},
+  pages     = {3--13},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '12}
+}
+
+@inproceedings{MechtaevAngelix2016,
+  title     = {{Angelix}: {Scalable} multiline program patch synthesis via symbolic analysis},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '16},
+  author    = {Mechtaev, Sergey and Yi, Jooyong and Roychoudhury, Abhik},
+  pages     = {691--701},
+  year      = {2016}
+}
+
+@inproceedings{KimPar2013,
+  title     = {Automatic Patch Generation Learned from Human-written Patches},
+  booktitle = {International Conference on Software Engineering},
+  author    = {Kim, Dongsun and Nam, Jaechang and Song, Jaewoo and Kim, Sunghun},
+  pages     = {802--811},
+  series    = {ICSE '13},
+  year      = {2013}
+}
+
+@inproceedings{LongStaged2015,
+  author    = {Long, Fan and Rinard, Martin},
+  title     = {Staged Program Repair with Condition Synthesis},
+  booktitle = {Joint Meeting of the European Software Engineering Conference and the Symposium on the Foundations of Software Engineering},
+  series    = {ESEC/FSE '15},
+  year      = {2015},
+  pages     = {166--178},
+  keywords  = {Condition synthesis, Program repair, Staged repair}
+}
+
+@article{LeGouesGenProg2012,
+  title     = {{GenProg}: {A} generic method for automatic software repair},
+  author    = {{Le~Goues}, Claire and Nguyen, ThanhVu and Forrest, Stephanie and Weimer, Westley},
+  journal   = {IEEE Transactions on Software Engineering},
+  volume    = {38},
+  number    = {1},
+  pages     = {54--72},
+  year      = {2012}
+}
+
+@inproceedings{TanCodeflaws2017,
+  author    = {Tan, Shin Hwei and Yi, Jooyong and Yulis and Mechtaev, Sergey and Roychoudhury, Abhik},
+  title     = {Codeflaws: {A} Programming Competition Benchmark for Evaluating Automated Program Repair Tools},
+  series    = {ICSE '17 Poster},
+  year      = {2017},
+  booktitle = {International Conference on Software Engineering},
+  pages     = {180--182},
+  year      = {2017}
+}
+
+@article{MartinezMining2015,
+  author    = {Martinez, Matias and Monperrus, Martin},
+  title     = {Mining software repair models for reasoning on the search space of automated program fixing},
+  journal   = {Empirical Software Engineering},
+  year      = {2015},
+  volume    = {20},
+  number    = {1},
+  pages     = {176--205}
+}
+
+@inproceedings{TimperleyMutation2017,
+  author    = {Timperley, Christopher Steven and Stepney, Susan and {Le~Goues}, Claire},
+  title     = {An Investigation into the Use of Mutation Analysis for Automated Program Repair},
+  booktitle = {Search Based Software Engineering},
+  series    = {SSBSE '17},
+  year      = {2017},
+  pages     = {99--114}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Testing, Generally
+%
+% KastnerToward2012, RafaelLenzLinking2013, PodgurskiReports2003, WegenerSystematic1996, XieUnit2006, FraserMemetic2013, RojasMultiple2015, MillerFuzz1990, DoControlled2005, MetwallyMoth2016, PachecoLET2007, PacheoEclat2005, PacheoFeedback2007, FraserMutation2012, FraserWholeSuites2011, GodefroidDART2005, CadarEXE2008, DoDynamicSymbolic2013, LakhotiaBranch2010, EmmiDynamic2007, OliveiraCoevolutionary2013, MocaoShrinking2013, FraserMemetic2015, LiRegression2007, DaiOptimal2003, LiuAutomated2014, CiupaAdaptive2008, AndrewsTool2006, JohnsonFalsePositives2013, BinderTesting2000, YueMutation2011, CsallnerCheckncrash2005, FraserEvosuite2011, FraserMutationOracles2010
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{KastnerToward2012,
+  title     = {Toward variability-aware testing},
+  author    = {K{\"a}stner, Christian and Von Rhein, Alexander and Erdweg, Sebastian and Pusch, Jonas and Apel, Sven and Rendel, Tillmann and Ostermann, Klaus},
+  booktitle = {International Workshop on Feature-Oriented Software Development},
+  pages     = {1--8},
+  year      = {2012},
+  series    = {FOSD '12}
+}
+
+@article{RafaelLenzLinking2013,
+  author    = {Rafael Lenz, Alexandre and Pozo, Aurora and Regina Vergilio, Silvia},
+  title     = {Linking Software Testing Results with a Machine Learning Approach},
+  journal   = {Engingeering Applications of Artifical Intelligence},
+  volume    = {26},
+  number    = {5-6},
+  year      = {2013},
+  issn      = {0952-1976},
+  pages     = {1631--1640}
+}
+
+@inproceedings{PodgurskiReports2003,
+  author    = {Podgurski, Andy and Leon, David and Francis, Patrick and Masri, Wes and Minch, Melinda and Sun, Jiayang and Wang, Bin},
+  title     = {Automated Support for Classifying Software Failure Reports},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '03},
+  year      = {2003},
+  pages     = {465--475}
+}
+
+@inproceedings{WegenerSystematic1996,
+  title     = {Systematic testing of real-time systems},
+  author    = {Wegener, Joachim and Grimm, Klaus and Grochtmann, Matthias and Sthamer, Harmen and Jones, Bryan},
+  booktitle = {Software Testing Analysis and Review},
+  series    = {EuroStar '96},
+  year      = {1996}
+}
+
+@inproceedings{XieUnit2006,
+  author    = {Xie, Tao},
+  title     = {Augmenting Automatically Generated Unit-test Suites with Regression Oracle Checking},
+  booktitle = {European Conference on Object-Oriented Programming},
+  series    = {ECOOP '06},
+  year      = {2006},
+  pages     = {380--403}
+}
+
+@inproceedings{FraserMemetic2013,
+  title     = {Test suite generation with memetic algorithms},
+  author    = {Fraser, Gordon and Arcuri, Andrea and McMinn, Phil},
+  booktitle = {Genetic and Evolutionary Computation},
+  series    = {GECCO '13},
+  pages     = {1437--1444},
+  year      = {2013},
+  organization= {ACM}
+}
+
+@inproceedings{RojasMultiple2015,
+  title     = {Combining Multiple Coverage Criteria in Search-Based Unit Test Generation},
+  author    = {Rojas, Jos{\'e} Miguel and Campos, Jos{\'e} and Vivanti, Mattia and Fraser, Gordon and Arcuri, Andrea},
+  booktitle = {Search Based Software Engineering},
+  series    = {SSBSE '15},
+  pages     = {93--108},
+  year      = {2015}
+}
+
+@article{MillerFuzz1990,
+  author    = {Miller, Barton P. and Fredriksen, Lars and So, Bryan},
+  title     = {An empirical study of the reliability of UNIX utilities},
+  journal   = {Communications of the ACM},
+  volume    = {33},
+  issue     = {12},
+  year      = {1990},
+  pages     = {32--44}
+}
+
+@article{DoControlled2005,
+  author    = {Hyunsook Do and
+              Sebastian G. Elbaum and
+              Gregg Rothermel},
+  title     = {Supporting Controlled Experimentation with Testing Techniques:
+             An Infrastructure and its Potential Impact.},
+  journal   = {Empirical Software Engineering: An International Journal},
+  volume    = {10},
+  number    = {4},
+  pages     = {405--435},
+  year      = {2005}
+}
+
+@inproceedings{MetwallyMoth2016,
+  author    = {A. S. Metwally and E. Hosam and M. M. Hassan and S. M. Rashad},
+  booktitle = {International Symposium on Software Reliability Engineering},
+  series    = {ISSRE '16},
+  title     = {{WAP}: {A} Novel Automatic Test Generation Technique Based on Moth Flame Optimization},
+  year      = {2016},
+  pages     = {59--64}
+}
+
+@inproceedings{PachecoRandoop2007,
+   author    = {Carlos Pacheco and Shuvendu K. Lahiri and Michael D. Ernst
+	and Thomas Ball},
+   title     = {Feedback-directed random test generation},
+   booktitle = {International Conference on Software Engineering},
+   pages     = {75--84},
+   series    = {ICSE '07},
+   year      = {2007}
+}
+
+@inproceedings{PacheoRandoopDotnet2008,
+  author    = {Carlos Pacheco and Shuvendu K. Lahiri and Thomas Ball},
+  title     = {Finding Errors in {.NET} with Feedback-directed Random Testing},
+  booktitle = {International Symposium on Software Testing and Analysis},
+  series    = {ISSTA '08},
+  pages     = {87--96},
+  year      = {2008}
+}
+
+@inproceedings{PacheoEclat2005,
+  author    = {Carlos Pacheco and Michael D. Ernst},
+  title     = {Eclat: {A}utomatic generation and classification of test inputs},
+  booktitle = {European Converence on Object-Oriented Programming},
+  series    = {ECOOP '05},
+  pages     = {504--527},
+  year      = {2005}
+}
+
+@inproceedings{PacheoFeedback2007,
+  author    = {Carlos Pacheco and Shuvendu K. Lahiri and Michael D. Ernst
+      and Thomas Ball},
+  title     = {Feedback-directed random test generation},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '07},
+  pages     = {75--84},
+  year      = {2007}
+}
+
+@article{FraserMutation2012,
+  author    = {Gordon Fraser and
+               Andreas Zeller},
+  title     = {Mutation-Driven Generation of Unit Tests and Oracles},
+  journal   = {Transactions on Software Engineering},
+  volume    = {38},
+  number    = {2},
+  year      = {2012},
+  pages     = {278--292}
+}
+
+@inproceedings{FraserWholeSuites2011,
+  author    = {Fraser, Gordon and Arcuri, Andrea},
+  title     = {Evolutionary Generation of Whole Test Suites},
+  booktitle = {International Conference on Quality Software},
+  series    = {QSIC '11},
+  year      = {2011},
+  pages     = {31--40}
+}
+
+@inproceedings{GodefroidDART2005,
+  author    = {Godefroid, Patrice and Klarlund, Nils and Sen, Koushik},
+  title     = {{DART: Directed Automated Random Testing}},
+  booktitle = {Programming Language Design and Implementation},
+  series    = {PLDI '05},
+  year      = {2005},
+  pages     = {213--223}
+}
+
+@article{CadarEXE2008,
+  title     = {EXE: automatically generating inputs of death},
+  author    = {Cadar, Cristian and Ganesh, Vijay and Pawlowski, Peter M. and Dill, David L. and Engler, Dawson R.},
+  journal   = {ACM Transactions on Information and System Security (TISSEC)},
+  volume    = {12},
+  number    = {2},
+  year      = {2008},
+  publisher = {ACM}
+}
+
+@incollection{DoDynamicSymbolic2013,
+  year      = {2013},
+  isbn      = {978-3-642-45421-9},
+  booktitle = {Evaluation of Novel Approaches to Software Engineering},
+  volume    = {410},
+  series    = {Communications in Computer and Information Science},
+  editor    = {Maciaszek, Leszek A. and Filipe, Joaquim},
+  title     = {Dynamic Symbolic Execution Guided by Data Dependency Analysis for High Structural Coverage},
+  author    = {Do, TheAnh and Fong, A.C.M. and Pears, Russel},
+  pages     = {3--15}
+}
+
+@article{LakhotiaBranch2010,
+  title     = {An empirical investigation into branch coverage for C programs using {CUTE} and {AUSTIN}},
+  journal   = {Journal of Systems and Software},
+  volume    = {83},
+  number    = {12},
+  pages     = {2379--2391},
+  year      = {2010},
+  author    = {Kiran Lakhotia and Phil McMinn and Mark Harman}
+}
+
+@inproceedings{EmmiDynamic2007,
+  author    = {Emmi, Michael and Majumdar, Rupak and Sen, Koushik},
+  title     = {Dynamic Test Input Generation for Database Applications},
+  booktitle = {International Symposium on Software Testing and Analysis},
+  series    = {ISSTA '07},
+  year      = {2007},
+  pages     = {151--162}
+}
+
+@inproceedings{OliveiraCoevolutionary2013,
+  author    = {Andr{\'{e}} Assis L{\^{o}}bo de Oliveira and
+               Celso Gonyalves Camilo{-}Junior and
+               Auri M. R. Vincenzi},
+  title     = {A coevolutionary algorithm to automatic test case selection and mutant in Mutation Testing},
+  booktitle = {Congress on Evolutionary Computation},
+  series    = {CEC '13},
+  pages     = {829--836},
+  year      = {2013}
+} 
+
+@inproceedings{MocaoShrinking2013,
+  author    = {Ana Claudia B. {Loureiro Moncao} and
+               Celso G. {Camilo-Junior} andLeGouesGenProg2012
+               Leonardo T. Queiroz and
+               C{\'{a}}ssio L. Rodrigues and
+               Plinio de {Sa~Leitao-Junior} and
+               Auri M. R. Vincenzi},
+  title     = {Shrinking a database to perform {SQL} mutation tests using an evolutionary algorithm},
+  booktitle = {Congress on Evolutionary Computation},
+  series    = {CEC '13},
+  pages     = {2533--2539},
+  year      = {2013}
+}
+
+@article{FraserMemetic2015, 
+  title     = {A Memetic Algorithm for whole test suite generation}, 
+  journal   = {Journal of Systems and Software}, 
+  volume    = {103}, 
+  number    = {0}, 
+  pages     = {311 - 327}, 
+  year      = {2015},
+  author    = {Gordon Fraser and Andrea Arcuri and Phil McMinn}
+ }
+
+@article{DaiOptimal2003,
+  author    = {Dai, Y. S. and Xie, M. and Poh, K. L. and Yang, B.},
+  title     = {Optimal Testing-resource Allocation with Genetic Algorithm for Modular Software Systems},
+  journal   = {Journal of Systems and Software},
+  volume    = {66},
+  number    = {1},
+  year      = {2003},
+  pages     = {47--55}
+} 
+
+@article{LiRegression2007,
+  author   = {Z. Li and M. Harman and R. M. Hierons},
+  journal  = {{IEEE} Transactions on Software Engineering},
+  title    = {Search Algorithms for Regression Test Case Prioritization},
+  year     = {2007},
+  volume   = {33},
+  number   = {4},
+  pages    = {225--237},
+  month    = {April}
+}
+
+@inproceedings{LiuAutomated2014,
+  author    = {Z. Liu and P. Mei},
+  booktitle = {International Conference on Software Engineering and Service Science},
+  series    = {ICSESS '14},
+  title     = {Automated testing for large-scale critical software systems},
+  year      = {2014},
+  pages     = {200--203}
+}
+
+@inproceedings{CiupaAdaptive2008,
+  author    = {Ciupa, Ilinca and Leitner, Andreas and Oriol, Manuel and Meyer, Bertrand},
+  title     = {{ARTOO}: {A}daptive Random Testing for Object-oriented Software},
+  booktitle = {International Conference on Software EngineerinCadarEXE2008g},
+  series    = {ICSE '08},
+  year      = {2008},
+  pages     = {71--80}
+} 
+
+@inproceedings{AndrewsTool2006,
+  author    = {Andrews, James H. and Haldar, Susmita and Lei, Yong and Li, Felix Chun Hang},
+  title     = {Tool Support for Randomized Unit Testing},
+  booktitle = {Random Testing},
+  series    = {RT '06},
+  year      = {2006},
+  pages     = {36--45}
+}
+
+@inproceedings{JohnsonFalsePositives2013,
+  author    = {Johnson, Brittany and Song, Yoonki and Murphy-Hill, Emerson and Bowdidge, Robert},
+  title     = {Why Don't Software Developers Use Static Analysis Tools to Find Bugs?},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '13},
+  year      = {2013},
+  pages     = {672--681}
+} 
+ 
+@book{BinderTesting2000,
+  author    = {Binder, Robert},
+  booktitle = {Testing object-oriented systems: models, patterns, and tools},
+  isbn      = {0201809389},
+  publisher = {Addison-Wesley},
+  year      = {2000}
+}
+
+@Article{YueMutation2011,
+  author    = {Yue Jia and Mark Harman},
+  title     = {An Analysis and Survey of the Development of Mutation Testing},
+  journal   = {Transactions on Software Engineering},
+  number    = {5},
+  volume    = {37},
+  year      = {2011},
+  pages     = {649--678}
+}
+
+@inproceedings{CsallnerCheckncrash2005,
+  author    = {Christoph Csallner and Yannis Smaragdakis},
+  title     = {{Check} 'n' {Crash}: Combining static checking and testing},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '05},
+  pages     = {422--431},
+  year      = {2005}
+}
+
+@inproceedings{FraserEvosuite2011,
+  author    = {Fraser, Gordon and Arcuri, Andrea},
+  title     = {{EvoSuite}: automatic test suite generation for object-oriented software},
+  booktitle = {Joint Meeting of the European Software Engineering Conference and the Symposium on the Foundations of Software Engineering},
+  series    = {ESEC/FSE '11},
+  year      = {2011},
+  pages     = {416--419}
+}
+
+@inproceedings{FraserMutationOracles2010,
+  author    = {Fraser, Gordon and Zeller, Andreas},
+  title     = {Mutation-driven Generation of Unit Tests and Oracles},
+  booktitle = {International Symposium on Software Testing and Analysis},
+  series    = {ISSTA '10},
+  year      = {2010},
+  pages     = {147--158}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bug Classification / Bug Types
+%
+% CotroneoTriggers2013, SahooServer2010, LiChanged2006, ShanMistakes2008, HenningssonFaultClassification2004, AsadollahConcurrency2015, ElEmamRepeatability1998, GrottkeSpace2010, SteinbauerRobocup2013
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@article{AvizienisTaxonomy2004,
+  author = {Avizienis, Algirdas and Laprie, Jean-Claude and Randell, Brian and Landwehr, Carl},
+  title = {Basic Concepts and Taxonomy of Dependable and Secure Computing},
+  journal = {IEEE Transactions on Dependable and Secure Computing},
+  volume = {1},
+  number = {1},
+  month = {Jan},
+  year = {2004},
+  pages = {11--33},
+  publisher = {IEEE Computer Society Press},
+  address = {Los Alamitos, CA, USA}
+} 
+
+@inproceedings{CotroneoTriggers2013,
+  author    = {Domenico Cotroneo and Michael Grottke and Roberto Natella and Roberto Pietrantuono and Kishor S. Trivedi},
+  booktitle = {International Symposium on Software Reliability Engineering},
+  series    = {ISSRE '13},
+  title     = {Fault triggers in open-source software: {A}n experience report},
+  pages     = {178--187},
+  year      = {2013}
+}
+
+@inproceedings{SahooServer2010,
+  author    = {Swarup Kumar Sahoo and John Criswell and Vikram Adve},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '10},
+  title     = {An empirical study of reported bugs in server software with implications for automated bug diagnosis},
+  pages     = {485--494},
+  year      = {2010}
+}
+
+@inproceedings{LiChanged2006,
+  author    = {Li, Zhenmin and Tan, Lin and Wang, Xuanhui and Lu, Shan and Zhou, Yuanyuan and Zhai, Chengxiang},
+  title     = {Have Things Changed Now?: {A}n Empirical Study of Bug Characteristics in Modern Open Source Software},
+  booktitle = {Architectural and System Support for Improving Software Dependability},
+  series    = {ASID '06},
+  year      = {2006},
+  pages     = {25--33}
+}
+
+@inproceedings{ShanMistakes2008,
+  author    = {Lu, Shan and Park, Soyeon and Seo, Eunsoo and Zhou, Yuanyuan},
+  title     = {Learning from Mistakes: A Comprehensive Study on Real World Concurrency Bug Characteristics},
+  booktitle = {Architectural Support for Programming Languages and Operating Systems},
+  series    = {ASPLOS '08},
+  year      = {2008},
+  pages     = {329--339}
+}
+
+
+@inproceedings{HenningssonFaultClassification2004,
+  author    = {Kennet Henningsson and Claes Wohlin},
+  booktitle = {International Symposium on Empirical Software Engineering},
+  series    = {ISESE '04},
+  title     = {Assuring fault classification agreement - an empirical evaluation},
+  pages     = {95--104},
+  year      = {2004}
+}
+
+@inproceedings{AsadollahConcurrency2015,
+  author    = {Sara Abbaspour Asadollah and Hans Hansson and Daniel Sundmark and Sigrid Eldh},
+  booktitle = {Complex Faults and Failures in Large Software Systems},
+  series    = {COUFLESS '15},
+  title     = {Towards Classification of Concurrency Bugs Based on Observable Properties},
+  pages     = {41--47},
+  year      = {2015}
+}
+
+@inproceedings{ElEmamRepeatability1998,
+  author    = {Khaled {El~Emam} and Isabella Wieczorek},
+  booktitle = {International Symposium on Software Reliability Engineering},
+  series    = {ISSRE '98},
+  title     = {The repeatability of code defect classifications},
+  pages     = {322--333},
+  year      = {1998}
+}
+
+@inproceedings{GrottkeSpace2010,
+  author    = {Michael Grottke and Allen P. Nikora and Kishor S. Trivedi},
+  booktitle = {Dependable Systems Networks},
+  title     = {An empirical investigation of fault types in space mission system software},
+  series    = {DSN '10},
+  year      = {2010},
+  pages     = {447--456}
+}
+
+@incollection{SteinbauerRobocup2013,
+  author    = {Steinbauer, Gerald},
+  editor    = {Chen, Xiaoping and Stone, Peter and Sucar, Luis Enrique and {van der Zant}, Tijn},
+  title     = {A Survey about Faults of Robots Used in RoboCup},
+  booktitle = {{RoboCup} 2012: Robot Soccer World Cup XVI},
+  year      = {2013},
+  address   = {Berlin, Heidelberg},
+  pages     = {344--355}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Motivation
+%
+% SchiaparelliExomars2016, AlphabetDrone2017, GlaserAmazonDrone2017
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@article{BBCZune2008,
+  title     = {{M}icrosoft {Z}une affected by `bug'},
+  year      = {2008},
+  month     = {December},
+  url       = {http://news.bbc.co.uk/2/hi/technology/7806683.stm}
+}
+
+
+@misc{SchiaparelliExomars2016,
+  title     = {Schiaparelli Landing Investigation Makes Progress},
+  year      = {2016},
+  url       = {http://www.esa.int/Our_Activities/Space_Science/ExoMars/Schiaparelli_landing_investigation_makes_progress},
+  note= {Accessed Mar. 1, 2018}
+}
+
+@misc{AlphabetDrone2017,
+  title     = {Alphabet Drones Will Deliver Burritos in Australia Test},
+  year      = {2017},
+  url= {https://www.bloomberg.com/news/articles/2017-10-16/drones-to-deliver-burritos-in-australia-as-alphabet-begins-tests},
+  note= {Accessed Mar. 1, 2018},
+  author    = {Alan Levin}
+}
+
+@misc{GlaserAmazonDrone2017,
+  title     = {Watch {Amazon's Prime Air} make its first public U.S. drone delivery},
+  year      = {2017},
+  author    = {April Glaser},
+  url       = {https://www.recode.net/2017/3/24/15054884/amazon-prime-air-public-us-drone-delivery},
+  note      = {Accessed Mar. 1, 2018}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% General Software Engineering
+%
+% SeacordLegacy2003, OneSmashing1996, WilliamsonCost2008, ZhivichCost2009, EnglerDeviant2001, MeyerEiffel1988, BryantCSAPP2010, SimBenchmarking2003, BirdFair2009, CotroneoAging2015, FraserBloat2011
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@book{SeacordLegacy2003,
+  author    = {Seacord, Robert C. and Plakosh, Daniel and Lewis, Grace A.},
+  title     = {Modernizing Legacy Systems: Software Technologies, Engineering Process and Business Practices},
+  year      = {2003},
+  isbn      = {0321118847},
+  publisher = {Addison-Wesley Longman Publishing Co., Inc.},
+  address   = {Boston, MA, USA}
+} 
+
+@article{OneSmashing1996,
+  title     = {Smashing the stack for fun and profit},
+  author    = {One, Aleph},
+  journal   = {Phrack magazine},
+  volume    = {7},
+  number    = {49},
+  pages     = {14--16},
+  year      = {1996}
+}
+
+@inproceedings{WilliamsonCost2008,
+  title     = {Presented as {IBM} {R}ational Software Analyzer: Beyond Source Code},
+  booktitle = {Rational Software Developer Conference},
+  author    = {Leigh Williamson},
+  year      = {2008},
+  series    = {RSDC '08},
+  howpublished = {\url{ftp://public.dhe.ibm.com/software/uk/itsolutions/developer/rsdc/keynotes/am07-rsar-beyond-source-code-rsdc-08-v1a.pdf}}
+}
+
+@article{ZhivichCost2009,
+  author    = {Michael Zhivich and Robert K. Cunningham},
+  journal   = {IEEE Security and Privacy},
+  title     = {The Real Cost of Software Errors},
+  year      = {2009},
+  volume    = {7},
+  number    = {2},
+  pages     = {87--90}
+}
+
+@inproceedings{EnglerDeviant2001,
+  author     = {Engler, Dawson and Chen, David Yu and Hallem, Seth and Chou, Andy and Chelf, Benjamin},
+  title      = {Bugs as Deviant Behavior: A General Approach to Inferring Errors in Systems Code},
+  booktitle  = {Symposium on Operating Systems Principles},
+  pages      = {57--72},
+  series     = {SOSP '01},
+  year       = {2001}
+}
+
+@article{MeyerEiffel1988,
+  title     = {Eiffel: A language and environment for software engineering},
+  author    = {Meyer, Bertrand},
+  journal   = {Journal of Systems and Software},
+  volume    = {8},
+  number    = {3},
+  pages     = {199--246},
+  year      = {1988}
+}
+
+@book{BryantCSAPP2010,
+  author    = {Bryant, Randal E. and O'Hallaron, David R.},
+  title     = {Computer Systems: A Programmer's Perspective},
+  year      = {2010},
+  isbn      = {0136108040, 9780136108047},
+  edition   = {2nd},
+  publisher = {Addison-Wesley Publishing Company},
+  address   = {USA}
+}
+
+@inproceedings{SimBenchmarking2003,
+  author    = {Sim, Susan Elliot and Easterbrook, Steve and Holt, Richard C.},
+  title     = {Using Benchmarking to Advance Research: A Challenge to Software Engineering},
+  booktitle = {International Conference on Software Engineering},
+  year      = {2003},
+  pages     = {74--83},
+  series    = {ICSE '03}
+}
+
+@inproceedings{BirdFair2009,
+  author    = {Bird, Christian and Bachmann, Adrian and Aune, Eirik and Duffy, John and Bernstein, Abraham and Filkov, Vladimir and Devanbu, Premkumar},
+  title     = {Fair and Balanced?: Bias in Bug-fix Datasets},
+  booktitle = {Joint Meeting of the European Software Engineering Conference and the Symposium on The Foundations of Software Engineering},
+  series    = {ESEC/FSE '09},
+  year      = {2009},
+  pages     = {121--130}
+}
+
+@inproceedings{CotroneoAging2015,
+  author    = {Domenico Cotroneo and Antonio Ken Iannillo and Roberto Natella and Roberto Pietrantuono and Stefano Russo},
+  booktitle = {International Symposium on Software Reliability Engineering Workshops},
+  title     = {The software aging and rejuvenation repository: http://openscience.us/repo/software-aging/},
+  year      = {2015},
+  series    = {ISSREW '15},
+  pages     = {108--113}
+}
+
+@inproceedings{FraserBloat2011,
+  author    = {Fraser, Gordon and Arcuri, Andrea},
+  title     = {It is Not the Length That Matters, It is How You Control It},
+  booktitle = {International Conference on Software Testing, Verification and Validation},
+  series    = {ICST '11},
+  year      = {2011},
+  pages     = {150--159}
+}
+
+@article{OstertagSimilarity1992,
+  author    = {Ostertag, Eduardo and Hendler, James and D\'{\i}az, Rub{\'e}n Prieto and Braun, Christine},
+  title     = {Computing Similarity in a Reuse Library System: An AI-based Approach},
+  journal   = {ACM Transactions on Software Engineering and Methodology},
+  volume    = {1},
+  number    = {3},
+  year      = {1992},
+  pages     = {205--228},
+  dsk_notes = {Not very relevant}
+}
