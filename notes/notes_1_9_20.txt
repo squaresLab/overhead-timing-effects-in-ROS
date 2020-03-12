@@ -18,3 +18,13 @@ has it been fixed in a new release? should you report it to R?
 
 are you using the right parameters with the python bindings? does it know you're working in C++?
 the relevant file is dskatz@gs12629:~/ardupilot/ArduCopter/system.diff.cpp
+=============================================================
+
+Jan 23
+
+change the filename representation in the create_mutations
+
+make some shorter missions
+
+find a way to combine patches
+--the first way was manifestly wrong
