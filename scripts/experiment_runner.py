@@ -55,7 +55,7 @@ def get_mutations(args: argparse.Namespace) -> List[str]:
     for patch_fn in patch_fns:
         with open(patch_fn) as f:
             diff = f.read()
-            diffs.append(diff)
+            diffs.append((patch_fn, diff))
     return diffs
 
 
@@ -318,6 +318,8 @@ def access_bag_db(db_fn: str) -> sqlite3.Cursor:
            container_uuid text,
            mission_sha text,
            mission_fn text,
+           mutation_sha txt,
+           mutation_fn txt,
            context text
        ); """
 
@@ -331,28 +333,41 @@ def access_bag_db(db_fn: str) -> sqlite3.Cursor:
     try:
         c.execute(sql_create_bagfns_table)
     except sqlite3.Error as e:
-        logger.warning(e)
+        logging.warning(e)
+    conn.commit()
 
-    return c
 
+    return c, conn
 
-def store_bag_fn(system, cursor, mission_fn: str,
-                 docker_image: str, context: str, bag_fn: str) -> None:
-    docker_image_sha = system.description.sha256
-    container_uuid = str(system.uuid)
-    logger.info("container_uuid: %s" % container_uuid)
+def file_hash(filename: str) -> str:
     BLOCKSIZE = 65536
     hasher = hashlib.sha1()
-    with open(mission_fn, 'rb') as afile:
+    with open(filename, 'rb') as afile:
         buf = afile.read(BLOCKSIZE)
         while len(buf) > 0:
             hasher.update(buf)
             buf = afile.read(BLOCKSIZE)
-    mission_sha = hasher.hexdigest()
-    command = "INSERT INTO bagfns VALUES (?, ?, ?, ?, ?, ?, ?)"
+    sha = hasher.hexdigest()
+    return sha
+
+
+def store_bag_fn(system, cursor, conn, mission_fn: str,
+                 docker_image: str, context: str, bag_fn: str,
+                 mutation_fn: str) -> None:
+    docker_image_sha = system.description.sha256
+    container_uuid = str(system.uuid)
+    print("container_uuid: %s" % container_uuid)
+
+    mission_sha = file_hash(mission_fn)
+    if mutation_fn is not "None":
+        mutation_sha = file_hash(mutation_fn)
+    else:
+        mutation_sha = "None"
+    command = "INSERT INTO bagfns VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     values = (bag_fn, docker_image_sha, docker_image, container_uuid,
-              mission_sha, mission_fn, context)
+              mission_sha, mission_fn, mutation_sha, mutation_fn, context)
     cursor.execute(command, values)
+    conn.commit()
 
 
 def get_bag_fn() -> str:
@@ -362,38 +377,45 @@ def get_bag_fn() -> str:
     return name
 
 
-def execute_experiment(system, cursor, mission_fn: str,
+def execute_experiment(system, cursor, conn, mission_fn: str,
                        docker_image, context, home,
                        use_dronekit: bool, use_mavproxy: bool,
-                       port_pool_mavlink: CircleIntBuffer) -> None:
+                       port_pool_mavlink: CircleIntBuffer,
+                       mutation_fn="None") -> None:
     bag_fn = get_bag_fn()
-    store_bag_fn(system, cursor, mission_fn, docker_image, context, bag_fn)
+    store_bag_fn(system=system, cursor=cursor, conn=conn,
+                 mission_fn=mission_fn,
+                 docker_image=docker_image, context=context, bag_fn=bag_fn,
+                 mutation_fn=mutation_fn)
     run_commands(system, mission_fn, bag_fn, home, use_dronekit, use_mavproxy,
                  port_pool_mavlink)
 
 
 def run_experiments(rsw, docker_image: str,
-                    mutations: List[str], mission_files: List[str],
+                    mutations: List[Any], mission_files: List[str],
                     mutate: bool, context: str, baseline_iterations: int,
-                    cursor, home, use_dronekit: bool,
+                    cursor, conn, home, use_dronekit: bool,
                     use_mavproxy: bool) -> None:
     port_pool_mavlink = CircleIntBuffer(13000, 135000)
 
     for mission_fn in mission_files:
         for i in range(baseline_iterations):
+            logging.debug(f"baseline iteration {i} of {baseline_iterations}")
+            print(f"baseline iteration {i} of {baseline_iterations}")
             with rsw.launch(docker_image) as system:
-                execute_experiment(system, cursor, mission_fn, docker_image,
+                execute_experiment(system, cursor, conn, mission_fn,
+                                   docker_image,
                                    context, home, use_dronekit, use_mavproxy,
                                    port_pool_mavlink)
 
         if mutate:
-            for diff in mutations:
+            for diff_fn, diff in mutations:
                 with rsw.launch(docker_image) as system:
                     system = build_patched_system(system, diff, context)
-                    execute_experiment(system, cursor, mission_fn,
+                    execute_experiment(system, cursor, conn, mission_fn,
                                        docker_image, context, home,
                                        use_dronekit, use_mavproxy,
-                                       port_pool_mavlink)
+                                       port_pool_mavlink, mutation_fn=diff_fn)
 
 
 def parse_args() -> argparse.Namespace:
@@ -444,14 +466,15 @@ def main() -> None:
     mutations = get_mutations(args)
     missions = [convert_mission(fn) for fn in args.mission_files]
 
-    cursor = access_bag_db(args.db_fn)
+    cursor, conn = access_bag_db(args.db_fn)
 
     home = dict((('lat', args.home_lat), ('long', args.home_long),
                  ('alt', args.home_alt)))
     run_experiments(rsw, docker_image, mutations, args.mission_files,
                     args.mutate,
-                    args.context, args.baseline_iterations, cursor, home,
+                    args.context, args.baseline_iterations, cursor, conn, home,
                     args.use_dronekit, args.use_mavproxy)
+    conn.close()
 
 
 if __name__ == '__main__':
