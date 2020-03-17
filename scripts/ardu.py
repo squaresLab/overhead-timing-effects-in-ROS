@@ -337,7 +337,9 @@ class SITL:
         # FIXME temporary workaround for problems with .terminate
         # self._process.terminate()
         cmd_kill = f'killall -15 {self.binary}'
-        self._shell.run(cmd_kill)
+        logger.debug(f'killing SITL via command: {cmd_kill}')
+        cmd_kill_outcome = self._shell.run(cmd_kill)
+        logger.debug(f'outcome [{cmd_kill}]: {cmd_kill_outcome}')
         try:
             retcode = self._process.wait(0.5)
         except subprocess.TimeoutExpired:
