@@ -2,7 +2,8 @@ import argparse
 import hashlib
 from contextlib import closing, ExitStack
 
-from loguru import logger
+import logging
+#from loguru import logger
 import os
 import sqlite3
 import time
@@ -105,15 +106,15 @@ def convert_mission(mission_fn: str) -> List[Any]:
 
 
 def build_patched_system(system, diff: str, context: str):
-    logger.info("applying patch")
+    logging.info("applying patch")
     system.files.patch(context, diff)
-    logger.info("patch applied")
+    logging.info("patch applied")
 
     dir_workspace = '/ros_ws'
 
     catkin = system.catkin(dir_workspace)
     catkin.build()
-    logger.info("rebuilt")
+    logging.info("rebuilt")
     return system
 
 
@@ -135,45 +136,45 @@ def run_mavros(system, mission, ros):
     time.sleep(60)
 
     # wait for the copter
-    logger.info("waiting...")
+    logging.info("waiting...")
     time.sleep(10)
-    logger.info("finished waiting")
+    logging.info("finished waiting")
 
     # Execute a mission
-    logger.info(WaypointPushRequest.format.to_dict())
-    logger.info("mission:\n%s\n" % str(mission))
+    logging.info(WaypointPushRequest.format.to_dict())
+    logging.info("mission:\n%s\n" % str(mission))
     request_waypoint = WaypointPushRequest(waypoints=mission)
-    logger.info("request_waypoint:\n%s\n\n" % str(request_waypoint))
+    logging.info("request_waypoint:\n%s\n\n" % str(request_waypoint))
     wp_service = '/mavros/mission/push'
     response_waypoint = ros.services[wp_service].call(request_waypoint)
     assert response_waypoint.success
-    logger.info("WaypointPush successful")
+    logging.info("WaypointPush successful")
 
     # wait for the copter
-    logger.info("waiting...")
+    logging.info("waiting...")
     time.sleep(10)
-    logger.info("finished waiting")
+    logging.info("finished waiting")
 
     # arm the copter
     request_arm = CommandBoolRequest(value=True)
     response_arm = ros.services['/mavros/cmd/arming'].call(request_arm)
     assert response_arm.success
-    logger.info("arm successful")
+    logging.info("arm successful")
 
     # wait for the copter
-    logger.info("waiting...")
+    logging.info("waiting...")
     time.sleep(2)
-    logger.info("finished waiting")
+    logging.info("finished waiting")
     request_auto = SetModeRequest(base_mode=0,
                                   custom_mode='AUTO')
     response_auto = ros.services['/mavros/set_mode'].call(request_auto)
     assert response_auto.success
-    logger.info("set_mode AUTO successful")
+    logging.info("set_mode AUTO successful")
 
     # wait for the copter
-    logger.info("waiting...")
+    logging.info("waiting...")
     time.sleep(2)
-    logger.info("finished waiting")
+    logging.info("finished waiting")
 
     request_long = CommandLongRequest(
         0, 300, 0, 1, len(mission) + 1, 0, 0, 0, 0, 4)
@@ -181,11 +182,11 @@ def run_mavros(system, mission, ros):
     response_long = ros.services['/mavros/cmd/command'].call(request_long)
     assert response_long.success, response_long
 
-    logger.info("waiting for copter to execute waypoints")
-    logger.info("Waiting for copter to execute waypoints.")
+    logging.info("waiting for copter to execute waypoints")
+    logging.info("Waiting for copter to execute waypoints.")
     time.sleep(300)
-    logger.info("Finished waiting for waypoints.")
-    logger.info("finished waiting for waypoints")
+    logging.info("Finished waiting for waypoints.")
+    logging.info("finished waiting for waypoints")
 
 
 def run_dronekit(system, mission_fn: str, mission_timeout=500):
@@ -203,7 +204,7 @@ def run_dronekit(system, mission_fn: str, mission_timeout=500):
         try:
             wpl_mission.execute(vehicle, timeout_mission=mission_timeout)
         except TimeoutError:
-            logger.debug("mission timed out")
+            logging.debug("mission timed out")
 
 
 def get_port_numbers(count, port_pool_mavlink):
@@ -225,7 +226,7 @@ def mavproxy(system, mission_fn: str, logfile_name: str,
     model = "copter"
     speedup = 1
     ports = get_port_numbers(3, port_pool_mavlink)
-    logger.info("ports: %s" % str(ports))
+    logging.info("ports: %s" % str(ports))
     wpl_mission = ardu.Mission.from_file(mission_fn)
     sitl_kwargs = {'ip_address': system.container.ip_address,
                    'model': model,
@@ -238,9 +239,9 @@ def mavproxy(system, mission_fn: str, logfile_name: str,
         exit_stack.enter_context(ardu.SITL.launch_with_mavproxy(shell,
                                                                 **sitl_kwargs))
 
-    logger.debug("allocated DroneKit URL: %s", url_dronekit)
-    logger.debug("allocated attacker URL: %s", url_attacker)
-    logger.debug("allocated monitor URL: %s", url_monitor)
+    logging.debug("allocated DroneKit URL: %s", url_dronekit)
+    logging.debug("allocated attacker URL: %s", url_attacker)
+    logging.debug("allocated monitor URL: %s", url_monitor)
 
     # connect via DroneKit
     vehicle = exit_stack.enter_context(
@@ -252,7 +253,7 @@ def mavproxy(system, mission_fn: str, logfile_name: str,
     try:
         wpl_mission.execute(vehicle, timeout_mission=timeout)
     except TimeoutError:
-        logger.debug("mission timed out after %.2f seconds",
+        logging.debug("mission timed out after %.2f seconds",
                       timer.duration)
         passed = False
     # allow a small amount of time for the message to arrive
@@ -269,7 +270,7 @@ def run_commands(system, mission_fn: str, bag_fn: str,
     # launch a temporary ROS session inside the app container
     # once the context is closed, the ROS session will be terminated and all
     # of its associated nodes will be automatically killed.
-    logger.info("Running roscore")
+    logging.info("Running roscore")
     with system.roscore() as ros:
 
         with ExitStack() as exit_stack:
@@ -287,7 +288,7 @@ def run_commands(system, mission_fn: str, bag_fn: str,
 
             else:
                 # separately launch a software-in-the-loop simulator
-                logger.info("Opening sitl")
+                logging.info("Opening sitl")
                 sitl_cmd = (("%s --model copter --home %f,%f,%f,%f" +
                             " --defaults %s") %
                             (FN_SITL, home['lat'], home['long'],
@@ -453,13 +454,13 @@ def main() -> None:
     args = parse_args()
     format_str = "%(asctime)s:%(levelname)s:%(name)s: %(message)s"
     date_str = '%m/%d/%Y %I:%M:%S %p'
-    #logging.basicConfig(filename=args.log_fn, level=logging.DEBUG,
-    #                    format=format_str, datefmt=date_str)
+    logging.basicConfig(filename=args.log_fn, level=logging.DEBUG,
+                        format=format_str, datefmt=date_str)
     # TODO:
     # add boilerplate python default logging or use loguru to attach to the correct
-    logger.remove()
-    logger.enable('roswire')
-    logger.add(args.log_fn, level='DEBUG', format="{time:MM/DD/YYYY HH:mm:ss}:{level}:{name} {message}")
+    #logger.remove()
+    #logger.enable('roswire')
+    #logger.add(args.log_fn, level='DEBUG', format="{time:MM/DD/YYYY HH:mm:ss}:{level}:{name} {message}")
 
     rsw = roswire.ROSWire()
     docker_image = get_docker_image(args)
