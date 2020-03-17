@@ -20,7 +20,8 @@ import dronekit
 from loguru import logger
 import roswire
 from roswire.util import Stopwatch
-from roswire.proxy.container import ShellProxy as ROSWireShell
+#from roswire.proxy.container import ShellProxy as ROSWireShell
+from dockerblade import Shell as ROSWireShell
 
 BIN_MAVPROXY = \
     pkg_resources.resource_filename(__name__, 'src/mavproxy')
@@ -336,7 +337,7 @@ class SITL:
         # FIXME temporary workaround for problems with .terminate
         # self._process.terminate()
         cmd_kill = f'killall -15 {self.binary}'
-        self._shell.execute(cmd_kill, user='root')
+        self._shell.run(cmd_kill)
         try:
             retcode = self._process.wait(0.5)
         except subprocess.TimeoutExpired:
