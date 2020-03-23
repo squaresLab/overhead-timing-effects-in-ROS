@@ -13,20 +13,21 @@ import contextlib
 import signal
 import subprocess
 import pkg_resources
-#import logging
+import logging
 
 import attr
 import dronekit
 from loguru import logger
 import roswire
 from roswire.util import Stopwatch
-from roswire.proxy.container import ShellProxy as ROSWireShell
+#from roswire.proxy.container import ShellProxy as ROSWireShell
+from dockerblade import Shell as ROSWireShell
 
 BIN_MAVPROXY = \
     pkg_resources.resource_filename(__name__, 'src/mavproxy')
 
-#logger = logging.getLogger('timing')  # type: logging.Logger
-#logger.setLevel(logging.DEBUG)
+logger = logging.getLogger('timing')  # type: logging.Logger
+logger.setLevel(logging.DEBUG)
 
 
 def distance_metres(x: dronekit.LocationGlobal, y: dronekit.LocationGlobal) -> float:
@@ -326,7 +327,7 @@ class SITL:
     def open(self) -> 'SITL':
         """Launches this SITL."""
         command = self.command
-        logger.debug('launching SITL: %s', command)
+        logger.debug(f"launching SITL: {command}")
         self._process = self._shell.popen(command)
         time.sleep(5)
         return self
@@ -335,8 +336,8 @@ class SITL:
         """Closes this SITL."""
         # FIXME temporary workaround for problems with .terminate
         # self._process.terminate()
-        cmd_kill = f'killall -15 {self.binary}'
-        self._shell.execute(cmd_kill, user='root')
+        cmd_kill = f'pkill -15 {self.binary}'
+        self._shell.run(cmd_kill)
         try:
             retcode = self._process.wait(0.5)
         except subprocess.TimeoutExpired:

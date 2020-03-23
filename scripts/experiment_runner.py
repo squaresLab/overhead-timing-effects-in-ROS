@@ -15,7 +15,8 @@ import dronekit
 import docker
 import roswire
 from roswire.definitions import FormatDatabase, TypeDatabase
-from roswire.proxy import ShellProxy as ROSWireShell
+#from roswire.proxy import ShellProxy as ROSWireShell
+from dockerblade import Shell as ROSWireShell
 from roswire.util import Stopwatch
 from util import CircleIntBuffer
 
@@ -217,12 +218,13 @@ def mavproxy(system, mission_fn: str, logfile_name: str,
 
     # Code to work with mavproxy, adapted from trmo code
     uid_container = str(system.uuid)
-    api_client = exit_stack.enter_context(
-        closing(docker.APIClient(base_url='unix://var/run/docker.sock')))
-    client_docker = exit_stack.enter_context(
-        closing(docker.DockerClient(base_url='unix://var/run/docker.sock')))
+    #api_client = exit_stack.enter_context(
+    #    closing(docker.APIClient(base_url='unix://var/run/docker.sock')))
+    #client_docker = exit_stack.enter_context(
+    #    closing(docker.DockerClient(base_url='unix://var/run/docker.sock')))
 
-    shell = build_shell(client_docker, api_client, uid_container)
+    #shell = build_shell(client_docker, api_client, uid_container)
+    shell = system.shell
     model = "copter"
     speedup = 1
     ports = get_port_numbers(3, port_pool_mavlink)
@@ -399,11 +401,13 @@ def run_experiments(rsw, docker_image: str,
                     use_mavproxy: bool) -> None:
     port_pool_mavlink = CircleIntBuffer(13000, 135000)
 
+    sources = ['/opt/ros/indigo/setup.bash', '/ros_ws/devel/setup.bash']
+
     for mission_fn in mission_files:
         for i in range(baseline_iterations):
-            logging.debug(f"baseline iteration {i} of {baseline_iterations}")
-            print(f"baseline iteration {i} of {baseline_iterations}")
-            with rsw.launch(docker_image) as system:
+            logging.debug(f"baseline iteration {i + 1} of {baseline_iterations}")
+            print(f"baseline iteration {i + 1} of {baseline_iterations}")
+            with rsw.launch(docker_image, sources) as system:
                 execute_experiment(system, cursor, conn, mission_fn,
                                    docker_image,
                                    context, home, use_dronekit, use_mavproxy,
@@ -411,7 +415,7 @@ def run_experiments(rsw, docker_image: str,
 
         if mutate:
             for diff_fn, diff in mutations:
-                with rsw.launch(docker_image) as system:
+                with rsw.launch(docker_image, sources) as system:
                     system = build_patched_system(system, diff, context)
                     execute_experiment(system, cursor, conn, mission_fn,
                                        docker_image, context, home,
