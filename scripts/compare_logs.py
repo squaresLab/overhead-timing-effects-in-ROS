@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 import random
 import shlex
@@ -11,8 +12,10 @@ from typing import Any, Callable, Collection, Dict, List, Optional, Sequence, Tu
 
 from fastdtw import fastdtw as fdtw
 import numpy as np
-#np.set_printoptions(threshold=sys.maxsize)
+# np.set_printoptions(threshold=sys.maxsize)
 from scipy.spatial.distance import sqeuclidean
+
+import log_analysis
 
 
 def parse_args() -> argparse.Namespace:
@@ -21,42 +24,32 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--use_nominal", action="store_true", default=False)
     parser.add_argument("--alg", type=str)
     parser.add_argument("--log_db", type=str)
+    parser.add_argument("--out_fn", type=str, default="comparisons.out")
+    parser.add_argument("--logging", type=str, default="compare_log.out")
     args = parser.parse_args()
     return args
 
 
-def get_json(log_fn: str) -> List[Dict]:
-    json_data = []
-    if log_fn.endswith(".json"):
-        json_fn = log_fn
-    if log_fn.endswith(".tlog"):
-        json_fn = f"{log_fn}.json"
-        if not os.path.isfile(json_fn):
-            cmd = f"mavlogdump.py --format json {log_fn}"
-            with open(json_fn, 'w') as json_file:
-                print(cmd)
-                subprocess.Popen(shlex.split(cmd), stdout=json_file)
-            time.sleep(1)
-    with open(json_fn, 'r') as json_read:
-        print(json_fn)
-        for line in json_read:
-            json_line = json.loads(line)
-            json_data.append(json_line)
-    return json_data
+def identical(ts_a: np.array, ts_b: np.array) -> bool:
+    return np.array_equal(ts_a, ts_b)
 
 
 def pairwise(ts_a: np.array, ts_b: np.array, weights: np.array,
              alg='eros') -> float:
+    if identical(ts_a, ts_b):
+        logging.warn(f"ts_a and ts_b are identical!!")
+        # logging.debug(f"ts_a: {ts_a}")
+        # logging.debug(f"ts_b: {ts_b}")
+
     if alg == 'eros':
-        comp = eros_similarity(ts_a, ts_b, weights)
-    elif alg == 'fdtw':
+        comp = eros_distance(ts_a, ts_b, weights)
+    elif alg == 'fdtw' or 'fastdtw':
         comp = fastdtw(ts_a, ts_b)
     else:
         raise NotImplementedError
-    print(f"ts_a: {ts_a}")
-    print(f"ts_b: {ts_b}")
-    print(f"alg: {alg} comp: {comp}")
+    logging.debug(f"alg: {alg} comp: {comp}")
     return comp
+
 
 def fastdtw(x: np.array, y: np.array) -> float:
     return np.sqrt(fdtw(x, y, dist=sqeuclidean)[0])
@@ -84,6 +77,7 @@ def eros_similarity(ts_a: np.array, ts_b: np.array, w: np.array) -> float:
     sum_ = 0.0
     for i, w_i in enumerate(w):
         sum_ += w_i * np.abs(np.inner(v_a[i], v_b[i]))
+        # logging.debug(f"eros_similarity sum_: {sum_}")
 
     # avoid rounding errors
     if np.isclose(sum_, 1.0):
@@ -98,8 +92,10 @@ def eros_similarity(ts_a: np.array, ts_b: np.array, w: np.array) -> float:
 def eros_distance(ts_a: np.array, ts_b: np.array, w: np.array) -> float:
     """Computes the Eros distance between two multivariate time series."""
     eros = eros_similarity(ts_a, ts_b, w)
-
-    return np.sqrt(2 - 2 * eros)
+    logging.debug(f"eros_similarity: {eros}")
+    eros_distance = np.sqrt(2 - 2 * eros)
+    logging.debug(f"eros_distance: {eros_distance}")
+    return eros_distance
 
 
 def eros_weights(dataset: Collection[np.array],
@@ -160,155 +156,95 @@ def eros_weights(dataset: Collection[np.array],
     w[np.isclose(w, 0.0)] = 0.0
 
     # check that assumptions hold
-    print("Value of w: %s" % w)
+    logging.debug("Value of w: %s" % w)
     assert np.isclose(1.0, np.sum(w)), 'w must sum to 1.0'
     assert all(w_i >= 0.0 for w_i in w)
 
     return w
 
 
-def access_bag_db(db_fn: str) -> Tuple[sqlite3.Cursor, sqlite3.Connection]:
-    conn = sqlite3.connect(db_fn)
-    if conn is not None:
-        cursor = conn.cursor()
-    else:
-        raise("Error! Cannot create database connection!")
-    return cursor, conn
+def memoize_dst(log_1: Tuple[str, str], log_2: Tuple[str, str], dist_fn: str,
+                db_fn: str, weights: np.array = None) -> float:
 
-
-def get_fns_from_rows(cursor: sqlite3.Cursor, log_dir: str) -> List[str]:
-    rows = cursor.fetchall()
-    log_fns = []
-    for row in rows:
-        # print(row)
-        log_fn = os.path.join(log_dir, f"{row[0]}.tlog")
-        # print(log_fn)
-        log_fns.append(log_fn)
-    return log_fns
-
-
-def memoize_dst(log_fn_1, log_fn_2, db_fn):
+    log_fn_1, log_data_1 = log_1
+    log_fn_2, log_data_2 = log_2
     # Access the database
-    cursor, conn = access_bag_db(db_fn)
+    cursor, conn = log_analysis.access_bag_db(db_fn)
 
     # Check if the database has the correct table.
-    # TODO
     # If not, create the correct table.
-    # TODO
+    sql_create_dist_table = """CREATE TABLE IF NOT EXISTS dist (
+           log_fn_1 text,
+           log_fn_2 text,
+           dist_fn text,
+           dist_value float
+       ); """
+
+    try:
+        cursor.execute(sql_create_dist_table)
+    except sqlite3.Error as e:
+        logging.warning(e)
+
     # Check if the distance is in the table
-    # TODO
-    # If so return it
-    # TODO
-    # If not, calculate it
+    command = "SELECT * FROM dist WHERE log_fn_1=? AND log_fn_2=? AND dist_fn=?"
+    cursor.execute(command, (log_fn_1, log_fn_2, dist_fn))
+    rows = cursor.fetchall()
+    logging.debug(f"rows: {rows}")
+    if len(rows) == 1:
+        logging.debug(f"distance: {rows[0]}")
+        # If so return it
+        print(f"rows: {rows}")
+        print(f"type(rows[0][-1]): {type(rows[0][-1])}")
+        dist_value = float(rows[0][-1])
+    elif len(rows) == 0:
+        # If not, calculate it
+        dist_value = pairwise(log_data_1, log_data_2, weights, alg=dist_fn)
 
-def get_from_db(log_db: str, log_dir: str = "../bags") -> Dict[str, List[str]]:
-    log_fns: Dict[str, List[np.array]] = dict()
-    cursor, conn = access_bag_db(log_db)
-
-    filename="None"
-    cursor.execute("select * from bagfns where mutation_fn=?", (filename,))
-    nominal_fns = get_fns_from_rows(cursor, log_dir)
-    log_fns['nominal'] = nominal_fns
-    print(f"len(nominal_fns): {len(nominal_fns)}")
-    print(f"len(log_fns['nominal']): {len(log_fns['nominal'])}")
-
-    cursor.execute("select * from bagfns where mutation_fn!=?", (filename,))
-    experimental_fns = get_fns_from_rows(cursor, log_dir)
-    log_fns['experimental'] = experimental_fns
-
-    conn.close()
-    return log_fns
-
-
-def convert_logs(log_fns: List[str]) -> List[np.array]:
-    global_pos_lists = []
-    fn_count = 0
-    total_fns = len(log_fns)
-    for log_fn in log_fns:
-        # convert the tlog to json, if it's not already json
-        log_json = get_json(log_fn)
-        global_pos = [x["data"] for x in log_json if x["meta"]["type"] == "GLOBAL_POSITION_INT"]
-        global_pos_list = ([(x['time_boot_ms'], x['lat'], x['lon'],
-                             x['alt'], x['relative_alt'], x['vx'],
-                             x['vy'], x['vz'], x['hdg']) for x in
-                            global_pos])
-        global_np = np.array(global_pos_list)
-        global_pos_lists.append(global_np)
-        fn_count += 1
-        print(f"File {fn_count} of {total_fns}")
-    return global_pos_lists
-
-
-def insert(db: Dict[str, List[Any]], label: str, data: List[Any]) -> Dict[str, List[Any]]:
-    print(db)
-    if label in db:
-        db[label] = db[label] + data
+        logging.debug(f"values to insert: {log_fn_1}, {log_fn_2}, {dist_fn}, {dist_value}")
+        # Insert it into the table
+        command = "INSERT INTO dist VALUES (?, ?, ?, ?)"
+        values = (log_fn_1, log_fn_2, dist_fn, dist_value)
+        cursor.execute(command, values)
+        # Assume reciprocal distances
+        values = (log_fn_2, log_fn_1, dist_fn, dist_value)
+        cursor.execute(command, values)
     else:
-        db[label] = data
-    return db
+        logging.error(f"Too many rows returned: {rows}")
+        raise NotImplementedError
+
+    conn.commit()
+    return dist_value
 
 
-def get_logs(args: argparse.Namespace)-> Dict[str, List[np.array]]:
-    log_fns: Dict[str, List[np.array]] = dict()
-
-    if args.log_fn and len(args.log_fn) > 1:
-        log_fns = insert(log_fns, "manual", args.log_fn)
-    elif args.log_db:
-        log_fns = get_from_db(args.log_db)
-
-    all_logs = dict()
-    # Turn the log files into np.arrays of the data
-    for label, log_fns_subset in log_fns.items():
-        logs_data = convert_logs(log_fns_subset)
-        all_logs[label] = logs_data
-
-    print(f"all_logs: {all_logs}")
-    return all_logs
-
-
-def get_comparisons(logs: List[np.array],
+def get_comparisons(logs: List[np.array], db_fn: str,
                     weights: np.array = None, alg: str = 'eros') -> np.array:
     comparisons = np.zeros((len(logs), len(logs)))
     for i in range(len(logs)):
         for j in range(len(logs)):
-            if comparisons[i][j] == 0:
-                print(f"comparing log[{i}] and log[{j}]")
-                comparison = pairwise(logs[i], logs[j], weights=weights,
-                                      alg=alg)
+            if comparisons[i][j] == 0 and i != j:
+                logging.debug(f"comparing log[{i}] and log[{j}]")
+                comparison = memoize_dst(logs[i], logs[j], alg, db_fn,
+                                         weights=weights)
                 comparisons[i][j] = comparison
                 comparisons[j][i] = comparison
     return comparisons
 
 
-def equalize_lengths(logs: List[np.array], length: int=0) -> List[np.array]:
-    if length == 0:
-        length = min([len(x) for x in logs])
-
-    new_logs = []
-    for log in logs:
-        while len(log) > length:
-            to_delete = random.randrange(len(log))
-            log = np.delete(log, to_delete, axis=0)
-        new_logs.append(log)
-
-    #print(str([x for x in new_logs]))
-    return new_logs
-
-def compare_logs(logs_dict: Dict[str, List[np.array]],
+def compare_logs(logs_dict: Dict[str, List[np.array]], db_fn: str,
                  alg: str = 'eros') -> Dict[str, np.array]:
-    #assert(len(logs) == len(labels)), f"{len(logs)} {len(labels)}"
-    #label_logs = zip(labels, logs)
+    # assert(len(logs) == len(labels)), f"{len(logs)} {len(labels)}"
+    # label_logs = zip(labels, logs)
 
     # Get all the groups for individual comparisons, by labels
-    #label_set = set(labels)
-    #logs_dict = dict()
-    #for label in label_set:
+    # label_set = set(labels)
+    # logs_dict = dict()
+    # for label in label_set:
     #    logs_subset = [x[1] for x in label_logs if x[0] == label]
-        # print(f"label: {label} logs_subset: {logs_subset}")
+        # logging.debug(f"label: {label} logs_subset: {logs_subset}")
     #    logs_dict[label] = logs_subset
-    #    print(f"len(logs_dict[{label}]): {len(logs_dict[label])}")
+    #    logging.debug(f"len(logs_dict[{label}]): {len(logs_dict[label])}")
 
-    print(f"logs_dict.keys(): {logs_dict.keys()}")
+    logging.debug(f"logs_dict.keys(): {logs_dict.keys()}")
 
     all_logs = []
     for label, logs in logs_dict.items():
@@ -316,22 +252,23 @@ def compare_logs(logs_dict: Dict[str, List[np.array]],
 
     if alg == 'eros':
         n = len(all_logs[0])
-        # print(logs[0])
+        # logging.debug(logs[0])
         if not all([len(x) == n for x in all_logs]):
-            logs_eq = equalize_lengths(all_logs)
+            logs_eq = log_analysis.equalize_lengths(all_logs)
         else:
             logs_eq = all_logs
-        weights = eros_weights(logs_eq)
+        # weights = eros_weights(logs_eq)
+        weights = eros_weights(logs_dict["nominal"])
     else:
         weights = None
 
-    print(f"logs_dict.keys(): {logs_dict.keys()}")
+    logging.debug(f"logs_dict.keys(): {logs_dict.keys()}")
     all_comparisons = dict()
-    for label, logs_subset in (list(logs_dict.items())): # +
-                               #list([('total', logs)])):
-        print(f"label: {label} len(logs_subset): {len(logs_subset)}")
+    for label, logs_subset in (list(logs_dict.items())):
+        logging.debug(f"label: {label} len(logs_subset): {len(logs_subset)}")
         if len(logs_subset) > 1:
-            comparisons = get_comparisons(logs, weights, alg)
+            comparisons = get_comparisons(logs_subset, db_fn,
+                                          weights=weights, alg=alg)
             all_comparisons[label] = comparisons
 
     return all_comparisons
@@ -340,12 +277,27 @@ def compare_logs(logs_dict: Dict[str, List[np.array]],
 def main():
     args = parse_args()
 
+    log_stream = logging.StreamHandler()
+    log_file = logging.FileHandler(args.logging)
+    format_str = "%(asctime)s:%(levelname)s:%(name)s: %(message)s"
+    date_str = '%m/%d/%Y %I:%M:%S %p'
+    logging.basicConfig(handlers=[log_stream, log_file], level=logging.DEBUG,
+                        format=format_str, datefmt=date_str)
+
     # get the logs to compare
-    logs_dict = get_logs(args)
+    logs_dict = log_analysis.get_logs(args)
 
     # compare the logs
-    comparisons = compare_logs(logs_dict, args.alg)
-    print(f"comparisons: {comparisons}")
+    comparisons = compare_logs(logs_dict, args.log_db, args.alg)
+    logging.debug(f"comparisons: {comparisons}")
+    out_fn = args.out_fn
+    for_json = dict()
+    for key in comparisons:
+        for_json[key] = comparisons[key].tolist()
+    with open(out_fn, 'w') as outfile:
+        json.dump(for_json, outfile)
+    non_zero = np.nonzero(comparisons)
+    logging.debug(f"non_zero: {non_zero}")
 
 
 if __name__ == '__main__':
