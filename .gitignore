@@ -103,8 +103,13 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# emacs
+*~
+\#*\#
+
 # custom
 *.sqlite
 *.json
 *.db
 *.out
+
