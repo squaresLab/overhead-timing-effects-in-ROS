@@ -30,6 +30,10 @@ def parse_args():
                         help="Portion of identified locations to instrument (between 0.0 and 1.0)")
     parser.add_argument('--output', type=str, default="coin_flip")
     parser.add_argument('--sweep', action="store_true", default=False)
+    parser.add_argument('--delay_min', type=int, default=-2,
+                        help="minimum exponent in sweep delay (2^x)")
+    parser.add_argument('--delay_max', type=int, default=4,
+                        help="maximum exponent in sweep delay (2^x)")
     args = parser.parse_args()
     return args
 
@@ -154,7 +158,10 @@ def main():
     if files:
         if args.sweep:
             weights = [x/10 for x in range(0, 10, 1)]
-            delays = [(1/pow(2, x)) for x in range(10)]
+            #delays = [(1/pow(2, x)) for x in range(10)]
+
+            #delays = [0.25, 0.5, 1, 2, 4, 8]
+            delays = [pow(2, x) for x in range(args.delay_min, args.delay_max)]
 
             print(weights)
             print(delays)
