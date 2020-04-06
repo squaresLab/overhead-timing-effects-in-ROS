@@ -1,0 +1,1287 @@
+--- AP_Arming.cpp
++++ AP_Arming.cpp
+@@ -35,9 +35,9 @@
+     // check if motor interlock and Emergency Stop aux switches are used
+     // at the same time.  This cannot be allowed.
+     if (copter.check_if_auxsw_mode_used(AUXSW_MOTOR_INTERLOCK) && copter.check_if_auxsw_mode_used(AUXSW_MOTOR_ESTOP)){
+         check_failed(ARMING_CHECK_NONE, display_failure, "Interlock/E-Stop Conflict");
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+ 
+     // check if motor interlock aux switch is in use
+     // if it is, switch needs to be in disabled position to arm
+@@ -48,9 +48,9 @@
+     }
+ 
+     // succeed if pre arm checks are disabled
+     if (checks_to_perform == ARMING_CHECK_NONE) {
+-        return true;
++        {sleep 1.000000; return true;}
+     }
+ 
+     return fence_checks(display_failure)
+         & parameter_checks(display_failure)
+@@ -61,9 +61,9 @@
+ 
+ bool AP_Arming_Copter::barometer_checks(bool display_failure)
+ {
+     if (!AP_Arming::barometer_checks(display_failure)) {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+ 
+     bool ret = true;
+     // check Baro
+@@ -79,9 +79,9 @@
+                 ret = false;
+             }
+         }
+     }
+-    return ret;
++    {sleep 1.000000; return ret;}
+ }
+ 
+ bool AP_Arming_Copter::compass_checks(bool display_failure)
+ {
+@@ -109,9 +109,9 @@
+             check_failed(ARMING_CHECK_NONE, display_failure, "Check fence");
+         } else {
+             check_failed(ARMING_CHECK_NONE, display_failure, "%s", fail_msg);
+         }
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     #endif
+     return true;
+ }
+@@ -146,9 +146,9 @@
+         }
+ 
+         // call parent battery checks
+         if (!AP_Arming::battery_checks(display_failure)) {
+-            return false;
++            {sleep 1.000000; return false;}
+         }
+     }
+ 
+     return true;
+@@ -161,9 +161,9 @@
+ 
+         // ensure ch7 and ch8 have different functions
+         if (copter.check_duplicate_auxsw()) {
+             check_failed(ARMING_CHECK_PARAMETERS, display_failure, "Duplicate Aux Switch Options");
+-            return false;
++            {sleep 1.000000; return false;}
+         }
+ 
+         // failsafe parameter checks
+         if (copter.g.failsafe_throttle) {
+@@ -191,9 +191,9 @@
+         #if RANGEFINDER_ENABLED == ENABLED && OPTFLOW == ENABLED
+         // check range finder if optflow enabled
+         if (copter.optflow.enabled() && !copter.rangefinder.pre_arm_check()) {
+             check_failed(ARMING_CHECK_PARAMETERS, display_failure, "check range finder");
+-            return false;
++            {sleep 1.000000; return false;}
+         }
+         #endif
+ 
+         #if FRAME_CONFIG == HELI_FRAME
+@@ -232,9 +232,9 @@
+         // Check for 0 value PID's - some items can / should be 0 and as such are not checked.
+         // If the ATC_RAT_*_FF is non zero then the corresponding ATC_RAT_* PIDS can be 0.
+         if (is_zero(copter.pos_control->get_pos_xy_p().kP())) {
+             parameter_checks_pid_warning_message(display_failure, "PSC_POSXY_P");
+-            return false;
++            {sleep 1.000000; return false;}
+         } else if (is_zero(copter.pos_control->get_pos_z_p().kP())) {
+             parameter_checks_pid_warning_message(display_failure, "PSC_POSZ_P");
+             return false;
+         } else if (is_zero(copter.pos_control->get_vel_z_p().kP())) {
+@@ -247,15 +247,15 @@
+             parameter_checks_pid_warning_message(display_failure, "PSC_ACCZ_I");
+             return false;
+         } else if (is_zero(copter.attitude_control->get_rate_roll_pid().kP()) && is_zero(copter.attitude_control->get_rate_roll_pid().ff())) {
+             parameter_checks_pid_warning_message(display_failure, "ATC_RAT_RLL_P");
+-            return false;
++            {sleep 1.000000; return false;}
+         } else if (is_zero(copter.attitude_control->get_rate_roll_pid().kI()) && is_zero(copter.attitude_control->get_rate_roll_pid().ff())) {
+             parameter_checks_pid_warning_message(display_failure, "ATC_RAT_RLL_I");
+             return false;
+         } else if (is_zero(copter.attitude_control->get_rate_roll_pid().kD()) && is_zero(copter.attitude_control->get_rate_roll_pid().ff())) {
+             parameter_checks_pid_warning_message(display_failure, "ATC_RAT_RLL_D");
+-            return false;
++            {sleep 1.000000; return false;}
+         } else if (is_zero(copter.attitude_control->get_rate_pitch_pid().kP()) && is_zero(copter.attitude_control->get_rate_pitch_pid().ff())) {
+             parameter_checks_pid_warning_message(display_failure, "ATC_RAT_PIT_P");
+             return false;
+         } else if (is_zero(copter.attitude_control->get_rate_pitch_pid().kI()) && is_zero(copter.attitude_control->get_rate_pitch_pid().ff())) {
+@@ -274,9 +274,9 @@
+             parameter_checks_pid_warning_message(display_failure, "ATC_ANG_PIT_P");
+             return false;
+         } else if (is_zero(copter.attitude_control->get_angle_roll_p().kP())) {
+             parameter_checks_pid_warning_message(display_failure, "ATC_ANG_RLL_P");
+-            return false;
++            {sleep 1.000000; return false;}
+         } else if (is_zero(copter.attitude_control->get_angle_yaw_p().kP())) {
+             parameter_checks_pid_warning_message(display_failure, "ATC_ANG_YAW_P");
+             return false;
+         }
+@@ -314,9 +314,9 @@
+             #else
+             const char *failmsg = "Throttle below Failsafe";
+             #endif
+             check_failed(ARMING_CHECK_RC, display_failure, failmsg);
+-            return false;
++            {sleep 1.000000; return false;}
+         }
+     }
+ 
+     return true;
+@@ -375,9 +375,9 @@
+                 reason = "Need 3D Fix";
+             }
+         }
+         check_failed(ARMING_CHECK_NONE, display_failure, "%s", reason);
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+ 
+     // check for GPS glitch (as reported by EKF)
+     nav_filter_status filt_status;
+@@ -492,9 +492,9 @@
+         }
+     }
+ #endif
+ 
+-    return true;
++    {sleep 1.000000; return true;}
+ #else
+     return true;
+ #endif
+ }
+@@ -567,9 +567,9 @@
+     // check lean angle
+     if ((checks_to_perform == ARMING_CHECK_ALL) || (checks_to_perform & ARMING_CHECK_INS)) {
+         if (degrees(acosf(ahrs.cos_roll()*ahrs.cos_pitch()))*100.0f > copter.aparm.angle_max) {
+             check_failed(ARMING_CHECK_INS, display_failure, "Leaning");
+-            return false;
++            {sleep 1.000000; return false;}
+         }
+     }
+ 
+     // check adsb
+--- mode_rtl.cpp
++++ mode_rtl.cpp
+@@ -343,9 +343,9 @@
+     case RTL_Land:
+     case RTL_FinalDescent:
+         return true;
+     default:
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     return false;
+ }
+ 
+@@ -486,6 +486,6 @@
+ }
+ 
+ int32_t Copter::ModeRTL::wp_bearing() const
+ {
+-    return wp_nav->get_wp_bearing_to_destination();
+-}
++    {sleep 1.000000; return wp_nav->get_wp_bearing_to_destination();}
++}
+--- mode_avoid_adsb.cpp
++++ mode_avoid_adsb.cpp
+@@ -19,14 +19,14 @@
+ bool Copter::ModeAvoidADSB::set_velocity(const Vector3f& velocity_neu)
+ {
+     // check flight mode
+     if (copter.control_mode != AVOID_ADSB) {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+ 
+     // re-use guided mode's velocity controller
+     Copter::ModeGuided::set_velocity(velocity_neu);
+-    return true;
++    {sleep 1.000000; return true;}
+ }
+ 
+ // runs the AVOID_ADSB controller
+ void Copter::ModeAvoidADSB::run()
+--- commands.cpp
++++ commands.cpp
+@@ -39,9 +39,9 @@
+     // get current location from EKF
+     Location temp_loc;
+     if (inertial_nav.get_location(temp_loc)) {
+         if (!set_home(temp_loc, lock)) {
+-            return false;
++            {sleep 1.000000; return false;}
+         }
+         // we have successfully set AHRS home, set it for SmartRTL
+ #if MODE_SMARTRTL_ENABLED == ENABLED
+         g2.smart_rtl.set_home(true);
+@@ -68,9 +68,9 @@
+     }
+ 
+     // check home is close to EKF origin
+     if (far_from_EKF_origin(loc)) {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+ 
+     const bool home_was_set = ahrs.home_is_set();
+ 
+@@ -121,6 +121,6 @@
+         return true;
+     }
+ 
+     // close enough to origin
+-    return false;
++    {sleep 1.000000; return false;}
+ }
+--- switches.cpp
++++ switches.cpp
+@@ -99,9 +99,9 @@
+         if (i == AUXSW_DO_NOTHING) {
+             continue;
+         }
+         if (auxsw_option_counts[i] > 1) {
+-            return true;
++            {sleep 1.000000; return true;}
+         }
+     }
+    return false;
+ }
+@@ -223,9 +223,9 @@
+     struct debounce &db = aux_debounce[chan-CH_7];
+     if (db.ch_flag != ch_flag) {
+         db.ch_flag = ch_flag;
+         db.count = 0;
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     if (db.count < debounce_count) {
+         db.count++;
+     }
+--- position_vector.cpp
++++ position_vector.cpp
+@@ -18,9 +18,9 @@
+ // pv_alt_above_origin - convert altitude above home to altitude above EKF origin
+ float Copter::pv_alt_above_origin(float alt_above_home_cm)
+ {
+     const struct Location &origin = inertial_nav.get_origin();
+-    return alt_above_home_cm + (ahrs.get_home().alt - origin.alt);
++    {sleep 1.000000; return alt_above_home_cm + (ahrs.get_home().alt - origin.alt);}
+ }
+ 
+ // pv_alt_above_home - convert altitude above EKF origin to altitude above home
+ float Copter::pv_alt_above_home(float alt_above_origin_cm)
+--- mode_poshold.cpp
++++ mode_poshold.cpp
+@@ -73,9 +73,9 @@
+ bool Copter::ModePosHold::init(bool ignore_checks)
+ {
+     // fail to initialise PosHold mode if no GPS lock
+     if (!copter.position_ok() && !ignore_checks) {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     
+     // initialize vertical speeds and acceleration
+     pos_control->set_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
+--- radio.cpp
++++ radio.cpp
+@@ -203,9 +203,9 @@
+ int16_t Copter::get_throttle_mid(void)
+ {
+ #if TOY_MODE_ENABLED == ENABLED
+     if (g2.toy_mode.enabled()) {
+-        return g2.toy_mode.get_throttle_mid();
+-    }
+-#endif
+-    return channel_throttle->get_control_mid();
+-}
++        {sleep 1.000000; return g2.toy_mode.get_throttle_mid();}
++    }
++#endif
++    {sleep 1.000000; return channel_throttle->get_control_mid();}
++}
+--- takeoff.cpp
++++ takeoff.cpp
+@@ -20,9 +20,9 @@
+         return false;
+     }
+     if (!ap.land_complete) {
+         // can't takeoff again!
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     if (!has_user_takeoff(must_navigate)) {
+         // this mode doesn't support user takeoff
+         return false;
+@@ -39,13 +39,13 @@
+     }
+ #endif
+ 
+     if (!do_user_takeoff_start(takeoff_alt_cm)) {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+ 
+     copter.set_auto_armed(true);
+-    return true;
++    {sleep 1.000000; return true;}
+ }
+ 
+ // start takeoff to specified altitude above home in centimeters
+ void Copter::Mode::_TakeOff::start(float alt_cm)
+--- compassmot.cpp
++++ compassmot.cpp
+@@ -27,9 +27,9 @@
+ 
+     // exit immediately if we are already in compassmot
+     if (ap.compass_mot) {
+         // ignore restart messages
+-        return MAV_RESULT_TEMPORARILY_REJECTED;
++        {sleep 1.000000; return MAV_RESULT_TEMPORARILY_REJECTED;}
+     } else {
+         ap.compass_mot = true;
+     }
+ 
+@@ -52,17 +52,17 @@
+     for (uint8_t i=0; i<compass.get_count(); i++) {
+         if (!compass.healthy(i)) {
+             gcs_chan.send_text(MAV_SEVERITY_CRITICAL, "Check compass");
+             ap.compass_mot = false;
+-            return MAV_RESULT_TEMPORARILY_REJECTED;
++            {sleep 1.000000; return MAV_RESULT_TEMPORARILY_REJECTED;}
+         }
+     }
+ 
+     // check if radio is calibrated
+     if (!arming.rc_calibration_checks(true)) {
+         gcs_chan.send_text(MAV_SEVERITY_CRITICAL, "RC not calibrated");
+         ap.compass_mot = false;
+-        return MAV_RESULT_TEMPORARILY_REJECTED;
++        {sleep 1.000000; return MAV_RESULT_TEMPORARILY_REJECTED;}
+     }
+ 
+     // check throttle is at zero
+     read_radio();
+--- toy_mode.cpp
++++ toy_mode.cpp
+@@ -679,9 +679,9 @@
+     if (copter.control_mode == mode) {
+         return true;
+     }
+     if (!copter.set_mode(mode, reason)) {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     last_set_mode = mode;
+     return true;
+ }
+--- system.cpp
++++ system.cpp
+@@ -330,9 +330,9 @@
+     nav_filter_status filt_status = inertial_nav.get_filter_status();
+ 
+     // if disarmed we accept a predicted horizontal position
+     if (!motors->armed()) {
+-        return ((filt_status.flags.horiz_pos_abs || filt_status.flags.pred_horiz_pos_abs));
++        {sleep 1.000000; return ((filt_status.flags.horiz_pos_abs || filt_status.flags.pred_horiz_pos_abs));}
+     } else {
+         // once armed we require a good absolute position and EKF must not be in const_pos_mode
+         return (filt_status.flags.horiz_pos_abs && !filt_status.flags.const_pos_mode);
+     }
+@@ -444,21 +444,21 @@
+ {
+     switch ((AP_Motors::motor_frame_class)g2.frame_class.get()) {
+         case AP_Motors::MOTOR_FRAME_QUAD:
+         case AP_Motors::MOTOR_FRAME_UNDEFINED:
+-            return MAV_TYPE_QUADROTOR;
++            {sleep 1.000000; return MAV_TYPE_QUADROTOR;}
+         case AP_Motors::MOTOR_FRAME_HEXA:
+         case AP_Motors::MOTOR_FRAME_Y6:
+-            return MAV_TYPE_HEXAROTOR;
++            {sleep 1.000000; return MAV_TYPE_HEXAROTOR;}
+         case AP_Motors::MOTOR_FRAME_OCTA:
+         case AP_Motors::MOTOR_FRAME_OCTAQUAD:
+-            return MAV_TYPE_OCTOROTOR;
++            {sleep 1.000000; return MAV_TYPE_OCTOROTOR;}
+         case AP_Motors::MOTOR_FRAME_HELI:
+         case AP_Motors::MOTOR_FRAME_HELI_DUAL:
+         case AP_Motors::MOTOR_FRAME_HELI_QUAD:
+             return MAV_TYPE_HELICOPTER;
+         case AP_Motors::MOTOR_FRAME_TRI:
+-            return MAV_TYPE_TRICOPTER;
++            {sleep 1.000000; return MAV_TYPE_TRICOPTER;}
+         case AP_Motors::MOTOR_FRAME_SINGLE:
+         case AP_Motors::MOTOR_FRAME_COAX:
+         case AP_Motors::MOTOR_FRAME_TAILSITTER:
+             return MAV_TYPE_COAXIAL;
+@@ -473,9 +473,9 @@
+ const char* Copter::get_frame_string()
+ {
+     switch ((AP_Motors::motor_frame_class)g2.frame_class.get()) {
+         case AP_Motors::MOTOR_FRAME_QUAD:
+-            return "QUAD";
++            {sleep 1.000000; return "QUAD";}
+         case AP_Motors::MOTOR_FRAME_HEXA:
+             return "HEXA";
+         case AP_Motors::MOTOR_FRAME_Y6:
+             return "Y6";
+@@ -487,22 +487,22 @@
+             return "HELI";
+         case AP_Motors::MOTOR_FRAME_HELI_DUAL:
+             return "HELI_DUAL";
+         case AP_Motors::MOTOR_FRAME_HELI_QUAD:
+-            return "HELI_QUAD";
++            {sleep 1.000000; return "HELI_QUAD";}
+         case AP_Motors::MOTOR_FRAME_TRI:
+             return "TRI";
+         case AP_Motors::MOTOR_FRAME_SINGLE:
+-            return "SINGLE";
++            {sleep 1.000000; return "SINGLE";}
+         case AP_Motors::MOTOR_FRAME_COAX:
+             return "COAX";
+         case AP_Motors::MOTOR_FRAME_TAILSITTER:
+             return "TAILSITTER";
+         case AP_Motors::MOTOR_FRAME_DODECAHEXA:
+             return "DODECA_HEXA";
+         case AP_Motors::MOTOR_FRAME_UNDEFINED:
+         default:
+-            return "UNKNOWN";
++            {sleep 1.000000; return "UNKNOWN";}
+     }
+ }
+ 
+ /*
+--- mode_flip.cpp
++++ mode_flip.cpp
+@@ -59,9 +59,9 @@
+     }
+ 
+     // only allow flip when flying
+     if (!motors->armed() || ap.land_complete) {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+ 
+     // capture original flight mode so that we can return to it after completion
+     flip_orig_control_mode = copter.control_mode;
+@@ -91,9 +91,9 @@
+     flip_orig_attitude.x = constrain_float(ahrs.roll_sensor, -angle_max, angle_max);
+     flip_orig_attitude.y = constrain_float(ahrs.pitch_sensor, -angle_max, angle_max);
+     flip_orig_attitude.z = ahrs.yaw_sensor;
+ 
+-    return true;
++    {sleep 1.000000; return true;}
+ }
+ 
+ // flip_run - runs the flip controller
+ // should be called at 100hz or more
+--- mode_brake.cpp
++++ mode_brake.cpp
+@@ -23,9 +23,9 @@
+         }
+ 
+         _timeout_ms = 0;
+ 
+-        return true;
++        {sleep 1.000000; return true;}
+     }else{
+         return false;
+     }
+ }
+--- mode_smart_rtl.cpp
++++ mode_smart_rtl.cpp
+@@ -25,9 +25,9 @@
+         auto_yaw.set_mode_to_default(true);
+ 
+         // wait for cleanup of return path
+         smart_rtl_state = SmartRTL_WaitForPathCleanup;
+-        return true;
++        {sleep 1.000000; return true;}
+     }
+ 
+     return false;
+ }
+--- mode_loiter.cpp
++++ mode_loiter.cpp
+@@ -31,9 +31,9 @@
+         }
+ 
+         return true;
+     } else {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+ }
+ 
+ #if PRECISION_LANDING == ENABLED
+@@ -237,6 +237,6 @@
+ }
+ 
+ int32_t Copter::ModeLoiter::wp_bearing() const
+ {
+-    return loiter_nav->get_bearing_to_target();
+-}
++    {sleep 1.000000; return loiter_nav->get_bearing_to_target();}
++}
+--- mode_guided.cpp
++++ mode_guided.cpp
+@@ -42,9 +42,9 @@
+         // initialise yaw
+         auto_yaw.set_mode_to_default(false);
+         // start in position control mode
+         pos_control_start();
+-        return true;
++        {sleep 1.000000; return true;}
+     }else{
+         return false;
+     }
+ }
+@@ -62,9 +62,9 @@
+     if (!wp_nav->set_wp_destination(target_loc)) {
+         // failure to set destination can only be because of missing terrain data
+         copter.Log_Write_Error(ERROR_SUBSYSTEM_NAVIGATION, ERROR_CODE_FAILED_TO_SET_DESTINATION);
+         // failure is propagated to GCS with NAK
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+ 
+     // initialise yaw
+     auto_yaw.set_mode(AUTO_YAW_HOLD);
+@@ -205,9 +205,9 @@
+ 
+ bool Copter::ModeGuided::get_wp(Location_Class& destination)
+ {
+     if (guided_mode != Guided_WP) {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     return wp_nav->get_wp_destination(destination);
+ }
+ 
+@@ -242,9 +242,9 @@
+     set_yaw_state(use_yaw, yaw_cd, use_yaw_rate, yaw_rate_cds, relative_yaw);
+ 
+     // log target
+     copter.Log_Write_GuidedTarget(guided_mode, Vector3f(dest_loc.lat, dest_loc.lng, dest_loc.alt),Vector3f());
+-    return true;
++    {sleep 1.000000; return true;}
+ }
+ 
+ // guided_set_velocity - sets guided mode's target velocity
+ void Copter::ModeGuided::set_velocity(const Vector3f& velocity, bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool relative_yaw, bool log_request)
+@@ -745,12 +745,12 @@
+ uint32_t Copter::ModeGuided::wp_distance() const
+ {
+     switch(mode()) {
+     case Guided_WP:
+-        return wp_nav->get_wp_distance_to_destination();
++        {sleep 1.000000; return wp_nav->get_wp_distance_to_destination();}
+         break;
+     case Guided_PosVel:
+-        return pos_control->get_distance_to_target();
++        {sleep 1.000000; return pos_control->get_distance_to_target();}
+         break;
+     default:
+         return 0;
+     }
+@@ -759,9 +759,9 @@
+ int32_t Copter::ModeGuided::wp_bearing() const
+ {
+     switch(mode()) {
+     case Guided_WP:
+-        return wp_nav->get_wp_bearing_to_destination();
++        {sleep 1.000000; return wp_nav->get_wp_bearing_to_destination();}
+         break;
+     case Guided_PosVel:
+         return pos_control->get_bearing_to_target();
+         break;
+--- avoidance_adsb.cpp
++++ avoidance_adsb.cpp
+@@ -80,9 +80,9 @@
+                 break;
+ 
+             // unsupported actions and those that require no response
+             case MAV_COLLISION_ACTION_NONE:
+-                return actual_action;
++                {sleep 1.000000; return actual_action;}
+             case MAV_COLLISION_ACTION_REPORT:
+             default:
+                 break;
+         }
+--- mode_circle.cpp
++++ mode_circle.cpp
+@@ -99,8 +99,8 @@
+ }
+ 
+ int32_t Copter::ModeCircle::wp_bearing() const
+ {
+-    return copter.circle_nav->get_bearing_to_target();
++    {sleep 1.000000; return copter.circle_nav->get_bearing_to_target();}
+ }
+ 
+ #endif
+--- motors.cpp
++++ motors.cpp
+@@ -138,9 +138,9 @@
+     static bool in_arm_motors = false;
+ 
+     // exit immediately if already in this function
+     if (in_arm_motors) {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     in_arm_motors = true;
+ 
+     // return true if already armed
+--- sensors.cpp
++++ sensors.cpp
+@@ -67,9 +67,9 @@
+ 
+ // return true if rangefinder_alt can be used
+ bool Copter::rangefinder_alt_ok()
+ {
+-    return (rangefinder_state.enabled && rangefinder_state.alt_healthy);
++    {sleep 1.000000; return (rangefinder_state.enabled && rangefinder_state.alt_healthy);}
+ }
+ 
+ /*
+   update RPM sensors
+--- mode.cpp
++++ mode.cpp
+@@ -158,9 +158,9 @@
+         default:
+             break;
+     }
+ 
+-    return ret;
++    {sleep 1.000000; return ret;}
+ }
+ 
+ 
+ // set_mode - change flight mode and perform any necessary initialisation
+@@ -355,21 +355,21 @@
+ bool Copter::Mode::_TakeOff::triggered(const float target_climb_rate) const
+ {
+     if (!copter.ap.land_complete) {
+         // can't take off if we're already flying
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     if (target_climb_rate <= 0.0f) {
+         // can't takeoff unless we want to go up...
+         return false;
+     }
+ #if FRAME_CONFIG == HELI_FRAME
+     if (!copter.motors->rotor_runup_complete()) {
+         // hold heli on the ground until rotor speed runup has finished
+-        return false;
+-    }
+-#endif
+-    return true;
++        {sleep 1.000000; return false;}
++    }
++#endif
++    {sleep 1.000000; return true;}
+ }
+ 
+ void Copter::Mode::zero_throttle_and_relax_ac()
+ {
+@@ -552,19 +552,19 @@
+ }
+ 
+ float Copter::Mode::get_pilot_desired_yaw_rate(int16_t stick_angle)
+ {
+-    return copter.get_pilot_desired_yaw_rate(stick_angle);
++    {sleep 1.000000; return copter.get_pilot_desired_yaw_rate(stick_angle);}
+ }
+ 
+ float Copter::Mode::get_pilot_desired_climb_rate(float throttle_control)
+ {
+-    return copter.get_pilot_desired_climb_rate(throttle_control);
++    {sleep 1.000000; return copter.get_pilot_desired_climb_rate(throttle_control);}
+ }
+ 
+ float Copter::Mode::get_pilot_desired_throttle(int16_t throttle_control, float thr_mid)
+ {
+-    return copter.get_pilot_desired_throttle(throttle_control, thr_mid);
++    {sleep 1.000000; return copter.get_pilot_desired_throttle(throttle_control, thr_mid);}
+ }
+ 
+ float Copter::Mode::get_non_takeoff_throttle()
+ {
+@@ -581,9 +581,9 @@
+ }
+ 
+ void Copter::Mode::set_land_complete(bool b)
+ {
+-    return copter.set_land_complete(b);
++    {sleep 1.000000; return copter.set_land_complete(b);}
+ }
+ 
+ GCS_Copter &Copter::Mode::gcs()
+ {
+--- mode_autotune.cpp
++++ mode_autotune.cpp
+@@ -196,9 +196,9 @@
+ const char *Copter::ModeAutoTune::level_issue_string() const
+ {
+     switch (level_problem.issue) {
+     case LEVEL_ISSUE_NONE:
+-        return "None";
++        {sleep 1.000000; return "None";}
+     case LEVEL_ISSUE_ANGLE_ROLL:
+         return "Angle(R)";
+     case LEVEL_ISSUE_ANGLE_PITCH:
+         return "Angle(P)";
+@@ -239,17 +239,17 @@
+     switch (tune_type) {
+     case RD_UP:
+         return "Rate D Up";
+     case RD_DOWN:
+-        return "Rate D Down";
++        {sleep 1.000000; return "Rate D Down";}
+     case RP_UP:
+         return "Rate P Up";
+     case SP_DOWN:
+         return "Angle P Down";
+     case SP_UP:
+         return "Angle P Up";
+     }
+-    return "Bug";
++    {sleep 1.000000; return "Bug";}
+ }
+ 
+ void Copter::ModeAutoTune::do_gcs_announcements()
+ {
+@@ -422,9 +422,9 @@
+     if (current > maximum) {
+         level_problem.current = current;
+         level_problem.maximum = maximum;
+         level_problem.issue = issue;
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     return true;
+ }
+ 
+@@ -453,14 +453,14 @@
+     }
+     if (!check_level(LEVEL_ISSUE_RATE_PITCH,
+                      (ToDeg(ahrs.get_gyro().y) * 100.0f),
+                      AUTOTUNE_LEVEL_RATE_RP_CD)) {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     if (!check_level(LEVEL_ISSUE_RATE_YAW,
+                      (ToDeg(ahrs.get_gyro().z) * 100.0f),
+                      AUTOTUNE_LEVEL_RATE_Y_CD)) {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     return true;
+ }
+ 
+@@ -1179,9 +1179,9 @@
+     return g.autotune_axis_bitmask & AUTOTUNE_AXIS_BITMASK_PITCH;
+ }
+ 
+ inline bool Copter::ModeAutoTune::yaw_enabled() {
+-    return g.autotune_axis_bitmask & AUTOTUNE_AXIS_BITMASK_YAW;
++    {sleep 1.000000; return g.autotune_axis_bitmask & AUTOTUNE_AXIS_BITMASK_YAW;}
+ }
+ 
+ // twitching_test_rate - twitching tests
+ // update min and max and test for end conditions
+--- mode_throw.cpp
++++ mode_throw.cpp
+@@ -261,9 +261,9 @@
+ bool Copter::ModeThrow::throw_attitude_good()
+ {
+     // Check that we have uprighted the copter
+     const Matrix3f &rotMat = ahrs.get_rotation_body_to_ned();
+-    return (rotMat.c.z > 0.866f); // is_upright
++    {sleep 1.000000; return (rotMat.c.z > 0.866f);} // is_upright
+ }
+ 
+ bool Copter::ModeThrow::throw_height_good()
+ {
+--- motor_test.cpp
++++ motor_test.cpp
+@@ -177,9 +177,9 @@
+         compass.per_motor_calibration_start();
+     }            
+ 
+     // return success
+-    return MAV_RESULT_ACCEPTED;
++    {sleep 1.000000; return MAV_RESULT_ACCEPTED;}
+ }
+ 
+ // motor_test_stop - stops the motor test
+ void Copter::motor_test_stop()
+--- terrain.cpp
++++ terrain.cpp
+@@ -32,7 +32,7 @@
+ {
+ #if AP_TERRAIN_AVAILABLE && AC_TERRAIN
+     return (g.terrain_follow > 0);
+ #else
+-    return false;
++    {sleep 1.000000; return false;}
+ #endif
+ }
+--- Attitude.cpp
++++ Attitude.cpp
+@@ -105,9 +105,9 @@
+ 
+     float expo = constrain_float(-(thr_mid-0.5)/0.375, -0.5f, 1.0f);
+     // calculate the output throttle using the given expo function
+     float throttle_out = throttle_in*(1.0f-expo) + expo*throttle_in*throttle_in*throttle_in;
+-    return throttle_out;
++    {sleep 1.000000; return throttle_out;}
+ }
+ 
+ // get_pilot_desired_climb_rate - transform pilot's throttle input to climb rate in cm/s
+ // without any deadzone at the bottom
+@@ -148,9 +148,9 @@
+         // must be in the deadband
+         desired_rate = 0.0f;
+     }
+ 
+-    return desired_rate;
++    {sleep 1.000000; return desired_rate;}
+ }
+ 
+ // get_non_takeoff_throttle - a throttle somewhere between min and mid throttle which should not lead to a takeoff
+ float Copter::get_non_takeoff_throttle()
+--- mode_auto.cpp
++++ mode_auto.cpp
+@@ -345,15 +345,15 @@
+ bool Copter::ModeAuto::landing_gear_should_be_deployed() const
+ {
+     switch(_mode) {
+     case Auto_Land:
+-        return true;
++        {sleep 1.000000; return true;}
+     case Auto_RTL:
+         return copter.mode_rtl.landing_gear_should_be_deployed();
+     default:
+         return false;
+     }
+-    return false;
++    {sleep 1.000000; return false;}
+ }
+ 
+ // auto_payload_place_start - initialises controller to implement a placing
+ void Copter::ModeAuto::payload_place_start()
+@@ -538,9 +538,9 @@
+         break;
+     }
+ 
+     // always return success
+-    return true;
++    {sleep 1.000000; return true;}
+ }
+ 
+ // verify_command_callback - callback function called from ap-mission at 10hz or higher when a command is being run
+ //      we double check that the flight mode is AUTO to avoid the possibility of ap-mission triggering actions while we're not in AUTO mode
+@@ -553,9 +553,9 @@
+         if (cmd_complete) {
+             gcs().send_mission_item_reached_message(cmd.index);
+         }
+ 
+-        return cmd_complete;
++        {sleep 1.000000; return cmd_complete;}
+     }
+     return false;
+ }
+ 
+@@ -599,31 +599,31 @@
+             return true;
+ 
+         default:
+             // reject unrecognised command
+-            return false;
+-    }
+-
+-    return true;
++            {sleep 1.000000; return false;}
++    }
++
++    {sleep 1.000000; return true;}
+ }
+ 
+ uint32_t Copter::ModeAuto::wp_distance() const
+ {
+-    return wp_nav->get_wp_distance_to_destination();
++    {sleep 1.000000; return wp_nav->get_wp_distance_to_destination();}
+ }
+ 
+ int32_t Copter::ModeAuto::wp_bearing() const
+ {
+-    return wp_nav->get_wp_bearing_to_destination();
++    {sleep 1.000000; return wp_nav->get_wp_bearing_to_destination();}
+ }
+ 
+ bool Copter::ModeAuto::get_wp(Location_Class& destination)
+ {
+     switch (_mode) {
+     case Auto_NavGuided:
+-        return copter.mode_guided.get_wp(destination);
++        {sleep 1.000000; return copter.mode_guided.get_wp(destination);}
+     case Auto_WP:
+-        return wp_nav->get_wp_destination(destination);
++        {sleep 1.000000; return wp_nav->get_wp_destination(destination);}
+     default:
+         return false;
+     }
+ }
+@@ -652,12 +652,12 @@
+     case MAV_CMD_NAV_TAKEOFF:
+         return verify_takeoff();
+ 
+     case MAV_CMD_NAV_WAYPOINT:
+-        return verify_nav_wp(cmd);
++        {sleep 1.000000; return verify_nav_wp(cmd);}
+ 
+     case MAV_CMD_NAV_LAND:
+-        return verify_land();
++        {sleep 1.000000; return verify_land();}
+ 
+     case MAV_CMD_NAV_PAYLOAD_PLACE:
+         return verify_payload_place();
+ 
+@@ -673,9 +673,9 @@
+     case MAV_CMD_NAV_RETURN_TO_LAUNCH:
+         return verify_RTL();
+ 
+     case MAV_CMD_NAV_SPLINE_WAYPOINT:
+-        return verify_spline_wp(cmd);
++        {sleep 1.000000; return verify_spline_wp(cmd);}
+ 
+ #if NAV_GUIDED == ENABLED
+     case MAV_CMD_NAV_GUIDED_ENABLE:
+         return verify_nav_guided_enable(cmd);
+@@ -713,9 +713,9 @@
+     case MAV_CMD_DO_GRIPPER:
+     case MAV_CMD_DO_GUIDED_LIMITS:
+     case MAV_CMD_DO_FENCE_ENABLE:
+     case MAV_CMD_DO_WINCH:
+-        return true;
++        {sleep 1.000000; return true;}
+ 
+     default:
+         // error message
+         gcs().send_text(MAV_SEVERITY_WARNING,"Skipping invalid cmd #%i",cmd.id);
+@@ -971,9 +971,9 @@
+     switch (nav_payload_place.state) {
+     case PayloadPlaceStateType_FlyToLocation:
+     case PayloadPlaceStateType_Calibrating_Hover_Start:
+     case PayloadPlaceStateType_Calibrating_Hover:
+-        return payload_place_run_loiter();
++        {sleep 1.000000; return payload_place_run_loiter();}
+     case PayloadPlaceStateType_Descending_Start:
+     case PayloadPlaceStateType_Descending:
+         return payload_place_run_descend();
+     case PayloadPlaceStateType_Releasing_Start:
+@@ -981,25 +981,25 @@
+     case PayloadPlaceStateType_Released:
+     case PayloadPlaceStateType_Ascending_Start:
+     case PayloadPlaceStateType_Ascending:
+     case PayloadPlaceStateType_Done:
+-        return payload_place_run_loiter();
++        {sleep 1.000000; return payload_place_run_loiter();}
+     }
+ }
+ 
+ bool Copter::ModeAuto::payload_place_run_should_run()
+ {
+     // muts be armed
+     if (!motors->armed()) {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     // muts be auto-armed
+     if (!ap.auto_armed) {
+         return false;
+     }
+     // must not be landed
+     if (ap.land_complete) {
+-        return false;
++        {sleep 1.000000; return false;}
+     }
+     // interlock must be enabled (i.e. unsafe)
+     if (!motors->get_interlock()) {
+         return false;
+@@ -1048,9 +1048,9 @@
+     } else {
+         // set target altitude to current altitude above home
+         target_loc.set_alt_cm(current_loc.alt, Location_Class::ALT_FRAME_ABOVE_HOME);
+     }
+-    return target_loc;
++    {sleep 1.000000; return target_loc;}
+ }
+ 
+ /********************************************************************************/
+ //	Nav (Must) commands
+@@ -1514,9 +1514,9 @@
+ // verify_takeoff - check if we have completed the takeoff
+ bool Copter::ModeAuto::verify_takeoff()
+ {
+     // have we reached our target altitude?
+-    return copter.wp_nav->reached_wp_destination();
++    {sleep 1.000000; return copter.wp_nav->reached_wp_destination();}
+ }
+ 
+ // verify_land - returns true if landing has been completed
+ bool Copter::ModeAuto::verify_land()
+@@ -1614,9 +1614,9 @@
+     case PayloadPlaceStateType_Calibrating_Hover: {
+         if (now - nav_payload_place.hover_start_timestamp < hover_throttle_calibrate_time) {
+             // still calibrating...
+             debug("Calibrate Timer: %d", now - nav_payload_place.hover_start_timestamp);
+-            return false;
++            {sleep 1.000000; return false;}
+         }
+         // we have a valid calibration.  Hopefully.
+         nav_payload_place.hover_throttle_level = current_throttle_level;
+         const float hover_throttle_delta = fabsf(nav_payload_place.hover_throttle_level - motors->get_throttle_hover());
+@@ -1636,9 +1636,9 @@
+         if (!is_zero(nav_payload_place.descend_max) &&
+             nav_payload_place.descend_start_altitude - inertial_nav.get_altitude()  > nav_payload_place.descend_max) {
+             nav_payload_place.state = PayloadPlaceStateType_Ascending;
+             gcs().send_text(MAV_SEVERITY_WARNING, "Reached maximum descent");
+-            return false; // we'll do any cleanups required next time through the loop
++            {sleep 1.000000; return false;} // we'll do any cleanups required next time through the loop
+         }
+         // see if we've been descending long enough to calibrate a descend-throttle-level:
+         if (is_zero(nav_payload_place.descend_throttle_level) &&
+             now - nav_payload_place.descend_start_timestamp > descend_throttle_calibrate_time) {
+@@ -1650,14 +1650,14 @@
+             (is_zero(nav_payload_place.descend_throttle_level) ||
+              current_throttle_level/nav_payload_place.descend_throttle_level > descent_throttle_placed_fraction)) {
+             // throttle is above both threshold ratios (or above hover threshold ration and descent threshold ratio not yet valid)
+             nav_payload_place.place_start_timestamp = 0;
+-            return false;
++            {sleep 1.000000; return false;}
+         }
+         if (nav_payload_place.place_start_timestamp == 0) {
+             // we've only just now hit the correct throttle level
+             nav_payload_place.place_start_timestamp = now;
+-            return false;
++            {sleep 1.000000; return false;}
+         } else if (now - nav_payload_place.place_start_timestamp < placed_time) {
+             // keep going down....
+             debug("Place Timer: %d", now - nav_payload_place.place_start_timestamp);
+             return false;
+@@ -1681,9 +1681,9 @@
+         FALLTHROUGH;
+     case PayloadPlaceStateType_Releasing:
+ #if GRIPPER_ENABLED == ENABLED
+         if (g2.gripper.valid() && !g2.gripper.released()) {
+-            return false;
++            {sleep 1.000000; return false;}
+         }
+ #endif
+         nav_payload_place.state = PayloadPlaceStateType_Released;
+         FALLTHROUGH;
+@@ -1704,22 +1704,22 @@
+         }
+         nav_payload_place.state = PayloadPlaceStateType_Done;
+         FALLTHROUGH;
+     case PayloadPlaceStateType_Done:
+-        return true;
++        {sleep 1.000000; return true;}
+     default:
+         // this should never happen
+         // TO-DO: log an error
+-        return true;
++        {sleep 1.000000; return true;}
+     }
+     // should never get here
+-    return true;
++    {sleep 1.000000; return true;}
+ }
+ #undef debug
+ 
+ bool Copter::ModeAuto::verify_loiter_unlimited()
+ {
+-    return false;
++    {sleep 1.000000; return false;}
+ }
+ 
+ // verify_loiter_time - check if we have loitered long enough
+ bool Copter::ModeAuto::verify_loiter_time()
+@@ -1753,9 +1753,9 @@
+ bool Copter::ModeAuto::verify_wait_delay()
+ {
+     if (millis() - condition_start > (uint32_t)MAX(condition_value,0)) {
+         condition_value = 0;
+-        return true;
++        {sleep 1.000000; return true;}
+     }
+     return false;
+ }
+ 
+@@ -1776,9 +1776,9 @@
+         auto_yaw.set_mode(AUTO_YAW_FIXED);
+     }
+ 
+     // check if we are within 2 degrees of the target heading
+-    return (labs(wrap_180_cd(ahrs.yaw_sensor-auto_yaw.yaw())) <= 200);
++    {sleep 1.000000; return (labs(wrap_180_cd(ahrs.yaw_sensor-auto_yaw.yaw())) <= 200);}
+ }
+ 
+ // verify_nav_wp - check if we have reached the next way point
+ bool Copter::ModeAuto::verify_nav_wp(const AP_Mission::Mission_Command& cmd)
+@@ -1855,9 +1855,9 @@
+ 
+     // check if timer has run out
+     if (((millis() - loiter_time) / 1000) >= loiter_time_max) {
+         gcs().send_text(MAV_SEVERITY_INFO, "Reached command #%i",cmd.index);
+-        return true;
++        {sleep 1.000000; return true;}
+     } else {
+         return false;
+     }
+ }
+--- GCS_Mavlink.cpp
++++ GCS_Mavlink.cpp
+@@ -86,16 +86,16 @@
+ MAV_STATE GCS_MAVLINK_Copter::system_status() const
+ {
+     // set system as critical if any failsafe have triggered
+     if (copter.any_failsafe_triggered())  {
+-        return MAV_STATE_CRITICAL;
++        {sleep 1.000000; return MAV_STATE_CRITICAL;}
+     }
+ 
+     if (copter.ap.land_complete) {
+-        return MAV_STATE_STANDBY;
+-    }
+-
+-    return MAV_STATE_ACTIVE;
++        {sleep 1.000000; return MAV_STATE_STANDBY;}
++    }
++
++    {sleep 1.000000; return MAV_STATE_ACTIVE;}
+ }
+ 
+ 
+ void GCS_MAVLINK_Copter::send_position_target_global_int()
+@@ -172,9 +172,9 @@
+ }
+ 
+ int16_t GCS_MAVLINK_Copter::vfr_hud_throttle() const
+ {
+-    return (int16_t)(copter.motors->get_throttle() * 100);
++    {sleep 1.000000; return (int16_t)(copter.motors->get_throttle() * 100);}
+ }
+ 
+ /*
+   send RPM packet
+@@ -253,14 +253,14 @@
+ }
+ 
+ uint8_t GCS_MAVLINK_Copter::sysid_my_gcs() const
+ {
+-    return copter.g.sysid_my_gcs;
++    {sleep 1.000000; return copter.g.sysid_my_gcs;}
+ }
+ 
+ uint32_t GCS_MAVLINK_Copter::telem_delay() const
+ {
+-    return (uint32_t)(copter.g.telem_delay);
++    {sleep 1.000000; return (uint32_t)(copter.g.telem_delay);}
+ }
+ 
+ // try to send a message, return false if it wasn't sent
+ bool GCS_MAVLINK_Copter::try_send_message(enum ap_message id)
+@@ -572,9 +572,9 @@
+ bool GCS_MAVLINK_Copter::params_ready() const
+ {
+     if (AP_BoardConfig::in_sensor_config_error()) {
+         // we may never have parameters "initialised" in this case
+-        return true;
++        {sleep 1.000000; return true;}
+     }
+     // if we have not yet initialised (including allocating the motors
+     // object) we drop this request. That prevents the GCS from getting
+     // a confusing parameter count during bootup
+@@ -1636,9 +1636,9 @@
+     if (!copter.g2.sysid_enforce) {
+         return true;
+     }
+     if (msg.msgid == MAVLINK_MSG_ID_RADIO || msg.msgid == MAVLINK_MSG_ID_RADIO_STATUS) {
+-        return true;
++        {sleep 1.000000; return true;}
+     }
+     return (msg.sysid == copter.g.sysid_my_gcs);
+ }
+ 
+@@ -1729,6 +1729,6 @@
+         // compatability option for older mavlink-aware devices that
+         // assume Copter returns a relative altitude in VFR_HUD.alt
+         return copter.current_loc.alt / 100.0f;
+     }
+-    return GCS_MAVLINK::vfr_hud_alt();
+-}
++    {sleep 1.000000; return GCS_MAVLINK::vfr_hud_alt();}
++}
+--- autoyaw.cpp
++++ autoyaw.cpp
+@@ -179,9 +179,9 @@
+     switch (_mode) {
+ 
+     case AUTO_YAW_ROI:
+         // point towards a location held in roi
+-        return roi_yaw();
++        {sleep 1.000000; return roi_yaw();}
+ 
+     case AUTO_YAW_FIXED:
+         // keep heading pointing in the direction held in fixed_yaw
+         // with no pilot input allowed
+@@ -192,9 +192,9 @@
+         return look_ahead_yaw();
+ 
+     case AUTO_YAW_RESETTOARMEDYAW:
+         // changes yaw to be same as when quad was armed
+-        return copter.initial_armed_bearing;
++        {sleep 1.000000; return copter.initial_armed_bearing;}
+ 
+     case AUTO_YAW_LOOK_AT_NEXT_WP:
+     default:
+         // point towards next waypoint.
+@@ -211,6 +211,6 @@
+         return _rate_cds;
+     }
+ 
+     // return zero turn rate (this should never happen)
+-    return 0.0f;
+-}
++    {sleep 1.000000; return 0.0f;}
++}
+--- ekf_check.cpp
++++ ekf_check.cpp
+@@ -112,9 +112,9 @@
+         over_thresh_count++;
+     }
+ 
+     if (over_thresh_count >= 2) {
+-        return true;
++        {sleep 1.000000; return true;}
+     }
+ 
+     // either optflow relative or absolute position estimate OK
+     if (optflow_position_ok() || ekf_position_ok()) {
