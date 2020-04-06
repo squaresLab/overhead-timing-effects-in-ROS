@@ -107,9 +107,16 @@ venv.bak/
 *~
 \#*\#
 
+# latex
+*.aux
+*.blg
+*.synctex.gz
+*.bbl
+
 # custom
 *.sqlite
 *.json
 *.db
 *.out
-
+*.old
+*.pdf
