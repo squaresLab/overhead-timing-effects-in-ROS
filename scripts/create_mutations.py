@@ -34,11 +34,19 @@ def parse_args():
                         help="minimum exponent in sweep delay (2^x)")
     parser.add_argument('--delay_max', type=int, default=4,
                         help="maximum exponent in sweep delay (2^x)")
+    parser.add_argument('--publish', action="store_true", default=False,
+                        help="Add instrumentation point before " +
+                        "publish statements")
     args = parser.parse_args()
     return args
 
 
-def get_fns(fn, delay, output="one_diff", weight=1.0):
+def get_fns(fn, delay, output="one_diff", weight=1.0, returns=False,
+            publish=False):
+    if returns:
+        fn = f"{fn}_returns"
+    if publish:
+        fn = f"{fn}_publish"
     if output == "coin_flip":
         fn_new = f"{fn}_d{delay}_w{weight}.new"
         diff_fn = f"{fn}_d{delay}_w{weight}.diff"
@@ -46,20 +54,23 @@ def get_fns(fn, delay, output="one_diff", weight=1.0):
         fn_new = "%s_all.new" % fn
         diff_fn = "%s_all.diff" % fn
     else:
-        raise NotImplemented
+        raise NotImplementedError
 
     return diff_fn, fn_new
 
 
-def mutate_files(files, returns=False, delay=0.5, weight=1.0,
+def mutate_files(files, returns=False, publish=False, delay=0.5, weight=1.0,
                  output="coin_flip", old_dir=".", big_diff=False):
     old_dir = os.path.abspath(old_dir)
     comby = Comby()
     if returns:
         match = "return :[x];"
         rewrite = "{sleep %f; return :[x];}" % delay
-    else:
-        raise NotImplemented
+    if publish:
+        match = ":[y].publish(:[x])"
+        rewrite = "{sleep %f; :[y].publish(:[x])}" % delay
+    if not (returns or publish):
+        raise NotImplementedError
 
     diff_fns = []
     new_fns = []
@@ -68,7 +79,8 @@ def mutate_files(files, returns=False, delay=0.5, weight=1.0,
 
 
     for fn in files:
-        diff_fn, new_fn = get_fns(fn, delay, output=output, weight=weight)
+        diff_fn, new_fn = get_fns(fn, delay, output=output, weight=weight,
+                                  returns=returns, publish=publish)
         diff_fns.append(diff_fn)
         new_fns.append(new_fn)
 
@@ -172,7 +184,8 @@ def main():
                     mutations = mutate_files(files, returns=args.returns,
                                              weight=weight, delay=delay,
                                              output=args.output,
-                                             old_dir=args.dir)
+                                             old_dir=args.dir,
+                                             publish=args.publish)
         else:
             mutations = mutate_files(files, returns=args.returns,
                                      weight=args.weight, delay=args.delay,
