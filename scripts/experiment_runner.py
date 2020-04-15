@@ -50,7 +50,7 @@ def get_docker_image(args: argparse.Namespace) -> str:
     return args.docker_image
 
 
-def get_mutations(args: argparse.Namespace) -> List[str]:
+def get_mutations(args: argparse.Namespace) -> List[Tuple[str, str]]:
     patch_fns = args.patches
     context = args.context
     diffs = []
@@ -311,7 +311,7 @@ def run_commands(system, mission_fn: str, bag_fn: str,
                 ps_sitl.kill()
 
 
-def access_bag_db(db_fn: str) -> sqlite3.Cursor:
+def access_bag_db(db_fn: str) -> Tuple[sqlite3.Cursor, sqlite3.Connection]:
 
     # Check if there's the appropriate table. If not, make it
     sql_create_bagfns_table = """CREATE TABLE IF NOT EXISTS bagfns (
@@ -456,10 +456,20 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    fh = logging.FileHandler(filename=args.log_fn)
     format_str = "%(asctime)s:%(levelname)s:%(name)s: %(message)s"
     date_str = '%m/%d/%Y %I:%M:%S %p'
-    logging.basicConfig(filename=args.log_fn, level=logging.DEBUG,
-                        format=format_str, datefmt=date_str)
+    fh_formatter = logging.Formatter(fmt=format_str, datefmt=date_str)
+    fh.setFormatter(fh_formatter)
+    logger.addHandler(fh)
+
+    #logging.basicConfig(filename=args.log_fn, level=logging.DEBUG,
+    #                    format=format_str, datefmt=date_str)
+
+
     # TODO:
     # add boilerplate python default logging or use loguru to attach to the correct
     #logger.remove()
