@@ -22,21 +22,25 @@ def access_bag_db(db_fn: str) -> Tuple[sqlite3.Cursor, sqlite3.Connection]:
     return cursor, conn
 
 
-def get_fns_from_rows(cursor: sqlite3.Cursor, log_dir: str) -> List[Tuple[str, str]]:
+def get_fns_from_rows(cursor: sqlite3.Cursor, log_dir: str) -> List[Tuple[str, str, str]]:
     rows = cursor.fetchall()
     log_fns = []
     for row in rows:
         # logging.debug(row)
         log_fn = os.path.join(log_dir, f"{row[0]}.tlog")
         mutation_fn = row[7]
+        mission_fn = row[5]
         # logging.debug(log_fn)
-        log_fns.append((log_fn, mutation_fn))
+        log_fns.append((log_fn, mutation_fn, mission_fn))
     return log_fns
 
 
-def get_from_db(log_db: str, log_dir: str = "../bags") -> Dict[str, List[Tuple[str,str]]]:
+def get_from_db(log_db: str, log_dir: str = "../bags") -> Dict[str, List[Tuple[str, str, str]]]:
     log_fns: Dict[str, List[np.array]] = dict()
     cursor, conn = access_bag_db(log_db)
+
+    # TODO - Get separately for each mission
+    # TODO - Find all the mission names then get them all separately
 
     # TODO - DEBUG HERE -- ARE WE GETTING ALL THE FILES?
     # Keep track of the variations in the varied ones
@@ -84,13 +88,13 @@ def get_json(log_fn: str) -> List[Dict]:
     return json_data
 
 
-def convert_logs(log_fns: List[Tuple[str, str]],
-                 field_type: str="GLOBAL_POSITION_INT") -> List[Tuple[str, str, np.array]]:
+def convert_logs(log_fns: List[Tuple[str, str, str]],
+                 field_type: str="GLOBAL_POSITION_INT") -> List[Tuple[str, str, str, np.array]]:
     one_field_lists = []
     fn_count = 0
     total_fns = len(log_fns)
     logging.debug(f"convert_logs log_fns: {log_fns}")
-    for log_fn, mutation_fn in log_fns:
+    for log_fn, mutation_fn, mission_fn in log_fns:
         logging.debug(f"convert_logs log_fn: {log_fn}")
         # convert the tlog to json, if it's not already json
         log_json = get_json(log_fn)
@@ -117,7 +121,7 @@ def convert_logs(log_fns: List[Tuple[str, str]],
             logging.error(f"Field: {field_type} not supported")
             raise NotImplementedError
         one_field_np = np.array(one_field_list)
-        one_field_lists.append((log_fn, mutation_fn, one_field_np))
+        one_field_lists.append((log_fn, mutation_fn, mission_fn, one_field_np))
         fn_count += 1
         logging.debug(f"File {fn_count} of {total_fns}")
     return one_field_lists
@@ -138,7 +142,7 @@ def equalize_lengths(logs: List[np.array], length: int = 0) -> List[np.array]:
     return new_logs
 
 
-def logs_to_np(log_fns: Dict[str, List[Tuple[str, str]]]) -> Dict[str, List[Tuple[str, str, Any]]]:
+def logs_to_np(log_fns: Dict[str, List[Tuple[str, str, str]]]) -> Dict[str, List[Tuple[str, str, str, Any]]]:
     all_logs = dict()
     # Turn the log files into np.arrays of the data
     for label, log_fns_subset in log_fns.items():
@@ -150,27 +154,28 @@ def logs_to_np(log_fns: Dict[str, List[Tuple[str, str]]]) -> Dict[str, List[Tupl
     return all_logs
 
 
-def to_json_ready(all_logs: Dict[str, List[Tuple[str, str, np.array]]]) -> Dict[str, List[Tuple[str, str, List]]]:
+def to_json_ready(all_logs: Dict[str, List[Tuple[str, str, str, np.array]]]) -> Dict[str, List[Tuple[str, str, str, List]]]:
     json_ready = dict()
     for key in all_logs:
         json_ready_list = []
         for item in all_logs[key]:
-            json_ready_list.append((item[0], item[1], item[2].tolist()))
+            json_ready_list.append((item[0], item[1], item[2], item[3].tolist()))
         json_ready[key] = json_ready_list
     return json_ready
 
 
-def json_to_np(json_logs: Dict[str, List[Tuple[str, str, List]]]) -> Dict[str, List[Tuple[str, str, np.array]]]:
+def json_to_np(json_logs: Dict[str, List[Tuple[str, str, str, List]]]) -> Dict[str, List[Tuple[str, str, str, np.array]]]:
     all_logs = dict()
     for key in json_logs:
         all_logs_list = []
         for item in json_logs[key]:
-            all_logs_list.append((item[0], item[1], np.array(item[2])))
+            # logging.debug(f"item: {item}")
+            all_logs_list.append((item[0], item[1], item[2], np.array(item[3])))
         all_logs[key] = all_logs_list
     return all_logs
 
 
-def memoize_log_db(log_db: str) -> Dict[str, List[Tuple[str, str, np.array]]]:
+def memoize_log_db(log_db: str) -> Dict[str, List[Tuple[str, str, str, np.array]]]:
     date = time.strftime("%m-%d-%Y")
     memoized_fn = f"{log_db}_{date}.json"
     logging.debug(memoized_fn)
@@ -188,8 +193,8 @@ def memoize_log_db(log_db: str) -> Dict[str, List[Tuple[str, str, np.array]]]:
     return all_logs
 
 
-def get_logs(args: argparse.Namespace) -> Dict[str, List[Tuple[str, str, np.array]]]:
-    log_fns: Dict[str, List[Tuple[str, str]]] = dict()
+def get_logs(args: argparse.Namespace) -> Dict[str, List[Tuple[str, str, str, np.array]]]:
+    log_fns: Dict[str, List[Tuple[str, str, str]]] = dict()
 
     logging.debug(f"args.log_fn: {args.log_fn}")
 
@@ -204,6 +209,23 @@ def get_logs(args: argparse.Namespace) -> Dict[str, List[Tuple[str, str, np.arra
         all_logs = memoize_log_db(args.log_db)
 
     return all_logs
+
+
+def logs_by_mission(logs: Dict[str, List[Tuple[str, str, str, np.array]]]) -> Dict[str, Dict[str, List[Tuple[str, str, np.array]]]]:
+    by_mission: Dict[str, Dict[str, List[Tuple[str, str, np.array]]]] = dict()
+    for label in logs.keys():
+        for log_fn, mutation_fn, mission_fn, log in logs[label]:
+            if mission_fn in by_mission:
+                if label in by_mission[mission_fn]:
+                    by_mission[mission_fn][label] = \
+                        by_mission[mission_fn][label] + \
+                        [(log_fn, mutation_fn, log)]
+                else:
+                    by_mission[mission_fn][label] = [(log_fn, mutation_fn, log)]
+            else:
+                by_mission[mission_fn] = {label: [(log_fn, mutation_fn, log)]}
+
+    return by_mission
 
 
 def insert(db: Dict[str, List[Any]], label: str,

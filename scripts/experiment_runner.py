@@ -205,7 +205,7 @@ def run_dronekit(system, mission_fn: str, mission_timeout=500):
         try:
             wpl_mission.execute(vehicle, timeout_mission=mission_timeout)
         except TimeoutError:
-            logging.debug("mission timed out")
+            logging.info("mission timed out")
 
 
 def get_port_numbers(count, port_pool_mavlink):
@@ -241,9 +241,9 @@ def mavproxy(system, mission_fn: str, logfile_name: str,
         exit_stack.enter_context(ardu.SITL.launch_with_mavproxy(shell,
                                                                 **sitl_kwargs))
 
-    logging.debug("allocated DroneKit URL: %s", url_dronekit)
-    logging.debug("allocated attacker URL: %s", url_attacker)
-    logging.debug("allocated monitor URL: %s", url_monitor)
+    logging.info("allocated DroneKit URL: %s", url_dronekit)
+    logging.info("allocated attacker URL: %s", url_attacker)
+    logging.info("allocated monitor URL: %s", url_monitor)
 
     # connect via DroneKit
     vehicle = exit_stack.enter_context(
@@ -255,7 +255,7 @@ def mavproxy(system, mission_fn: str, logfile_name: str,
     try:
         wpl_mission.execute(vehicle, timeout_mission=timeout)
     except TimeoutError:
-        logging.debug("mission timed out after %.2f seconds",
+        logging.info("mission timed out after %.2f seconds",
                       timer.duration)
         passed = False
     # allow a small amount of time for the message to arrive
@@ -405,7 +405,7 @@ def run_experiments(rsw, docker_image: str,
 
     for mission_fn in mission_files:
         for i in range(baseline_iterations):
-            logging.debug(f"baseline iteration {i + 1} of {baseline_iterations}")
+            logging.info(f"baseline iteration {i + 1} of {baseline_iterations}")
             print(f"baseline iteration {i + 1} of {baseline_iterations}")
             with rsw.launch(docker_image, sources) as system:
                 execute_experiment(system, cursor, conn, mission_fn,
@@ -458,13 +458,13 @@ def main() -> None:
     args = parse_args()
     format_str = "%(asctime)s:%(levelname)s:%(name)s: %(message)s"
     date_str = '%m/%d/%Y %I:%M:%S %p'
-    logging.basicConfig(filename=args.log_fn, level=logging.DEBUG,
+    logging.basicConfig(filename=args.log_fn, level=logging.INFO,
                         format=format_str, datefmt=date_str)
     # TODO:
     # add boilerplate python default logging or use loguru to attach to the correct
     #logger.remove()
     #logger.enable('roswire')
-    #logger.add(args.log_fn, level='DEBUG', format="{time:MM/DD/YYYY HH:mm:ss}:{level}:{name} {message}")
+    #logger.add(args.log_fn, level='INFO', format="{time:MM/DD/YYYY HH:mm:ss}:{level}:{name} {message}")
 
     rsw = roswire.ROSWire()
     docker_image = get_docker_image(args)

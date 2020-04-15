@@ -161,15 +161,18 @@ def graph_time(logs: Dict[str, List[Tuple[str, str, np.array]]],
     fig.savefig("TOTAL_TIME.png")
 
 
-def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]]) -> None:
+def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
+               title: str="") -> None:
 
     fig, ax = plt.subplots()
     ax.ticklabel_format(useOffset=False)
+    
     colors = [matplotlib.colors.to_rgb(x) for x in ('r', 'g', 'b', 'c', 'm', 'y')]
     zipped = zip(logs.keys(), colors)
+    title_short = title.split("/")[-1].split(".")[0]
     for subset_label, color in zipped:
         # Pick a color family
-
+        ax.set_title(title)
         logs_subset = logs[subset_label]
         # Define the label
         # TODO
@@ -178,14 +181,20 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]]) -> None:
         # Plot each log in a variation in the color family
         for log_fn, mutation_fn, log in logs_subset:
             lat, lon, time_elapsed, alt, relative_alt = extract_series(log)
+            logging.debug(f"lat: {lat}")
+            logging.debug(f"lon: {lon}")
+            logging.debug(f"title_short: {title_short}")
             ax.scatter(lat, lon, c=time_elapsed, s=(relative_alt/100))
             # logging.debug(f"color: {color}")
             # logging.debug(f"type(color): {type(color)}")
+            ax.set_ylim(min(lon), max(lon))
+            ax.set_xlim(min(lat), max(lat))
             ax.set_xlabel("Latitude")
             ax.set_ylabel("Longitude")
             color = next_color(color)
 
-    fig.savefig("MANY_FIG.png")
+
+    fig.savefig(f"MANY_FIG_{title_short}.png")
 
     graph_time(logs)
 
@@ -202,18 +211,22 @@ def main() -> None:
 
     logs = log_analysis.get_logs(args)
 
+    logs_by_mission = log_analysis.logs_by_mission(logs)
+
     # logging.debug(f"logs: {logs}")
 
     if (args.individual):
-        for logs_subset in logs.values():
+        for mission_fn, one_mission in logs_by_mission.items():            
             filename_counter = 1
-            for log_fn, mutation_fn, log in logs_subset:
-                log_fn_short = log_fn.split("/")[-1].split(".")[0]
-                filename = f"ONE_LOG_{log_fn_short}.png"
-                graph_one_log(log, fn=filename, title=mutation_fn)
-                filename_counter = filename_counter + 1
+            for label, logs_subset in one_mission.items():
+                for log_fn, mutation_fn, log in logs_subset:
+                    log_fn_short = log_fn.split("/")[-1].split(".")[0]
+                    filename = f"ONE_LOG_{log_fn_short}.png"
+                    graph_one_log(log, fn=filename, title=mutation_fn)
+                    filename_counter = filename_counter + 1
 
-    graph_logs(logs)
+    for mission_fn, one_mission in logs_by_mission.items():
+        graph_logs(one_mission, title=mission_fn)
 
     #animate_logs(logs)
 
