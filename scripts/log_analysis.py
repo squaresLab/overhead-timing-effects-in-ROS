@@ -75,7 +75,11 @@ def get_json(log_fn: str) -> List[Dict]:
     with open(json_fn, 'r') as json_read:
         logging.debug(json_fn)
         for line in json_read:
-            json_line = json.loads(line)
+            try:
+                json_line = json.loads(line)
+            except json.decoder.JSONDecodeError as e:
+                logging.warn(f"Cannot read json in line: {line}")
+                continue
             json_data.append(json_line)
     return json_data
 
