@@ -122,7 +122,7 @@ def build_patched_system(system, diff: str, context: str):
 def run_mavros(system, mission, ros):
 
     # use roslaunch to launch mavros inside the ROS session
-    ros.launch('apm.launch', package='mavros',
+    ros.roslaunch('apm.launch', package='mavros',
                args={'fcu_url': 'tcp://127.0.0.1:5760@5760'})
 
     # Fetch dynamically generated types for the messages that we want to send
