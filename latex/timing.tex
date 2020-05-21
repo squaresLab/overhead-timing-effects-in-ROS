@@ -8,6 +8,7 @@
 \usepackage{textcomp}
 \usepackage[nolist]{acronym}
 \usepackage{xcolor}
+\usepackage{url}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
     
@@ -94,7 +95,6 @@ In addition, software monitoring techniques can cause execution delays. These te
 It is desirable to get a more precise understanding of the amount of delay that these systems can absorb, to determine to what extent they can tolerate software monitoring. 
 \todo{I definitely had a better explanation for this reasoning before. Use that instead.}
 
-\cite{TimperleyArdu2018}
 
 \section{Background and Motivation}
 \label{sec:background}
@@ -117,7 +117,7 @@ We count the number of nominal runs that exhibit crashing behaviors, to establis
 
 \todo{The approach section is unfinished and still intertwined with the methodology section}
 
-\subsection{Methodology}
+\section{Methodology}
 \label{sec:timing-methodology}
 \todo{As usual, I've conflated approach and methodology. Separate these back out.}
 
@@ -129,10 +129,10 @@ For each combination of robot and mission, I run several \emph{nominal} executio
 
 For the \emph{experimental} executions, I add controlled artificial delays to the execution of the robot code.
 The location, number, and length of these delays are experimental parameters to the experiments.
-\subsubsection{Method of Inserting Delays}
+\subsection{Method of Inserting Delays}
 \label{sec:timing-methodology-delays}
 
-\paragraph{\tool{ArduCopter}} 
+\subsubsection{\tool{ArduCopter}} 
 For the \tool{ArduCopter} experiments, the artificial delays are introduced before return statements in the code.
 I identified the program point immediately before 
 each return statement in all \tool{.cpp} files in the 
@@ -148,7 +148,7 @@ meaning a delay was inserted before every return statement,
 and the length of each delay ranged from 0.001953125 seconds to 8 seconds, 
 with delay lengths chosen as powers of 2.
 
-\paragraph{\tool{ROS}-based Systems}
+\subsubsection{\tool{ROS}-based Systems}
 For the \tool{\ac{ROS}} experiments, the artificial delays are introduced at communications 
 barriers on ROS topics, taking advantage of the architecture of \tool{ROS}-based systems. 
 
@@ -212,8 +212,9 @@ To evaluate the research questions, I make use of the following metrics.
 
 To determine a representative nominal execution, I take the medoid of the time series representing the 3-dimensional positions of the robot in all nominal executions of a particular mission (without artificial delays).
 
-\subsection{Research Questions}
-\label{sec:timing-research-questions}
+\section{Evaluation}
+
+\label{sec:evaluation}
 I evaluate the following research questions.
 \begin{description}
 \item[\textbf{RQ1:}] To what extent do the presence of timing delays in robot systems have an effect on observable behavior as defined by a set of performance metrics?
@@ -222,15 +223,21 @@ I evaluate the following research questions.
 \item[\textbf{RQ4:}] Under what circumstances do timing delays lead to system crashes?
 \end{description}
 
-\paragraph{Effects on Observable Behavior}
+\subsection{Effects on Observable Behavior}
 \label{sec:timing-methodology-RQ-observable}
 
-To evaluate RQ1, To what extent do the presence of timing delays in robot systems have an effect on observable behavior as defined by a set of performance metrics, I look at the metrics enumerated in Section~\ref{sec:timing-methodology-metrics}.
+\textbf{RQ1:} To what extent do the presence of timing delays in robot systems have an effect on observable behavior as defined by a set of performance metrics?
+
+To evaluate RQ1, I look at the metrics enumerated in Section~\ref{sec:timing-methodology-metrics}.
 
 The clearest and most obvious effects on observable execution are crashes, both software crashes and crashes in physical space.
 I evaluate these deviations separately in RQ4 (Section~\ref{sec:timing-methodology-RQ-crash}).
 
-\paragraph{Different Effects on Different Components}
+\subsubsection{Results}
+\todo{insert results here}
+
+\subsection{Different Effects on Different Components}
+\textbf{RQ2:} Are certain kinds of robotics components more robust or resilient to timing delays?
 
 To evaluate RQ2, Are certain kinds of robotics components more robust or resilient to timing delays, 
 I conduct separate experiments in which I insert delays that affect different 
@@ -243,14 +250,140 @@ nodes that subscribe to that topic.
 By delaying different topics separately, I can evaluate the different effects on the subscriber nodes. 
 In \tool{ArduPilot}, I achieve a similar effect by conducting separate experiments with timing delays inserted into a single source file of the \tool{ArduCopter} code at a time.
 
-\paragraph{•}
+\subsubsection{Results}
+\todo{Insert results here}
 
-\paragraph{When Delays Cause Software Crashes}
+\paragraph{Different Effects on Different Systems}
+\textbf{RQ3:} Are certain robotics systems more robust or resilient to timing delays?
+
+To evaluate RQ3, I evaluate several different robotics systems. I experiment, in simulation, on the following systems.
+
+\todo{Make sure the list of robots actually matches the ones you finally wind up with in your experiments.}
+\begin{itemize}
+
+\item{\tool{ArduPilot}:} The open-source \tool{ArduPilot}
+project, written in C++, uses a common framework and
+collection of libraries to implement a set of general-purpose
+autopilot systems for use with a variety of vehicles, including,
+submarines, helicopters, multirotors, and
+airplanes. \tool{ArduPilot} is extremely popular with hobbyists
+and professionals. It is installed in over one million vehicles
+worldwide and used by organizations including NASA,
+Intel, and Boeing, as well as many institutions of higher-education.~\cite{TimperleyArdu2018}
+These experiments focus on the \tool{ArduCopter} software, designed for
+helicopter and multi-rotor aircraft.\footnote{\url{https://ardupilot.org/copter/}}
+
+\item{\tool{Fetch}:} Fetch robots are commercially available ``autonomous mobile robots that operate
+safely in commercial and industrial environments shared by
+people."\footnote{\url{http://fetchrobotics.com/automated-material-transport-v3/}}
+They pick up and transport heavy payloads, such as items in a warehouse environment.
+They have a mobile base and an arm for manipulation.
+The robots are built on \ac{ROS}.
+
+
+
+\item{\tool{F 1/10}} This project is a 1/10th-scale open-source terrestrial vehicle designed to evaluate autonomous racing algorithms.\footnote{\url{https://f1tenth.org/}}
+
+\item{\tool{TurtleBot3}:} This project is a modular, customizable mobile terrestrial vehicle robot that allows for varied functionality. Applications such as automatic parking and leader-follower behavior have been implemented for \tool{TurtleBot3}.\footnote{\url{http://emanual.robotis.com/docs/en/platform/turtlebot3/overview/}}
+
+\item{\tool{Care-o-Bot 4}:} This is a service robot, designed to interact with humans in private or public settings, such as retail environments, museums, and airports. It is modular, with optional arms and optionally-jointed neck and hips. It can be configured to carry objects or provide information. The robot is developed and produced by Fraunhofer IPA.\footnote{\url{https://www.care-o-bot.de/en/care-o-bot-4.html}}
+
+
+\item{\tool{Husky}:} The Husky unmanned ground vehicle by Clearpath Robotics\footnote{\url{https://clearpathrobotics.com/husky-unmanned-ground-vehicle-robot/}} is a real world robot with an extensive simulation infrastructure. It is rugged, designed to be deployed in uneven terrain, and it is capable of carrying and integrating with a variety of input sources (sensors) and actuators. Husky is popular among researchers for its straightforward design and real world usage history.
+
+\end{itemize}
+
+I construct the following experiments, which are designed to compare the effects on the different systems. 
+Because each system has a slightly different architecture, it is not always possible to
+conduct identical experiments across systems.
+We take advantage of \tool{rostopics} that are used in several different systems,
+as they generally serve similar functions across systems. 
+\todo{examples}
+Where possible, we run these experiments using different \tool{rostopics}, to 
+evaluate whether different systems are more able to tolerate delays in different 
+components.
+
+\begin{itemize}
+\item Given a chosen fixed delay inserted on every message on a \tool{rostopic} that is used in \todo{all/several} systems, which of the systems experience software crashes?
+\item Given the same chosen fixed delay inserted on every message on a \tool{rostopic} that
+is used in \todo{all/several} systems, is the three-dimensional position of the
+robot, as measured by the metrics in Section~\ref{sec:timing-methodology-metrics},
+deformed more in some systems than others? (In these comparisons, distances are
+normalized to reflect that some robots cover greater distances than others.)
+\item Given the same chosen fixed delay inserted on every message on a \tool{rostopic} that
+is used in \todo{all/several} systems, is the time to completion deformed more in
+some systems than in others? (In these comparisons, timing is normalized in the same way as distance.)
+\end{itemize}
+
+\subsubsection{Results}
+
+
+By comparing the results of the experiments on these systems, I note the following effects. [System X can tolerate greater delays than system Y; system Z can tolerate some delays that system M cannot but system M can tolerate some delays that system Z cannot, etc.]
+
+\todo{Insert results here}
+
+
+\subsection{When Delays Cause Software Crashes}
 \label{sec:timing-methodology-RQ-crash}
 
-\section*{Acknowledgments}
+\textbf{RQ4:} Under what circumstances do timing delays lead to system crashes?
 
-\todo{add acknowledgements}
+To evaluate RQ4, I look at several indicators of software crashes that can be observed from experiments.
+(It is interesting to find out when timing causes a system crash because system crashes have different practical implications for recovery techniques than other failures, such as incorrect trajectories or delays. System crashes can lead to, for example, losing contact with the system or damage to the hardware. Under some circumstances, a system that has crashed without hardware damage can simply be restarted.)
+It is important to separate system crashes from other successful executions so that we can exclude any trajectories and timing data that are invalid because of system crashes.
+
+I establish a baseline of software crashes that occur in the nominal data set. Robotics systems are often nondeterministic and difficult to simulate and,
+therefore, even nominal executions can cause software crashes.
+I compare the rate of software crashes in nominal executions against the rate of software crashes under the experimental conditions.
+
+The presence of a core dump file, such as would be produced when a segmentation fault occurs, indicates a system crash
+The absence of logs that would have normally been produced during a proper execution indicates a system crash.
+If the test harness exits abnormally, we classify that execution as a system crash.
+
+\subsubsection{Results}
+
+\todo{Insert results here}
+
+\section{Discussion}
+
+\subsection{Threats to Validity}
+
+\subsection{Future Directions}
+
+There are several questions that arise directly from the work presented here.
+
+\subsubsection{Violations of Other Desired Properties}
+
+The work presented here looks at the extent to which artificial timing delays deform execution
+in robotics programs in simulation by looking at whether the software crashes
+and physically-observable properties, such as how far the robot is from the expected
+position in physical space and how long the robot takes to reach waypoints.
+However, there are other desired properties in robotics execution.
+For example, there are safety properties that robots should maintain during
+execution, such as that they should not crash into an obstacle or that they
+should not violate speed limits.
+In addition, robots should maintain liveness --- they should not time out.
+It would be interesting to investigate the extent to which timing delays cause these properties to be violated.
+
+\subsubsection{Error Handling Behavior}
+
+It would be further interesting to investigate to what extent timing delays cause
+robotics systems to enter into error-handling behavior.
+For example, many systems are designed with \emph{fail safe} behavior, in which
+the robot is designed to shut down in a non-damaging state when the system encounters
+an unrecoverable error.
+Error handling for less severe faults may cause the robot to execute a recovery 
+behavior, such as clearing its position and using its sensors to attempt to 
+identify where it is with respect to its environment. 
+Such a recovery behavior can occur even in nominal execution and is a normal part
+of providing resiliency and accounting for nondeterminism in normal robotics executions.
+However, timing delays may cause these behaviors to be more frequent.
+
+\section{Conclusions}
+
+%\section*{Acknowledgments}
+
+%\todo{add acknowledgements}
 
 
 \bibliographystyle{IEEEtran}
