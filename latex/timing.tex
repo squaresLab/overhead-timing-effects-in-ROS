@@ -6,11 +6,30 @@
 \usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
+\usepackage[nolist]{acronym}
 \usepackage{xcolor}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
     
 \newcommand{\todo}[1]{\textcolor{violet}{{\bfseries [[TODO: #1]]}}}
+\newcommand{\tool}[1]{\textsc{#1}}
+
+\begin{acronym}
+\acro{QA}{Quality Assurance}
+\acro{SUT}{System Under Test}
+\acrodefplural{SUT}{Systems Under Test}
+\acroindefinite{SUT}{an}{a}
+\acro{LDCOF}{Local Density Cluster-Based Outlier Factor}
+\acroindefinite{LDCOF}{an}{a}
+\acro{DTW}{Dynamic Time Warping}
+\acro{BMB}{BenchMark Bot}
+\acro{ROS}{Robot Operating System}
+\acro{NREC}{National Robotics Engineering Center}
+\acro{FDR}{False Detection Rate}
+\acro{UAS}{Unmanned Autonomous Systems}
+\end{acronym}
+
+
     
 \begin{document}
 
@@ -35,12 +54,7 @@ email address or ORCID}
 \textit{name of organization (of Aff.)}\\
 City, Country \\
 email address or ORCID}
-\and
-\IEEEauthorblockN{4\textsuperscript{th} Given Name Surname}
-\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
-\textit{name of organization (of Aff.)}\\
-City, Country \\
-email address or ORCID}
+
 }
 
 \maketitle
@@ -80,6 +94,8 @@ In addition, software monitoring techniques can cause execution delays. These te
 It is desirable to get a more precise understanding of the amount of delay that these systems can absorb, to determine to what extent they can tolerate software monitoring. 
 \todo{I definitely had a better explanation for this reasoning before. Use that instead.}
 
+\cite{TimperleyArdu2018}
+
 \section{Background and Motivation}
 \label{sec:background}
 \todo{Fill in background}
@@ -88,27 +104,84 @@ It is desirable to get a more precise understanding of the amount of delay that 
 \label{sec:approach}
 \todo{Fill in approach}
 
+This section sets out the approach to determining the extent to which artificial timing delays interfere with the behavior of robotics systems.
+The details of the experiments as performed here are given in the following
+section, \ref{sec:timing-methodology}.
+
+For a given robot, I establish a set of commands, I call a mission. \todo{Damnit, this is still too detailed for approach, right?}
+
+We want to establish a baseline for how a robot behaves without any artificially-inserted delays. To do so, we take a robot and run it on a set of commands (mission) many times.
+This establishes the nominal baseline.
+We use the nominal baseline to establish the baseline values for each metric.
+We count the number of nominal runs that exhibit crashing behaviors, to establish a baseline for how often the software crashes, even when not artificially disrupted.
+
+\todo{The approach section is unfinished and still intertwined with the methodology section}
 
 \subsection{Methodology}
-\label{sec:methodology}
+\label{sec:timing-methodology}
 \todo{As usual, I've conflated approach and methodology. Separate these back out.}
 
 To evaluate the extent to which timing delays deform the observable execution of a robotic system I execute the following experiments:
 
 I run each robot over a series of missions. Each mission is represented as a series of destinations in three dimensional space (two dimensional space for robots that move in only two dimensions), with the final destination being a return to the origin point.
 
-For each combination of robot and mission, I run several \emph{nominal} executions to establish a baseline for what robot behavior should look like in these executions. These are run in simulation on unmodified code.
+For each combination of robot and mission, I run several \emph{nominal} executions to establish a baseline for what robot behavior should look like in these executions. These are run in simulation on unmodified code, with no artificially-inserted delays.
 
-For the \emph{experimental} executions, I add artificial delays to the execution of the robot code.
+For the \emph{experimental} executions, I add controlled artificial delays to the execution of the robot code.
+The location, number, and length of these delays are experimental parameters to the experiments.
+\subsubsection{Method of Inserting Delays}
+\label{sec:timing-methodology-delays}
 
-For the ArduCopter experiments, the artificial delays are introduced before return statements in the code. For each return statement in a .cpp file in the <directory name> directory, a delay may be placed in the source code before the return statement. The choice of whether to insert a delay was determined probabilistically, with a weighted coin flip. Different modified versions of the code were created, each of which had (a) a fixed coin flip weight and (b) fixed delay amount added at each delay location. The weights for the weighted coin flip ranged from 0.1 to 1.0, and the delays ranged from X to Y.
+\paragraph{\tool{ArduCopter}} 
+For the \tool{ArduCopter} experiments, the artificial delays are introduced before return statements in the code.
+I identified the program point immediately before 
+each return statement in all \tool{.cpp} files in the 
+\tool{ArduPilot/ArduCopter} source code directory.
+For each of these program points, there was the possibility of inserting an 
+artificial delay.
+The choice of whether to insert a delay was determined probabilistically, with a weighted coin flip. 
+Different modified versions of the code were created, each of which had 
+(a) a fixed coin flip weight and 
+(b) fixed delay amount added at each delay location. 
+The weights for the weighted coin flip ranged from 0.1 to 1.0, with 1.0
+meaning a delay was inserted before every return statement, 
+and the length of each delay ranged from 0.001953125 seconds to 8 seconds, 
+with delay lengths chosen as powers of 2.
 
-For the ROS experiments, the artificial delays are introduced at communications barriers on ROS topics. \todo{TODO: insert discussion of how we're introducing delays at ROS topics and what this means in the ROS architecture}
-To give a simplified overview of the architecture of ROS-based systems, these systems consist of various nodes which communicate with each other on a bus. A publish-subscribe system determines which nodes receive messages. Each node that publishes messages publishes to a \emph{topic} while each node that receives a message receives by subscribing to a \emph{topic}. We insert delays on these topics by intercepting messages using topic renaming. \todo{the explanation here probably needs to be better}. The topics to delay were chosen by X \todo{principled explanation of how I picked which topics to delay}. Delays ranged from X to Y and were inserted for every message in a topic. \todo{do I need to do this probabilistically as well?}
+\paragraph{\tool{ROS}-based Systems}
+For the \tool{\ac{ROS}} experiments, the artificial delays are introduced at communications 
+barriers on ROS topics, taking advantage of the architecture of \tool{ROS}-based systems. 
 
 
+\todo{TODO: insert discussion of how we're introducing delays at ROS topics and what this means in the ROS architecture}
+To give a simplified overview of the architecture of ROS-based systems,
+these systems consist of various nodes which communicate with each other by 
+sending messages over a bus.
+\todo{Add a diagram?} 
+A publish-subscribe system determines which nodes receive which messages. 
+A node can publish messages to a \emph{topic}.
+To receive those messages, another node subscribes to the same \emph{topic}.
+Generally, each topic only accepts messages of one type.
+\tool{\ac{ROS}} makes it easy to query a running system to find out information
+such as (a) the topics in that system; (b) the type of messages published to each
+topic; (c) the node or nodes that publish to a particular topic; and (d) the node
+or nodes that subscribe to the particular topic.
+This information makes it easy to infer certain properties about the relationships
+among nodes and the purposes of particular messages.
+We use this information to choose the topics to which we add artificial delays.
+\todo{Add more specifics about examples of topics we delay.}
 
-I evaluate the following metrics.
+Once we set a \tool{topic} or \tool{topics} to delay on a particular \tool{\ac{ROS}}
+system for a particular set of experiments, we insert delays on these topics by
+intercepting messages using topic renaming. \todo{Elaborate on how to use topic renaming for delay insertion}. 
+Delays ranged in length from \todo{X} to \todo{Y} and were inserted for every message 
+in a topic. \todo{If I decide to do this probabilistically too, insert discussion of 
+probabilistic choices.}
+
+\subsection{Metrics}
+\label{sec:timing-methodology-metrics}
+To evaluate the research questions, I make use of the following metrics.
+
 \begin{itemize}
 
 \item Whether each execution executes each waypoint and returns home
@@ -134,26 +207,52 @@ I evaluate the following metrics.
 \item Total amount of time taken to reach each waypoint (`reach' defined as when the system issues the instruction to go to the next waypoint)
 \end{itemize}
 
-\item \todo{discussion of more complex metrics}
 \end{itemize}
 
 
-To determine a representative nominal execution, I take the medoid of the time series representing the 3d positions of the robot in all nominal executions of a particular mission (without artificial delays).
+To determine a representative nominal execution, I take the medoid of the time series representing the 3-dimensional positions of the robot in all nominal executions of a particular mission (without artificial delays).
 
+\subsection{Research Questions}
+\label{sec:timing-research-questions}
 I evaluate the following research questions.
 \begin{description}
 \item[\textbf{RQ1:}] To what extent do the presence of timing delays in robot systems have an effect on observable behavior as defined by a set of performance metrics?
-\item[\textbf{RQ2:}] Are certain kinds of robotics components more robust to resilient to timing delays?
-\item[\textbf{RQ3:}] How could software-based simulation platforms be improved
-  to encourage developers to use simulation for software-based testing?
+\item[\textbf{RQ2:}] Are certain kinds of robotics components more robust or resilient to timing delays?
+\item[\textbf{RQ3:}]  Are certain robotics systems more robust or resilient to timing delays?
 \item[\textbf{RQ4:}] Under what circumstances do timing delays lead to system crashes?
 \end{description}
+
+\paragraph{Effects on Observable Behavior}
+\label{sec:timing-methodology-RQ-observable}
+
+To evaluate RQ1, To what extent do the presence of timing delays in robot systems have an effect on observable behavior as defined by a set of performance metrics, I look at the metrics enumerated in Section~\ref{sec:timing-methodology-metrics}.
+
+The clearest and most obvious effects on observable execution are crashes, both software crashes and crashes in physical space.
+I evaluate these deviations separately in RQ4 (Section~\ref{sec:timing-methodology-RQ-crash}).
+
+\paragraph{Different Effects on Different Components}
+
+To evaluate RQ2, Are certain kinds of robotics components more robust or resilient to timing delays, 
+I conduct separate experiments in which I insert delays that affect different 
+components. 
+For example, on \tool{ROS} systems, different experiments have delays on different 
+\tool{rostopics}. 
+A \tool{rostopic} conveys messages to the nodes that subscribe to it. 
+When I delay the messages on a particular \tool{rostopic}, those delays affect the 
+nodes that subscribe to that topic. 
+By delaying different topics separately, I can evaluate the different effects on the subscriber nodes. 
+In \tool{ArduPilot}, I achieve a similar effect by conducting separate experiments with timing delays inserted into a single source file of the \tool{ArduCopter} code at a time.
+
+\paragraph{•}
+
+\paragraph{When Delays Cause Software Crashes}
+\label{sec:timing-methodology-RQ-crash}
 
 \section*{Acknowledgments}
 
 \todo{add acknowledgements}
 
-\section*{References}
-\todo{add bibliography}
 
+\bibliographystyle{IEEEtran}
+\bibliography{dsk_ref}
 \end{document}
