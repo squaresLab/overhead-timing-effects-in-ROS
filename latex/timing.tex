@@ -353,7 +353,14 @@ I run these experiments in simulation.
 While it is possible to gain many insights about robotics in simulation~\cite{TimperleyArdu2018, etc},
 simulation may not accurately reflect the influence of overhead on timing
 in real hardware.
-For example, real robotics hardware often
+For example, real robotics hardware often has distributed computing resources
+which may not be accurately reflected in the centralized computing power available in simulation.
+A component with less computing power may encounter bottlenecks that are not
+seen in simulation.
+Simulation also has imperfect fidelity to real world situations~\cite{robotSimulationStudy}.
+
+However, this threat is mitigated by the fact that much of the monitoring
+and bug detection can also take place in simulation.
 
 \subsection{Future Directions}
 
