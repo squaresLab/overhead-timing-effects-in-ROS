@@ -11,7 +11,7 @@
 \usepackage{url}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
-    
+
 \newcommand{\todo}[1]{\textcolor{violet}{{\bfseries [[TODO: #1]]}}}
 \newcommand{\tool}[1]{\textsc{#1}}
 
@@ -31,7 +31,7 @@
 \end{acronym}
 
 
-    
+
 \begin{document}
 
 \title{The Effects of Timing Delays on ROS Systems\\
@@ -68,14 +68,14 @@ external events.
 The architecture of some robotics and cyber-physical systems allows these
 systems to absorb many delays without disrupting intended behavior, while
 some delays, especially those that occur in critical sections of execution,
-are too much for these systems to absorb. 
+are too much for these systems to absorb.
 Furthermore, system monitoring is a set of techniques that can help to understand
 when and whether systems are behaving as intended.
-These techniques can add unacceptable levels of overhead in many 
+These techniques can add unacceptable levels of overhead in many
 circumstances.
 However, the overhead of system monitoring techniques may be absorbed into normal execution for some robotics and cyber-physical systems.
 
-This paper analyzes the circumstances under which artificially-inserted 
+This paper analyzes the circumstances under which artificially-inserted
 timing delays have an observable effect on robotics systems.
 
 
@@ -92,7 +92,7 @@ Robotics and cyber-physical systems are particularly prone to variability in ope
 
 In addition, software monitoring techniques can cause execution delays. These techniques may be useful to evaluate whether software is behaving as intended, but in many legacy pieces of software, they cause unacceptable overhead. I hypothesize that the same properties that allow robotics and cyber-physical systems to absorb timing delays that occur due to real-world unpredictability allow these systems to absorb some of the delays that would be caused by program monitoring.
 
-It is desirable to get a more precise understanding of the amount of delay that these systems can absorb, to determine to what extent they can tolerate software monitoring. 
+It is desirable to get a more precise understanding of the amount of delay that these systems can absorb, to determine to what extent they can tolerate software monitoring.
 \todo{I definitely had a better explanation for this reasoning before. Use that instead.}
 
 
@@ -132,33 +132,33 @@ The location, number, and length of these delays are experimental parameters to 
 \subsection{Method of Inserting Delays}
 \label{sec:timing-methodology-delays}
 
-\subsubsection{\tool{ArduCopter}} 
+\subsubsection{\tool{ArduCopter}}
 For the \tool{ArduCopter} experiments, the artificial delays are introduced before return statements in the code.
-I identified the program point immediately before 
-each return statement in all \tool{.cpp} files in the 
+I identified the program point immediately before
+each return statement in all \tool{.cpp} files in the
 \tool{ArduPilot/ArduCopter} source code directory.
-For each of these program points, there was the possibility of inserting an 
+For each of these program points, there was the possibility of inserting an
 artificial delay.
-The choice of whether to insert a delay was determined probabilistically, with a weighted coin flip. 
-Different modified versions of the code were created, each of which had 
-(a) a fixed coin flip weight and 
-(b) fixed delay amount added at each delay location. 
+The choice of whether to insert a delay was determined probabilistically, with a weighted coin flip.
+Different modified versions of the code were created, each of which had
+(a) a fixed coin flip weight and
+(b) fixed delay amount added at each delay location.
 The weights for the weighted coin flip ranged from 0.1 to 1.0, with 1.0
-meaning a delay was inserted before every return statement, 
-and the length of each delay ranged from 0.001953125 seconds to 8 seconds, 
+meaning a delay was inserted before every return statement,
+and the length of each delay ranged from 0.001953125 seconds to 8 seconds,
 with delay lengths chosen as powers of 2.
 
 \subsubsection{\tool{ROS}-based Systems}
-For the \tool{\ac{ROS}} experiments, the artificial delays are introduced at communications 
-barriers on ROS topics, taking advantage of the architecture of \tool{ROS}-based systems. 
+For the \tool{\ac{ROS}} experiments, the artificial delays are introduced at communications
+barriers on ROS topics, taking advantage of the architecture of \tool{ROS}-based systems.
 
 
 \todo{TODO: insert discussion of how we're introducing delays at ROS topics and what this means in the ROS architecture}
 To give a simplified overview of the architecture of ROS-based systems,
-these systems consist of various nodes which communicate with each other by 
+these systems consist of various nodes which communicate with each other by
 sending messages over a bus.
-\todo{Add a diagram?} 
-A publish-subscribe system determines which nodes receive which messages. 
+\todo{Add a diagram?}
+A publish-subscribe system determines which nodes receive which messages.
 A node can publish messages to a \emph{topic}.
 To receive those messages, another node subscribes to the same \emph{topic}.
 Generally, each topic only accepts messages of one type.
@@ -173,9 +173,9 @@ We use this information to choose the topics to which we add artificial delays.
 
 Once we set a \tool{topic} or \tool{topics} to delay on a particular \tool{\ac{ROS}}
 system for a particular set of experiments, we insert delays on these topics by
-intercepting messages using topic renaming. \todo{Elaborate on how to use topic renaming for delay insertion}. 
-Delays ranged in length from \todo{X} to \todo{Y} and were inserted for every message 
-in a topic. \todo{If I decide to do this probabilistically too, insert discussion of 
+intercepting messages using topic renaming. \todo{Elaborate on how to use topic renaming for delay insertion}.
+Delays ranged in length from \todo{X} to \todo{Y} and were inserted for every message
+in a topic. \todo{If I decide to do this probabilistically too, insert discussion of
 probabilistic choices.}
 
 \subsection{Metrics}
@@ -239,15 +239,15 @@ I evaluate these deviations separately in RQ4 (Section~\ref{sec:timing-methodolo
 \subsection{Different Effects on Different Components}
 \textbf{RQ2:} Are certain kinds of robotics components more robust or resilient to timing delays?
 
-To evaluate RQ2, Are certain kinds of robotics components more robust or resilient to timing delays, 
-I conduct separate experiments in which I insert delays that affect different 
-components. 
-For example, on \tool{ROS} systems, different experiments have delays on different 
-\tool{rostopics}. 
-A \tool{rostopic} conveys messages to the nodes that subscribe to it. 
-When I delay the messages on a particular \tool{rostopic}, those delays affect the 
-nodes that subscribe to that topic. 
-By delaying different topics separately, I can evaluate the different effects on the subscriber nodes. 
+To evaluate RQ2, Are certain kinds of robotics components more robust or resilient to timing delays,
+I conduct separate experiments in which I insert delays that affect different
+components.
+For example, on \tool{ROS} systems, different experiments have delays on different
+\tool{rostopics}.
+A \tool{rostopic} conveys messages to the nodes that subscribe to it.
+When I delay the messages on a particular \tool{rostopic}, those delays affect the
+nodes that subscribe to that topic.
+By delaying different topics separately, I can evaluate the different effects on the subscriber nodes.
 In \tool{ArduPilot}, I achieve a similar effect by conducting separate experiments with timing delays inserted into a single source file of the \tool{ArduCopter} code at a time.
 
 \subsubsection{Results}
@@ -293,14 +293,14 @@ The robots are built on \ac{ROS}.
 
 \end{itemize}
 
-I construct the following experiments, which are designed to compare the effects on the different systems. 
+I construct the following experiments, which are designed to compare the effects on the different systems.
 Because each system has a slightly different architecture, it is not always possible to
 conduct identical experiments across systems.
 We take advantage of \tool{rostopics} that are used in several different systems,
-as they generally serve similar functions across systems. 
+as they generally serve similar functions across systems.
 \todo{examples}
-Where possible, we run these experiments using different \tool{rostopics}, to 
-evaluate whether different systems are more able to tolerate delays in different 
+Where possible, we run these experiments using different \tool{rostopics}, to
+evaluate whether different systems are more able to tolerate delays in different
 components.
 
 \begin{itemize}
@@ -348,6 +348,13 @@ If the test harness exits abnormally, we classify that execution as a system cra
 
 \subsection{Threats to Validity}
 
+\paragraph{Simulation}
+I run these experiments in simulation.
+While it is possible to gain many insights about robotics in simulation~\cite{TimperleyArdu2018, etc},
+simulation may not accurately reflect the influence of overhead on timing
+in real hardware.
+For example, real robotics hardware often
+
 \subsection{Future Directions}
 
 There are several questions that arise directly from the work presented here.
@@ -372,9 +379,9 @@ robotics systems to enter into error-handling behavior.
 For example, many systems are designed with \emph{fail safe} behavior, in which
 the robot is designed to shut down in a non-damaging state when the system encounters
 an unrecoverable error.
-Error handling for less severe faults may cause the robot to execute a recovery 
-behavior, such as clearing its position and using its sensors to attempt to 
-identify where it is with respect to its environment. 
+Error handling for less severe faults may cause the robot to execute a recovery
+behavior, such as clearing its position and using its sensors to attempt to
+identify where it is with respect to its environment.
 Such a recovery behavior can occur even in nominal execution and is a normal part
 of providing resiliency and accounting for nondeterminism in normal robotics executions.
 However, timing delays may cause these behaviors to be more frequent.
