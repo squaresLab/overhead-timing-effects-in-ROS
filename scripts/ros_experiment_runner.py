@@ -25,6 +25,7 @@ def parse_args() -> argparse.Namespace:
     # default="/usr0/home/dskatz/Documents/overhead-timing-effects-in-ROS/ROSRunner/husky_waypoints.yml")
     parser.add_argument("--db_fn", type=str, default="ros_bag_db.db")
     parser.add_argument("--log_fn", type=str, default="ros_experiment.log")
+    parser.add_argument("--baseline_iterations", type=int, default=1)
     args = parser.parse_args()
     return args
 
@@ -113,7 +114,7 @@ def main() -> None:
 
         # Run the image with ROSRunner
         run_experiments(cursor, conn, param_fn, docker_image=docker_image,
-                        sources=sources)
+                        sources=sources, num_iter=args.baseline_iterations)
 
 
 if __name__ == '__main__':
