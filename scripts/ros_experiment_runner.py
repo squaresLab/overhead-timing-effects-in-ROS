@@ -72,7 +72,7 @@ def run_experiments(cursor, conn, param_fn: str,
     mission_sha = file_hash(mission_fn)
 
     for i in range(num_iter):
-        bag_fn = get_bag_fn()
+        bag_fn = f"{get_bag_fn()}.bag"
 
         run_one_experiment(sources, cursor, conn, outbag=bag_fn,
                            docker_image=docker_image,
