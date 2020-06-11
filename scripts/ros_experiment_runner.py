@@ -94,10 +94,13 @@ def main() -> None:
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     fh = logging.FileHandler(filename=args.log_fn)
+    ch = logging.StreamHandler()
     format_str = "%(asctime)s:%(levelname)s:%(name)s: %(message)s"
     date_str = "%m/%d/%Y %I:%M%S %p"
     fh_formatter = logging.Formatter(fmt=format_str, datefmt=date_str)
     fh.setFormatter(fh_formatter)
+    ch.setFormatter(fh_formatter)
+    logger.addHandler(ch)
     logger.addHandler(fh)
 
     # Set up the bag database
