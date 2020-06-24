@@ -47,18 +47,28 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--orig_topic", type=str, default="chatter")
     parser.add_argument("--delayed_topic", type=str, default="_chatter_delay")
+    parser.add_argument("--delay_amount", type=int, default=4)
+    parser.add_argument("--delay_probability", type=float, default=1.0)
+    parser.add_argument("--queue_size", type=int, default=1000)
+    args = parser.parse_args()
+    return args
 
 
-def callback(data, pub):
-    rospy.sleep(4)
+def callback(data, callback_args):
+    pub, delay_amount = callback_args
+    rospy.sleep(delay_amount)
     rospy.loginfo(data)
     pub.publish(data)
 
 
-def talker():
+def talker(args):
     rospy.init_node('delay', anonymous=True)
-    pub = rospy.Publisher(args.delayed_topic, String, queue_size=10)
-    sub = rospy.Subscriber(args.orig_topic, String, callback, pub, queue_size=40)
+    sub = rospy.Subscriber(args.orig_topic, String, callback,
+                           callback_args=[pub, args.delay_amount],
+                           queue_size=args.queue_size)
+    pub = rospy.Publisher(args.delayed_topic, String,
+                          queue_size=args.queue_size)
+
     rospy.spin()
 
 
