@@ -1,0 +1,52 @@
+
+image: dskatz/husky_waypoints
+files:
+- container: /ros_ws/husky_poses.yaml
+  host: /home/dskatz/overhead-timing-effects-in-ROS/scripts/waypoint_husky/HUSKY_pose_array_5_156109eab4cc4c1f9432690d0b6e6ca9.yaml
+instructions:
+- type: shell
+  blocking: false
+  command: Xvfb :1 -screen 0 1600x1200x16
+  wait: 2
+- type: shell
+  blocking: true
+  command: echo $DISPLAY
+  wait: 0
+- type: roslaunch
+  blocking: false
+  package: husky_gazebo
+  launch_file: playpen.launch
+  blocking: false
+  wait: 60
+- type: roslaunch
+  blocking: false
+  package: husky_gazebo
+  launch_file: spawn_husky.launch
+  wait: 20
+  args:
+    laser_enabled: "true"
+    kinect_enabled: "false"
+- type: roslaunch
+  blocking: false
+  package: husky_navigation
+  launch_file: amcl_demo.launch
+  wait: 10
+- type: shell
+  blocking: false
+  command: rosrun follow_waypoints follow_waypoints.py
+  wait: 2
+  monitor: true
+- type: shell
+  blocking: true
+  command: rostopic list
+  wait: 0
+- type: shell
+  blocking: true
+  command: rostopic pub -f /ros_ws/husky_poses.yaml /positions geometry_msgs/PoseArray
+  wait: 2
+sources:
+- /opt/ros/melodic/setup.bash
+- /ros_ws/devel/setup.bash
+- /ros_ws/devel_isolated/setup.bash
+environment:
+  DISPLAY: ":1.0"
