@@ -38,8 +38,16 @@
 
 # Modified by Deby Katz 2020 for delay forwarding
 
+import argparse
 import rospy
 from std_msgs.msg import String
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--orig_topic", type=str, default="chatter")
+    parser.add_argument("--delayed_topic", type=str, default="_chatter_delay")
+
 
 def callback(data, pub):
     rospy.sleep(4)
@@ -49,13 +57,14 @@ def callback(data, pub):
 
 def talker():
     rospy.init_node('delay', anonymous=True)
-    pub = rospy.Publisher('chatter_delay', String, queue_size=10)
-    sub = rospy.Subscriber('chatter', String, callback, pub, queue_size=40)
+    pub = rospy.Publisher(args.delayed_topic, String, queue_size=10)
+    sub = rospy.Subscriber(args.orig_topic, String, callback, pub, queue_size=40)
     rospy.spin()
 
 
 if __name__ == '__main__':
+    args = parse_args()
     try:
-        talker()
+        talker(args)
     except rospy.ROSInterruptException:
         pass
