@@ -43,7 +43,7 @@ import rospy
 from std_msgs.msg import String
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--orig_topic", type=str, default="chatter")
     parser.add_argument("--delayed_topic", type=str, default="_chatter_delay")
@@ -63,11 +63,11 @@ def callback(data, callback_args):
 
 def talker(args):
     rospy.init_node('delay', anonymous=True)
-    sub = rospy.Subscriber(args.orig_topic, String, callback,
+    pub = rospy.Publisher(args.delayed_topic, rospy.msg.AnyMsg,
+                          queue_size=args.queue_size)
+    sub = rospy.Subscriber(args.orig_topic, rospy.msg.AnyMsg, callback,
                            callback_args=[pub, args.delay_amount],
                            queue_size=args.queue_size)
-    pub = rospy.Publisher(args.delayed_topic, String,
-                          queue_size=args.queue_size)
 
     rospy.spin()
 

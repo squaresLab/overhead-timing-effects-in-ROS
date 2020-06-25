@@ -45,27 +45,24 @@ def main():
             print(f"type(ros): {type(ros)}")
             print(f"type(rsw): {type(rsw)}")
 
-            for package, fn in launch_list:
-                print(f"\n{package} {fn}")
+#            for package, fn in launch_list:
+#              print(f"\n{package} {fn}")
 
-                launch_config = ros.roslaunch.read(package=package,
-                                               filename=fn)
+                # launch_config = ros.roslaunch.read(package=package,
+                #                                filename=fn)
                 # print(launch_config)
 
-                remappings = {"gazebo":
-                                  [("/husky_velocity_controller/odom",
-                                    "/kayak"),
-                                   ("/odom",
-                                    "/sailboat")],
-                              "ekf_localization":
-                                  [("/odometry/filtered",
-                                    "/gorilla")]}
-                if "playpen" in fn:
-                    roslaunch_mgr = ros.roslaunch(filename=fn, package=package,
-                                                  node_to_remappings=remappings)
-                else:
-                    roslaunch_mgr = ros.roslaunch(filename=fn, package=package)
-            time.sleep(30)
+            remappings = {"gazebo": [("/gazebo/model_states", "/huh"),
+                                     ("/husky_velocity_controller/odom",
+                                      "/_odom_orig")]}
+
+            roslaunch_mgr = ros.roslaunch(filename="playpen.launch",
+                                          package="husky_gazebo",
+                                          node_to_remappings=remappings)
+
+            roslaunch_mgr = ros.roslaunch(filename="spawn_husky.launch",
+                                          package="husky_gazebo")
+            time.sleep(40)
             system_state = ros.state
             print(system_state)
 
