@@ -40,32 +40,63 @@
 
 import argparse
 import rospy
+import threading
+
+from gazebo_msgs.msg import LinkStates
 from std_msgs.msg import String
+from rosgraph_msgs.msg import Clock
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Twist, PoseArray
+from sensor_msgs.msg import NavSatFix
+
+
+
+# Hardcoded dictionary of topic name to msg type
+# (The topic name corresponds to the *delayed_topic* because that's
+# the original name of the topic in the system)
+
+msg_type_dict = {"/gazebo/link_states": LinkStates,
+                 "/_gazebo/link_states": LinkStates,
+                 "/clock": Clock,
+                 "/_clock": Clock,
+                 "/husky_velocity_controller/odom": Odometry,
+                 "/_husky_velocity_controller/odom": Odometry,
+                 "/husky_velocity_controller/cmd_vel": Twist,
+                 "/_husky_velocity_controller/cmd_vel": Twist,
+                 "/navsat/fix": NavSatFix,
+                 "_/navsat/fix": NavSatFix}
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--orig_topic", type=str, default="chatter")
     parser.add_argument("--delayed_topic", type=str, default="_chatter_delay")
-    parser.add_argument("--delay_amount", type=int, default=4)
+    parser.add_argument("--delay_amount", type=int, default=2)
     parser.add_argument("--delay_probability", type=float, default=1.0)
-    parser.add_argument("--queue_size", type=int, default=1000)
+    parser.add_argument("--queue_size", type=int, default=100)
     args = parser.parse_args()
     return args
 
 
-def callback(data, callback_args):
-    pub, delay_amount = callback_args
+def delayer(data, pub, delay_amount):
     rospy.sleep(delay_amount)
     rospy.loginfo(data)
     pub.publish(data)
 
 
+def callback(data, callback_args):
+    pub, delay_amount = callback_args
+    p = threading.Thread(target=delayer, args=(data, pub, delay_amount))
+    p.start()
+    #p.join()
+
+
 def talker(args):
     rospy.init_node('delay', anonymous=True)
-    pub = rospy.Publisher(args.delayed_topic, rospy.msg.AnyMsg,
+    topic = msg_type_dict[args.delayed_topic]
+    pub = rospy.Publisher(args.delayed_topic, topic,
                           queue_size=args.queue_size)
-    sub = rospy.Subscriber(args.orig_topic, rospy.msg.AnyMsg, callback,
+    sub = rospy.Subscriber(args.orig_topic, topic, callback,
                            callback_args=[pub, args.delay_amount],
                            queue_size=args.queue_size)
 
