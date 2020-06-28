@@ -47,7 +47,7 @@ from std_msgs.msg import String
 from rosgraph_msgs.msg import Clock
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist, PoseArray
-from sensor_msgs.msg import NavSatFix
+from sensor_msgs.msg import NavSatFix, Imu
 
 
 
@@ -64,7 +64,11 @@ msg_type_dict = {"/gazebo/link_states": LinkStates,
                  "/husky_velocity_controller/cmd_vel": Twist,
                  "/_husky_velocity_controller/cmd_vel": Twist,
                  "/navsat/fix": NavSatFix,
-                 "_/navsat/fix": NavSatFix}
+                 "_/navsat/fix": NavSatFix,
+                 "/imu/data": Imu,
+                 "/_imu/data": Imu,
+                 "/imu/data/bias": Imu,
+                 "/_imu/data/bias": Imu}
 
 
 def parse_args():
