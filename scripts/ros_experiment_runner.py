@@ -26,6 +26,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--db_fn", type=str, default="ros_bag_db.db")
     parser.add_argument("--log_fn", type=str, default="ros_experiment.log")
     parser.add_argument("--baseline_iterations", type=int, default=1)
+    parser.add_argument("--topic_regex", type=str,
+                        default="((.*)/move_base/(result|status|parameter(.*)|goal(.*))|(.*)/amcl(.*))|(.*)ground_truth(.*)")
     args = parser.parse_args()
     return args
 
@@ -64,8 +66,8 @@ def run_one_experiment(sources: List[str], cursor, conn,
     subprocess.run(cmd)
 
 
-def run_experiments(cursor, conn, param_fn: str,
-                    docker_image=None, sources=None, num_iter=1):
+def run_experiments(*, cursor, conn, param_fn: str,
+                    docker_image, sources, topic_regex, num_iter=1):
 
     rsw = roswire.ROSWire()
     description = rsw.descriptions.load_or_build(docker_image, sources)
@@ -83,7 +85,8 @@ def run_experiments(cursor, conn, param_fn: str,
                            docker_image=docker_image,
                            docker_image_sha=docker_image_sha,
                            param_fn=param_fn, mission_sha=mission_sha,
-                           mission_fn=mission_fn)
+                           mission_fn=mission_fn,
+                           topic_regex=topic_regex)
 
 
 def get_from_yaml(fn: str, field: str) -> Any:
@@ -121,8 +124,10 @@ def main() -> None:
 
 
         # Run the image with ROSRunner
-        run_experiments(cursor, conn, param_fn, docker_image=docker_image,
-                        sources=sources, num_iter=args.baseline_iterations)
+        run_experiments(cursor=cursor, conn=conn, param_fn=param_fn,
+                        docker_image=docker_image,
+                        sources=sources, topic_regex=args.topic_regex,
+                        num_iter=args.baseline_iterations)
 
 
 if __name__ == '__main__':
