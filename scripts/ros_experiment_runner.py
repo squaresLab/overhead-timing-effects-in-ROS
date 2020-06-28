@@ -42,7 +42,7 @@ def store_bag_fn_ros(*, bag_fn, docker_image_sha, docker_image,
 
 def run_one_experiment(sources: List[str], cursor, conn,
                        outbag: str="husky_waypoints.bag",
-                       timeout: int=2000,
+                       timeout: int=1000,
                        topic_regex: str="((.*)/move_base/(result|status|parameter(.*)|goal(.*))|(.*)/amcl(.*))|(.*)ground_truth(.*)",
                        param_fn: str="/usr0/home/dskatz/Documents/overhead-timing-effects-in-ROS/ROSRunner/husky_waypoints.yml",
                        docker_image_sha: str="None",
@@ -50,11 +50,16 @@ def run_one_experiment(sources: List[str], cursor, conn,
                        delay_fn: str="None", delay_sha: str="None",
                        mission_fn: str="None", mission_sha: str="None"):
 
+    bag_abs_dir = os.path.join(DIR_THIS, bag_dir)
+    if not os.path.isdir(bag_abs_dir):
+        os.makedirs(bag_abs_dir)
+    outbag = os.path.join(bag_abs_dir, outbag)
     store_bag_fn_ros(bag_fn=outbag, docker_image_sha=docker_image_sha,
                      docker_image=docker_image, container_uuid="None",
                      mission_sha=mission_sha, mission_fn=mission_fn,
                      mutation_sha=delay_sha, mutation_fn=delay_fn,
                      context=str(sources), cursor=cursor, conn=conn)
+    
     cmd = shlex.split(f'rosrunner --bag {outbag} --verbose --timeout {timeout} --topics "{topic_regex}" {param_fn}')
     subprocess.run(cmd)
 
