@@ -68,7 +68,8 @@ def run_one_experiment(sources: List[str], cursor, conn,
 
 
 def run_experiments(*, cursor, conn, param_fn: str,
-                    docker_image, sources, topic_regex, num_iter=1):
+                       docker_image, sources, topic_regex, num_iter=1,
+                       delay_fn: str="None", delay_sha: str="None"):
 
     rsw = roswire.ROSWire()
     description = rsw.descriptions.load_or_build(docker_image, sources)
@@ -87,7 +88,8 @@ def run_experiments(*, cursor, conn, param_fn: str,
                            docker_image_sha=docker_image_sha,
                            param_fn=param_fn, mission_sha=mission_sha,
                            mission_fn=mission_fn,
-                           topic_regex=topic_regex)
+                           topic_regex=topic_regex,
+                           delay_fn=delay_fn, delay_sha=delay_sha)
 
 
 def get_from_yaml(fn: str, field: str) -> Any:
@@ -131,13 +133,14 @@ def main() -> None:
         sources = get_from_yaml(param_fn, "sources")
         logging.debug(f"Image: {docker_image}")
         logging.debug(f"Sources: {sources}")
-
+        delay_sha = file_hash(delay_fn)
 
         # Run the image with ROSRunner
         run_experiments(cursor=cursor, conn=conn, param_fn=param_fn,
                         docker_image=docker_image,
                         sources=sources, topic_regex=args.topic_regex,
-                        num_iter=args.baseline_iterations)
+                        num_iter=args.baseline_iterations,
+                        dealy_fn=param_fn, delay_sha=param_fn_sha)
 
 
 if __name__ == '__main__':
