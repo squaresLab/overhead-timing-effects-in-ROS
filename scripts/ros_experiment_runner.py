@@ -22,7 +22,8 @@ bag_dir = '../bags/'
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--rosrunner_yaml", type=str, action='append')
-    # default="/usr0/home/dskatz/Documents/overhead-timing-effects-in-ROS/ROSRunner/husky_waypoints.yml")
+    parser.add_argument("--rosrunner_yaml_dir", type=str,
+                        help="overrides rosrunner_yaml, uses all yaml or yml files in directory")
     parser.add_argument("--db_fn", type=str, default="ros_bag_db.db")
     parser.add_argument("--log_fn", type=str, default="ros_experiment.log")
     parser.add_argument("--baseline_iterations", type=int, default=1)
@@ -61,7 +62,7 @@ def run_one_experiment(sources: List[str], cursor, conn,
                      mission_sha=mission_sha, mission_fn=mission_fn,
                      mutation_sha=delay_sha, mutation_fn=delay_fn,
                      context=str(sources), cursor=cursor, conn=conn)
-    
+
     cmd = shlex.split(f'rosrunner --bag {outbag} --verbose --timeout {timeout} --topics "{topic_regex}" {param_fn}')
     subprocess.run(cmd)
 
@@ -114,7 +115,16 @@ def main() -> None:
     # Set up the bag database
     cursor, conn = access_bag_db(args.db_fn)
 
-    for param_fn in args.rosrunner_yaml:
+    if not args.rosrunner_yaml_dir:
+        rosrunner_yaml_fns = args.rosrunner_yaml
+    else:
+        all_dir_fns = os.listdir(args.rosrunner_yaml_dir)
+        rosrunner_yaml_fns = [ os.path.join(args.rosrunner_yaml_dir, x)
+                               for x in all_dir_fns if
+                               x.endswith(".yaml") or x.endswith(".yml")]
+        print(rosrunner_yaml_fns)
+
+    for param_fn in rosrunner_yaml_fns:
         # Warm up the docker image
         rsw = roswire.ROSWire()
         docker_image = get_from_yaml(param_fn, "image")
