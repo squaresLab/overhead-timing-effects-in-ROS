@@ -133,7 +133,7 @@ def main() -> None:
         sources = get_from_yaml(param_fn, "sources")
         logging.debug(f"Image: {docker_image}")
         logging.debug(f"Sources: {sources}")
-        delay_sha = file_hash(delay_fn)
+        delay_sha = file_hash(param_fn)
 
         # Run the image with ROSRunner
         run_experiments(cursor=cursor, conn=conn, param_fn=param_fn,
