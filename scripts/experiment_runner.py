@@ -10,8 +10,6 @@ import time
 from typing import List, Dict, Any, Optional, Tuple
 import uuid
 
-import ardu
-import dronekit
 import docker
 import roswire
 from roswire.definitions import FormatDatabase, TypeDatabase
@@ -191,6 +189,9 @@ def run_mavros(system, mission, ros):
 
 
 def run_dronekit(system, mission_fn: str, mission_timeout=500):
+    import ardu
+    import dronekit
+    
     with ExitStack() as exit_stack:
 
         ip = system.container.ip_address
@@ -216,6 +217,9 @@ def mavproxy(system, mission_fn: str, logfile_name: str,
              port_pool_mavlink: CircleIntBuffer,
              exit_stack, timeout=1000) -> None:
 
+    import ardu
+    import dronekit
+    
     # Code to work with mavproxy, adapted from trmo code
     uid_container = str(system.uuid)
     #api_client = exit_stack.enter_context(
