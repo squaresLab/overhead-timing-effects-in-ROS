@@ -140,7 +140,7 @@ def main() -> None:
                         docker_image=docker_image,
                         sources=sources, topic_regex=args.topic_regex,
                         num_iter=args.baseline_iterations,
-                        dealy_fn=param_fn, delay_sha=param_fn_sha)
+                        delay_fn=param_fn, delay_sha=param_fn_sha)
 
 
 if __name__ == '__main__':
