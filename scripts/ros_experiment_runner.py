@@ -126,7 +126,10 @@ def main() -> None:
                                x.endswith(".yaml") or x.endswith(".yml")]
         print(rosrunner_yaml_fns)
 
-    for param_fn in rosrunner_yaml_fns:
+    num_param_fns = len(rosrunner_yaml_fns)
+    for param_fn, index in zip(rosrunner_yaml_fns, 
+                               range(1, num_param_fns + 1)):
+        logger.info(f"Param_fn: {param_fn} ({index}/{num_param_fns})")
         # Warm up the docker image
         rsw = roswire.ROSWire()
         docker_image = get_from_yaml(param_fn, "image")
@@ -140,7 +143,7 @@ def main() -> None:
                         docker_image=docker_image,
                         sources=sources, topic_regex=args.topic_regex,
                         num_iter=args.baseline_iterations,
-                        dealy_fn=param_fn, delay_sha=param_fn_sha)
+                        delay_fn=param_fn, delay_sha=param_fn_sha)
 
 
 if __name__ == '__main__':
