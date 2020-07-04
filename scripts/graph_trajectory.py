@@ -20,25 +20,34 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--logging", type=str, default="graph.log")
     parser.add_argument("-i", "--individual", action="store_true",
                         default=False)
+    parser.add_argument("--log_type", type=str, default="ardu")
     args = parser.parse_args()
     return args
 
 
-def graph_one_log(log: np.array, fn: str = "FIG.png", title: str = "None") -> None:
+def graph_one_log(log: np.array, fn: str = "FIG.png", title: str = "None",
+                  log_type: str = "ardu") -> None:
     fig, ax = plt.subplots()
     ax.ticklabel_format(useOffset=False)
 
-    lat, lon, time_elapsed, alt, relative_alt = extract_series(log)
-    #lat = log[:,1][1:]
-    #lon = log[:,2][1:]
+    if log_type == "ardu":
+        lat, lon, time_elapsed, alt, relative_alt = extract_series(log)
+        # lat = log[:,1][1:]
+        # lon = log[:,2][1:]
 
-    #logging.debug(f"lat: {lat}")
-    #logging.debug(f"lon: {lon}")
-    ax.scatter(lat, lon, c=time_elapsed, s=(relative_alt/100))
-    ax.set_xlabel("Latitude")
-    ax.set_ylabel("Longitude")
+        # logging.debug(f"lat: {lat}")
+        # logging.debug(f"lon: {lon}")
+        ax.scatter(lat, lon, c=time_elapsed, s=(relative_alt/100))
+        ax.set_xlabel("Latitude")
+        ax.set_ylabel("Longitude")
+    elif log_type == "husky":
+        x, y, z, time_elapsed = extract_series(log, log_type=log_type)
+        ax.scatter(x, y, c=time_elapsed, s=z)
+        ax.set_xlabel("X Position")
+        ax.set_ylabel("Y Position")
+
     if title != "None":
-        ax.set_title(title)
+            ax.set_title(title)
     logging.debug(f"saving to filename: {fn}")
     fig.savefig(fn)
     plt.close(fig)
@@ -71,24 +80,32 @@ def animate_logs(logs) -> None:
     plt.close(fig)
 
 
-def extract_series(log, discard_zero: bool=True) -> Tuple[np.array, np.array, np.array, np.array, np.array]:
+def extract_series(log, log_type="ardu", discard_zero: bool=True) -> Tuple[np.array, np.array, np.array, np.array, np.array]:
     if discard_zero:
         log = np.array([x for x in log if (x[1] != 0 and x[2] != 0)])
     else:
         log = np.array([x for x in log])
 
-    lat = log[:,1]
-    lon = log[:,2]
-    time_elapsed = log[:,0]
-    alt = log[:,3]
-    relative_alt = log[:,4]
+    if log_type == "ardu":
+        lat = log[:,1]
+        lon = log[:,2]
+        time_elapsed = log[:,0]
+        alt = log[:,3]
+        relative_alt = log[:,4]
 
-    lat = [x/10000000 for x in lat]
-    lon = [x/10000000 for x in lon]
-    assert(all([x < 90 and x > -90 for x in lat])), lat
-    assert(all([x < 180 and x > -180 for x in lon])), lon
+        lat = [x/10000000 for x in lat]
+        lon = [x/10000000 for x in lon]
+        assert(all([x < 90 and x > -90 for x in lat])), lat
+        assert(all([x < 180 and x > -180 for x in lon])), lon
 
-    return (lat, lon, time_elapsed, alt, relative_alt)
+        return (lat, lon, time_elapsed, alt, relative_alt)
+
+    elif log_type == "husky":
+        x = log[:,1]
+        y = log[:,2]
+        z = log[:,3]
+        time_elapsed = log[:,0]
+        return (x, y, z, time_elapsed)
 
 
 def get_delay_weight(mutation_fn: str) -> Tuple[float, float]:
@@ -162,11 +179,12 @@ def graph_time(logs: Dict[str, List[Tuple[str, str, np.array]]],
 
 
 def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
+               log_type="ardu",
                title: str="") -> None:
 
     fig, ax = plt.subplots()
     ax.ticklabel_format(useOffset=False)
-    
+
     colors = [matplotlib.colors.to_rgb(x) for x in ('r', 'g', 'b', 'c', 'm', 'y')]
     zipped = zip(logs.keys(), colors)
     title_short = title.split("/")[-1].split(".")[0]
@@ -179,20 +197,35 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
         #logging.debug(f"logs_subset[0]: {logs_subset[0]}")
         #logging.debug(f"type(logs_subset[0]): {type(logs_subset[0])}")
         # Plot each log in a variation in the color family
-        for log_fn, mutation_fn, log in logs_subset:
-            lat, lon, time_elapsed, alt, relative_alt = extract_series(log)
-            logging.debug(f"lat: {lat}")
-            logging.debug(f"lon: {lon}")
-            logging.debug(f"title_short: {title_short}")
-            ax.scatter(lat, lon, c=time_elapsed, s=(relative_alt/100))
-            # logging.debug(f"color: {color}")
-            # logging.debug(f"type(color): {type(color)}")
-            ax.set_ylim(min(lon), max(lon))
-            ax.set_xlim(min(lat), max(lat))
-            ax.set_xlabel("Latitude")
-            ax.set_ylabel("Longitude")
-            color = next_color(color)
 
+        for log_fn, mutation_fn, log in logs_subset:
+            if log_type == "ardu":
+                lat, lon, time_elapsed, \
+                    alt, relative_alt = extract_series(log,
+                                                       log_type=log_type)
+
+                logging.debug(f"lat: {lat}")
+                logging.debug(f"lon: {lon}")
+                logging.debug(f"title_short: {title_short}")
+                ax.scatter(lat, lon, c=time_elapsed, s=(relative_alt/100))
+                # logging.debug(f"color: {color}")
+                # logging.debug(f"type(color): {type(color)}")
+                ax.set_ylim(min(lon), max(lon))
+                ax.set_xlim(min(lat), max(lat))
+                ax.set_xlabel("Latitude")
+                ax.set_ylabel("Longitude")
+                color = next_color(color)
+            elif log_type == "husky":
+                x, y, z, time_elapsed = extract_series(log, log_type=log_type)
+                logging.debug(f"x: {x}")
+                logging.debug(f"y: {y}")
+                logging.debug(f"title_short: {title_short}")
+                ax.scatter(x, y, c=time_elapsed, s=z)
+                ax.set_ylim(min(y), max(y))
+                ax.set_xlim(min(x), max(x))
+                ax.set_xlabel("X position")
+                ax.set_ylabel("Y position")
+                color = next_color(color)
 
     fig.savefig(f"MANY_FIG_{title_short}.png")
 
@@ -216,17 +249,19 @@ def main() -> None:
     # logging.debug(f"logs: {logs}")
 
     if (args.individual):
-        for mission_fn, one_mission in logs_by_mission.items():            
+        for mission_fn, one_mission in logs_by_mission.items():
+            logging.debug(f"mission filename: {mission_fn}")
             filename_counter = 1
             for label, logs_subset in one_mission.items():
                 for log_fn, mutation_fn, log in logs_subset:
                     log_fn_short = log_fn.split("/")[-1].split(".")[0]
                     filename = f"ONE_LOG_{log_fn_short}.png"
-                    graph_one_log(log, fn=filename, title=mutation_fn)
+                    graph_one_log(log, fn=filename, title=mutation_fn,
+                                  log_type=args.log_type)
                     filename_counter = filename_counter + 1
 
     for mission_fn, one_mission in logs_by_mission.items():
-        graph_logs(one_mission, title=mission_fn)
+        graph_logs(one_mission, title=mission_fn, log_type=args.log_type)
 
     #animate_logs(logs)
 
