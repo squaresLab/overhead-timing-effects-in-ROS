@@ -28,7 +28,11 @@ def get_fns_from_rows(cursor: sqlite3.Cursor, log_dir: str) -> List[Tuple[str, s
     log_fns = []
     for row in rows:
         # logging.debug(row)
-        log_fn = os.path.join(log_dir, f"{row[0]}.tlog")
+        if log_type == "ardu":
+            log_fn = os.path.join(log_dir, f"{row[0]}.tlog")
+        elif log_type == "husky":
+            log_fn = os.path.join(log_dir, row[0])
+            print(f"log_fn: {log_fn}")
         mutation_fn = row[7]
         mission_fn = row[5]
         # logging.debug(log_fn)
