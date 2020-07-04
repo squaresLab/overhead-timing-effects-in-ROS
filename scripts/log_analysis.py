@@ -11,6 +11,7 @@ import time
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
+import rosbag
 
 
 def access_bag_db(db_fn: str) -> Tuple[sqlite3.Cursor, sqlite3.Connection]:
@@ -88,12 +89,48 @@ def get_json(log_fn: str) -> List[Dict]:
     return json_data
 
 
-def convert_logs(log_fns: List[Tuple[str, str, str]],
-                 field_type: str="GLOBAL_POSITION_INT") -> List[Tuple[str, str, str, np.array]]:
+def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
+                       field_type: str="/ground_truth/state_map") -> List[Tuple[str, str, str, np.array]]:
+    fn_count = 0
+    one_field_lists = []
+    total_fns = len(log_fns)
+    logging.debug(f"convert_logs_husky log_fns: {log_fns}")
+    for log_fn, mutation_fn, mission_fn in log_fns:
+        logging.debug(f"convert_logs log_fn: {log_fn}")
+
+        bag = rosbag.Bag(log_fn)
+        bag_contents = bag.read_messages()
+        bag_name = bag.filename
+
+        logs_by_topic: Dict[str, Any] = dict()
+
+        for topic, msg, t in bag_contents:
+            #logging.debug(f"topic: {topic}, msg: {msg}, t: {t}")
+            if topic in logs_by_topic:
+                logs_by_topic[topic] = logs_by_topic[topic] + [(msg, t)]
+            else:
+                logs_by_topic[topic] = [(msg, t)]
+
+        data = logs_by_topic[field_type]
+        if field_type == "/ground_truth/state_map":
+            one_field_list = [ (x[1].to_nsec(),
+                                x[0].pose.pose.position.x,
+                                x[0].pose.pose.position.y,
+                                x[0].pose.pose.position.z)
+                               for x in data]
+        one_field_np = np.array(one_field_list)
+        one_field_lists.append((log_fn, mutation_fn, mission_fn, one_field_np))
+        fn_count += 1
+        logging.debug(f"File {fn_count} of {total_fns}")
+    return one_field_lists
+
+
+def convert_logs_ardu(log_fns: List[Tuple[str, str, str]],
+                      field_type: str="GLOBAL_POSITION_INT") -> List[Tuple[str, str, str, np.array]]:
     one_field_lists = []
     fn_count = 0
     total_fns = len(log_fns)
-    logging.debug(f"convert_logs log_fns: {log_fns}")
+    logging.debug(f"convert_logs_ardu log_fns: {log_fns}")
     for log_fn, mutation_fn, mission_fn in log_fns:
         logging.debug(f"convert_logs log_fn: {log_fn}")
         # convert the tlog to json, if it's not already json
@@ -142,12 +179,15 @@ def equalize_lengths(logs: List[np.array], length: int = 0) -> List[np.array]:
     return new_logs
 
 
-def logs_to_np(log_fns: Dict[str, List[Tuple[str, str, str]]]) -> Dict[str, List[Tuple[str, str, str, Any]]]:
+def logs_to_np(log_fns: Dict[str, List[Tuple[str, str, str]]], log_type="ardu") -> Dict[str, List[Tuple[str, str, str, Any]]]:
     all_logs = dict()
     # Turn the log files into np.arrays of the data
     for label, log_fns_subset in log_fns.items():
         logging.debug(f"label: {label}, log_fns_subset: {log_fns_subset}")
-        logs_data = convert_logs(log_fns_subset)
+        if log_type == "ardu":
+            logs_data = convert_logs_ardu(log_fns_subset)
+        elif log_type == "husky":
+            logs_data = convert_logs_husky(log_fns_subset)
         all_logs[label] = logs_data
 
     # logging.debug(f"all_logs: {all_logs}")
@@ -175,14 +215,14 @@ def json_to_np(json_logs: Dict[str, List[Tuple[str, str, str, List]]]) -> Dict[s
     return all_logs
 
 
-def memoize_log_db(log_db: str) -> Dict[str, List[Tuple[str, str, str, np.array]]]:
+def memoize_log_db(log_db: str, log_type="ardu") -> Dict[str, List[Tuple[str, str, str, np.array]]]:
     date = time.strftime("%m-%d-%Y")
     memoized_fn = f"{log_db}_{date}.json"
     logging.debug(memoized_fn)
 
     if not os.path.isfile(memoized_fn):
         log_fns = get_from_db(log_db)
-        all_logs = logs_to_np(log_fns)
+        all_logs = logs_to_np(log_fns, log_type=log_type)
         with open(memoized_fn, 'w') as memoized_file:
             json_ready_logs = to_json_ready(all_logs)
             json.dump(json_ready_logs, memoized_file)
@@ -200,13 +240,13 @@ def get_logs(args: argparse.Namespace) -> Dict[str, List[Tuple[str, str, str, np
 
     # if args.log_fn and len(args.log_fn) > 1:
     if args.log_fn and len(args.log_fn) > 0:
-        log_fns = insert(log_fns, "manual", [(x, "None") for x in args.log_fn] )
+        log_fns = insert(log_fns, "manual", [(x, "None", "None") for x in args.log_fn] )
         logging.debug(f"log_fns: {log_fns}")
-        all_logs = logs_to_np(log_fns)
+        all_logs = logs_to_np(log_fns, args.log_type)
     elif args.log_db:
         #TODO: This assumes all the logs in the database have the same
         # mission, which isn't always a good assumption. Fix it.
-        all_logs = memoize_log_db(args.log_db)
+        all_logs = memoize_log_db(args.log_db, args.log_type)
 
     return all_logs
 
@@ -214,6 +254,7 @@ def get_logs(args: argparse.Namespace) -> Dict[str, List[Tuple[str, str, str, np
 def logs_by_mission(logs: Dict[str, List[Tuple[str, str, str, np.array]]]) -> Dict[str, Dict[str, List[Tuple[str, str, np.array]]]]:
     by_mission: Dict[str, Dict[str, List[Tuple[str, str, np.array]]]] = dict()
     for label in logs.keys():
+        logging.debug(f"key: {label}")
         for log_fn, mutation_fn, mission_fn, log in logs[label]:
             if mission_fn in by_mission:
                 if label in by_mission[mission_fn]:
@@ -230,7 +271,7 @@ def logs_by_mission(logs: Dict[str, List[Tuple[str, str, str, np.array]]]) -> Di
 
 def insert(db: Dict[str, List[Any]], label: str,
            data: List[Any]) -> Dict[str, List[Any]]:
-    logging.debug(db)
+    #logging.debug(db)
     if label in db:
         db[label] = db[label] + data
     else:
