@@ -9,9 +9,10 @@ import matplotlib.colors
 from matplotlib.ticker import ScalarFormatter
 import numpy as np
 #np.set_printoptions(threshold=sys.maxsize)
+import yaml
 
 import log_analysis
-
+from waypoints_from_pgm import parse_pgm
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -26,12 +27,51 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--nominal_delay", action="store_true",
                         default=False,
                         help="make a graph separating nominal runs from delayed")
+    parser.add_argument("--overlay_pgm", action="store_true", default=False,
+                        help="add pgm map to graph. must include pgm_fn and pgm_param_fn")
+    parser.add_argument("--pgm_fn", type=str)
+    parser.add_argument("--pgm_param_fn", type=str)
     args = parser.parse_args()
     return args
 
 
-def graph_one_log(log: np.array, fn: str = "FIG.png", title: str = "None",
-                  log_type: str = "ardu") -> None:
+def matrix_to_scatter(pgm_matrix: List[List[int]],
+                      pgm_param_fn: str) -> np.array:
+    with open(pgm_param_fn, 'r' ) as y:
+        parameters = yaml.load(y, Loader=yaml.BaseLoader)
+        
+    resolution = float(parameters["resolution"])
+    origin_x = float(parameters["origin"][0])
+    origin_y = float(parameters["origin"][1])
+
+    height = len(pgm_matrix)
+    width = len(pgm_matrix[0])
+    
+    occupied_points = {"x": [], "y": []}
+    for i in range(len(pgm_matrix)):
+        for j in range(len(pgm_matrix[0])):
+            # Zero means occupied
+            if pgm_matrix[i][j] == 0:
+                x = (i * resolution) + origin_x
+                # logging.debug(f"type(origin_y): {type(origin_y)}")
+                # logging.debug(f"type(height): {type(height)}")
+                # logging.debug(f"type(resolution): {type(resolution)}")
+                # logging.debug(f"type(j): {type(j)}")
+                y = origin_y + ((height - j) * resolution)
+                occupied_points["x"].append(x)
+                occupied_points["y"].append(y)
+                
+    return occupied_points
+
+
+def graph_logs_nominal_delay(one_mission, mission_fn="", mutation_fn="",
+                             log_type="ardu", pgm_scatter=None):
+    pass
+
+
+def graph_one_log(log: np.array, fn: str = "FIG.png", mutation_fn: str = "None",
+                  mission_fn: str = "None",
+                  log_type: str = "ardu", pgm_scatter=None) -> None:
     fig, ax = plt.subplots()
     ax.ticklabel_format(useOffset=False)
 
@@ -46,9 +86,16 @@ def graph_one_log(log: np.array, fn: str = "FIG.png", title: str = "None",
         ax.scatter(x, y, c=time_elapsed, s=z)
         ax.set_xlabel("X Position")
         ax.set_ylabel("Y Position")
+        ax.set_ylim(min(y), max(y))
+        ax.set_xlim(min(x), max(x))
 
-    if title != "None":
-            ax.set_title(title)
+    if mutation_fn != "None":
+            ax.set_title(mutation_fn)
+
+    if pgm_scatter:
+        ax.scatter(pgm_scatter["x"], pgm_scatter["y"], 
+                   marker='.', c="black", s=1)
+
     logging.debug(f"saving to filename: {fn}")
     fig.savefig(fn)
     plt.close(fig)
@@ -182,7 +229,8 @@ def graph_time(logs: Dict[str, List[Tuple[str, str, np.array]]],
 def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
                log_type="ardu",
                mission_fn: str="",
-               mutation_fn: str="") -> None:
+               mutation_fn: str="",
+               pgm_scatter=None) -> None:
 
     fig, ax = plt.subplots()
     ax.ticklabel_format(useOffset=False)
@@ -221,8 +269,8 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
                 color = next_color(color)
             elif log_type == "husky":
                 x, y, z, time_elapsed = extract_series(log, log_type=log_type)
-                logging.debug(f"x: {x}")
-                logging.debug(f"y: {y}")
+                # logging.debug(f"x: {x}")
+                # logging.debug(f"y: {y}")
                 logging.debug(f"title_short: {title_short}")
                 ax.scatter(x, y, c=time_elapsed, s=z)
                 ax.set_ylim(min(y), max(y))
@@ -230,6 +278,11 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
                 ax.set_xlabel("X position")
                 ax.set_ylabel("Y position")
                 color = next_color(color)
+
+    if pgm_scatter:
+        ax.scatter(pgm_scatter["x"], pgm_scatter["y"], 
+                   marker='.', c="black", s=1)
+
 
     fig.savefig(f"MANY_FIG_{title_short}.png")
 
@@ -247,10 +300,18 @@ def main() -> None:
                         format=format_str, datefmt=date_str)
 
     logs = log_analysis.get_logs(args)
-
     logs_by_mission = log_analysis.logs_by_mission(logs)
 
-    # logging.debug(f"logs: {logs}")
+    if args.overlay_pgm:
+        if not args.pgm_fn or not args.pgm_param_fn:
+            logging.warn(f"pgm_fn and pgm_param_fn are required for overlay_pgm")
+            pgm_scatter = None
+        else:
+            pgm_matrix = parse_pgm(args.pgm_fn)
+            pgm_scatter = matrix_to_scatter(pgm_matrix, args.pgm_param_fn)
+    else:
+        pgm_scatter = None
+
 
     if (args.individual):
         for mission_fn, one_mission in logs_by_mission.items():
@@ -265,17 +326,19 @@ def main() -> None:
                     graph_one_log(log, fn=filename, 
                                   mutation_fn=mutation_fn_short,
                                   mission_fn=mission_fn_short,
-                                  log_type=args.log_type)
+                                  log_type=args.log_type,
+                                  pgm_scatter=pgm_scatter)
                     filename_counter = filename_counter + 1
 
     for mission_fn, one_mission in logs_by_mission.items():
         mission_fn_short = mission_fn.split("/")[-1].split(".")[0]
         graph_logs(one_mission, mission_fn=mission_fn_short, 
-                   log_type=args.log_type)
+                   log_type=args.log_type, pgm_scatter=pgm_scatter)
         if args.nominal_delay:
             graph_logs_nominal_delay(one_mission, title=mission_fn_short,
                                      mutation_fn=mutation_fn_short,
-                                     log_type=args.log_type)
+                                     log_type=args.log_type, 
+                                     pgm_scatter=pgm_scatter)
 
     #animate_logs(logs)
 
