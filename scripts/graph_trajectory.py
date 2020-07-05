@@ -21,6 +21,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("-i", "--individual", action="store_true",
                         default=False)
     parser.add_argument("--log_type", type=str, default="ardu")
+    parser.add_argument("--bag_dir", type=str,
+                        help="Use all files ending in .bag in the specified directory.")
+    parser.add_argument("--nominal_delay", action="store_true",
+                        default=False,
+                        help="make a graph separating nominal runs from delayed")
     args = parser.parse_args()
     return args
 
@@ -32,11 +37,7 @@ def graph_one_log(log: np.array, fn: str = "FIG.png", title: str = "None",
 
     if log_type == "ardu":
         lat, lon, time_elapsed, alt, relative_alt = extract_series(log)
-        # lat = log[:,1][1:]
-        # lon = log[:,2][1:]
 
-        # logging.debug(f"lat: {lat}")
-        # logging.debug(f"lon: {lon}")
         ax.scatter(lat, lon, c=time_elapsed, s=(relative_alt/100))
         ax.set_xlabel("Latitude")
         ax.set_ylabel("Longitude")
@@ -180,23 +181,26 @@ def graph_time(logs: Dict[str, List[Tuple[str, str, np.array]]],
 
 def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
                log_type="ardu",
-               title: str="") -> None:
+               mission_fn: str="",
+               mutation_fn: str="") -> None:
 
     fig, ax = plt.subplots()
     ax.ticklabel_format(useOffset=False)
 
     colors = [matplotlib.colors.to_rgb(x) for x in ('r', 'g', 'b', 'c', 'm', 'y')]
     zipped = zip(logs.keys(), colors)
-    title_short = title.split("/")[-1].split(".")[0]
+    title_short = mission_fn.split("/")[-1].split(".")[0]
     for subset_label, color in zipped:
-        # Pick a color family
-        ax.set_title(title)
+
+        logging.debug(f"subset_label: {subset_label}")
+
+        ax.set_title(title_short)
         logs_subset = logs[subset_label]
         # Define the label
         # TODO
         #logging.debug(f"logs_subset[0]: {logs_subset[0]}")
         #logging.debug(f"type(logs_subset[0]): {type(logs_subset[0])}")
-        # Plot each log in a variation in the color family
+
 
         for log_fn, mutation_fn, log in logs_subset:
             if log_type == "ardu":
@@ -251,17 +255,27 @@ def main() -> None:
     if (args.individual):
         for mission_fn, one_mission in logs_by_mission.items():
             logging.debug(f"mission filename: {mission_fn}")
+            mission_fn_short = mission_fn.split("/")[-1].split(".")[0]
             filename_counter = 1
             for label, logs_subset in one_mission.items():
                 for log_fn, mutation_fn, log in logs_subset:
                     log_fn_short = log_fn.split("/")[-1].split(".")[0]
-                    filename = f"ONE_LOG_{log_fn_short}.png"
-                    graph_one_log(log, fn=filename, title=mutation_fn,
+                    filename = f"ONE_LOG_{log_fn_short}_mission_{mission_fn_short}.png"
+                    mutation_fn_short = mutation_fn.split("/")[-1].split(".")[0]
+                    graph_one_log(log, fn=filename, 
+                                  mutation_fn=mutation_fn_short,
+                                  mission_fn=mission_fn_short,
                                   log_type=args.log_type)
                     filename_counter = filename_counter + 1
 
     for mission_fn, one_mission in logs_by_mission.items():
-        graph_logs(one_mission, title=mission_fn, log_type=args.log_type)
+        mission_fn_short = mission_fn.split("/")[-1].split(".")[0]
+        graph_logs(one_mission, mission_fn=mission_fn_short, 
+                   log_type=args.log_type)
+        if args.nominal_delay:
+            graph_logs_nominal_delay(one_mission, title=mission_fn_short,
+                                     mutation_fn=mutation_fn_short,
+                                     log_type=args.log_type)
 
     #animate_logs(logs)
 

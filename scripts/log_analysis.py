@@ -23,7 +23,8 @@ def access_bag_db(db_fn: str) -> Tuple[sqlite3.Cursor, sqlite3.Connection]:
     return cursor, conn
 
 
-def get_fns_from_rows(cursor: sqlite3.Cursor, log_dir: str) -> List[Tuple[str, str, str]]:
+def get_fns_from_rows(cursor: sqlite3.Cursor, log_dir: str,
+                      log_type: str = "ardu") -> List[Tuple[str, str, str]]:
     rows = cursor.fetchall()
     log_fns = []
     for row in rows:
@@ -40,7 +41,8 @@ def get_fns_from_rows(cursor: sqlite3.Cursor, log_dir: str) -> List[Tuple[str, s
     return log_fns
 
 
-def get_from_db(log_db: str, log_dir: str = "../bags") -> Dict[str, List[Tuple[str, str, str]]]:
+def get_from_db(log_db: str, log_dir: str = "../bags",
+                log_type: str = "ardu") -> Dict[str, List[Tuple[str, str, str]]]:
     log_fns: Dict[str, List[np.array]] = dict()
     cursor, conn = access_bag_db(log_db)
 
@@ -52,7 +54,7 @@ def get_from_db(log_db: str, log_dir: str = "../bags") -> Dict[str, List[Tuple[s
 
     filename = "None"
     cursor.execute("select * from bagfns where mutation_fn=?", (filename,))
-    nominal_fns = get_fns_from_rows(cursor, log_dir)
+    nominal_fns = get_fns_from_rows(cursor, log_dir, log_type=log_type)
     log_fns['nominal'] = nominal_fns
     logging.debug(f"len(nominal_fns): {len(nominal_fns)}")
     logging.debug(f"len(log_fns['nominal']): {len(log_fns['nominal'])}")
@@ -102,6 +104,11 @@ def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
     for log_fn, mutation_fn, mission_fn in log_fns:
         logging.debug(f"convert_logs log_fn: {log_fn}")
 
+        if not os.path.isfile(log_fn):
+            logging.info(f"file missing: {log_fn}\nContinuing")
+            fn_count += 1
+            continue
+
         bag = rosbag.Bag(log_fn)
         bag_contents = bag.read_messages()
         bag_name = bag.filename
@@ -115,7 +122,12 @@ def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
             else:
                 logs_by_topic[topic] = [(msg, t)]
 
-        data = logs_by_topic[field_type]
+        try:
+            data = logs_by_topic[field_type]
+        except KeyError as e:
+            logging.warning(f"No field {field_type} in bag: {log_fn}.\nContinuing")
+            fn_count += 1
+            continue
         if field_type == "/ground_truth/state_map":
             one_field_list = [ (x[1].to_nsec(),
                                 x[0].pose.pose.position.x,
@@ -225,7 +237,7 @@ def memoize_log_db(log_db: str, log_type="ardu") -> Dict[str, List[Tuple[str, st
     logging.debug(memoized_fn)
 
     if not os.path.isfile(memoized_fn):
-        log_fns = get_from_db(log_db)
+        log_fns = get_from_db(log_db, log_type=log_type)
         all_logs = logs_to_np(log_fns, log_type=log_type)
         with open(memoized_fn, 'w') as memoized_file:
             json_ready_logs = to_json_ready(all_logs)
@@ -240,11 +252,18 @@ def memoize_log_db(log_db: str, log_type="ardu") -> Dict[str, List[Tuple[str, st
 def get_logs(args: argparse.Namespace) -> Dict[str, List[Tuple[str, str, str, np.array]]]:
     log_fns: Dict[str, List[Tuple[str, str, str]]] = dict()
 
-    logging.debug(f"args.log_fn: {args.log_fn}")
-
     # if args.log_fn and len(args.log_fn) > 1:
-    if args.log_fn and len(args.log_fn) > 0:
-        log_fns = insert(log_fns, "manual", [(x, "None", "None") for x in args.log_fn] )
+    if args.bag_dir or (args.log_fn and len(args.log_fn) > 0):
+        if args.bag_dir:
+            log_fn_list = [x for x in os.listdir(args.bag_dir)
+                           if x.endswith(".bag")]
+            log_fn_list = [os.path.join(args.bag_dir, x) for x in log_fn_list]
+        elif args.log_fn and len(args.log_fn) > 0:
+            log_fn_list = args.log_fn
+        logging.debug(f"log_fn_list: {log_fn_list}")
+
+        log_fns = insert(log_fns, "manual", [(x, "None", "None") for x
+                                             in log_fn_list] )
         logging.debug(f"log_fns: {log_fns}")
         all_logs = logs_to_np(log_fns, args.log_type)
     elif args.log_db:
