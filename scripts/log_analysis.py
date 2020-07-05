@@ -23,7 +23,8 @@ def access_bag_db(db_fn: str) -> Tuple[sqlite3.Cursor, sqlite3.Connection]:
     return cursor, conn
 
 
-def get_fns_from_rows(cursor: sqlite3.Cursor, log_dir: str) -> List[Tuple[str, str, str]]:
+def get_fns_from_rows(cursor: sqlite3.Cursor, log_dir: str,
+                      log_type: str = "ardu") -> List[Tuple[str, str, str]]:
     rows = cursor.fetchall()
     log_fns = []
     for row in rows:
@@ -40,7 +41,8 @@ def get_fns_from_rows(cursor: sqlite3.Cursor, log_dir: str) -> List[Tuple[str, s
     return log_fns
 
 
-def get_from_db(log_db: str, log_dir: str = "../bags") -> Dict[str, List[Tuple[str, str, str]]]:
+def get_from_db(log_db: str, log_dir: str = "../bags",
+                log_type: str = "ardu") -> Dict[str, List[Tuple[str, str, str]]]:
     log_fns: Dict[str, List[np.array]] = dict()
     cursor, conn = access_bag_db(log_db)
 
@@ -52,7 +54,7 @@ def get_from_db(log_db: str, log_dir: str = "../bags") -> Dict[str, List[Tuple[s
 
     filename = "None"
     cursor.execute("select * from bagfns where mutation_fn=?", (filename,))
-    nominal_fns = get_fns_from_rows(cursor, log_dir)
+    nominal_fns = get_fns_from_rows(cursor, log_dir, log_type=log_type)
     log_fns['nominal'] = nominal_fns
     logging.debug(f"len(nominal_fns): {len(nominal_fns)}")
     logging.debug(f"len(log_fns['nominal']): {len(log_fns['nominal'])}")
@@ -101,6 +103,10 @@ def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
     logging.debug(f"convert_logs_husky log_fns: {log_fns}")
     for log_fn, mutation_fn, mission_fn in log_fns:
         logging.debug(f"convert_logs log_fn: {log_fn}")
+
+        if not os.path.isfile(log_fn):
+            logging.info(f"file missing: {log_fn}\nContinuing")
+            continue
 
         bag = rosbag.Bag(log_fn)
         bag_contents = bag.read_messages()
@@ -225,7 +231,7 @@ def memoize_log_db(log_db: str, log_type="ardu") -> Dict[str, List[Tuple[str, st
     logging.debug(memoized_fn)
 
     if not os.path.isfile(memoized_fn):
-        log_fns = get_from_db(log_db)
+        log_fns = get_from_db(log_db, log_type=log_type)
         all_logs = logs_to_np(log_fns, log_type=log_type)
         with open(memoized_fn, 'w') as memoized_file:
             json_ready_logs = to_json_ready(all_logs)
