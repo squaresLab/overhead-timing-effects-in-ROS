@@ -106,6 +106,7 @@ def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
 
         if not os.path.isfile(log_fn):
             logging.info(f"file missing: {log_fn}\nContinuing")
+            fn_count += 1
             continue
 
         bag = rosbag.Bag(log_fn)
@@ -121,7 +122,12 @@ def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
             else:
                 logs_by_topic[topic] = [(msg, t)]
 
-        data = logs_by_topic[field_type]
+        try:
+            data = logs_by_topic[field_type]
+        except KeyError as e:
+            logging.warning(f"No field {field_type} in bag: {log_fn}.\nContinuing")
+            fn_count += 1
+            continue
         if field_type == "/ground_truth/state_map":
             one_field_list = [ (x[1].to_nsec(),
                                 x[0].pose.pose.position.x,
@@ -246,11 +252,18 @@ def memoize_log_db(log_db: str, log_type="ardu") -> Dict[str, List[Tuple[str, st
 def get_logs(args: argparse.Namespace) -> Dict[str, List[Tuple[str, str, str, np.array]]]:
     log_fns: Dict[str, List[Tuple[str, str, str]]] = dict()
 
-    logging.debug(f"args.log_fn: {args.log_fn}")
-
     # if args.log_fn and len(args.log_fn) > 1:
-    if args.log_fn and len(args.log_fn) > 0:
-        log_fns = insert(log_fns, "manual", [(x, "None", "None") for x in args.log_fn] )
+    if args.bag_dir or (args.log_fn and len(args.log_fn) > 0):
+        if args.bag_dir:
+            log_fn_list = [x for x in os.listdir(args.bag_dir)
+                           if x.endswith(".bag")]
+            log_fn_list = [os.path.join(args.bag_dir, x) for x in log_fn_list]
+        elif args.log_fn and len(args.log_fn) > 0:
+            log_fn_list = args.log_fn
+        logging.debug(f"log_fn_list: {log_fn_list}")
+
+        log_fns = insert(log_fns, "manual", [(x, "None", "None") for x
+                                             in log_fn_list] )
         logging.debug(f"log_fns: {log_fns}")
         all_logs = logs_to_np(log_fns, args.log_type)
     elif args.log_db:

@@ -21,6 +21,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("-i", "--individual", action="store_true",
                         default=False)
     parser.add_argument("--log_type", type=str, default="ardu")
+    parser.add_argument("--bag_dir", type=str,
+                        help="Use all files ending in .bag in the specified directory.")
+    parser.add_argument("--nominal_delay", action="store_true",
+                        default=False,
+                        help="make a graph separating nominal runs from delayed")
     args = parser.parse_args()
     return args
 
@@ -32,11 +37,7 @@ def graph_one_log(log: np.array, fn: str = "FIG.png", title: str = "None",
 
     if log_type == "ardu":
         lat, lon, time_elapsed, alt, relative_alt = extract_series(log)
-        # lat = log[:,1][1:]
-        # lon = log[:,2][1:]
 
-        # logging.debug(f"lat: {lat}")
-        # logging.debug(f"lon: {lon}")
         ax.scatter(lat, lon, c=time_elapsed, s=(relative_alt/100))
         ax.set_xlabel("Latitude")
         ax.set_ylabel("Longitude")
@@ -188,7 +189,7 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
 
     colors = [matplotlib.colors.to_rgb(x) for x in ('r', 'g', 'b', 'c', 'm', 'y')]
     zipped = zip(logs.keys(), colors)
-    title_short = title.split("/")[-1].split(".")[0]
+    title_short = mission_fn.split("/")[-1].split(".")[0]
     for subset_label, color in zipped:
 
         logging.debug(f"subset_label: {subset_label}")
@@ -268,11 +269,13 @@ def main() -> None:
                     filename_counter = filename_counter + 1
 
     for mission_fn, one_mission in logs_by_mission.items():
+        mission_fn_short = mission_fn.split("/")[-1].split(".")[0]
         graph_logs(one_mission, mission_fn=mission_fn_short, 
                    log_type=args.log_type)
-        graph_logs_nominal_delay(one_mission, title=mission_fn_short,
-                                 mutation_fn=mutation_fn_short,
-                                 log_type=args.log_type)
+        if args.nominal_delay:
+            graph_logs_nominal_delay(one_mission, title=mission_fn_short,
+                                     mutation_fn=mutation_fn_short,
+                                     log_type=args.log_type)
 
     #animate_logs(logs)
 
