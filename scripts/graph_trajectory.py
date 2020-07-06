@@ -185,6 +185,7 @@ def graph_time(logs: Dict[str, List[Tuple[str, str, np.array]]],
     cbar = fig.colorbar(scatter)
     cbar.ax.set_ylabel("total time elapsed (s)")
     fig.savefig("TOTAL_TIME.png")
+    plt.close(fig)
 
 
 def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
@@ -198,11 +199,11 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
     colors = [matplotlib.colors.to_rgb(x) for x in ('r', 'g', 'b', 'c', 'm', 'y')]
     zipped = zip(logs.keys(), colors)
     title_short = mission_fn.split("/")[-1].split(".")[0]
+    ax.set_title(f"{title_short} {logs.keys()}")
     for subset_label, color in zipped:
 
         logging.debug(f"subset_label: {subset_label}")
 
-        ax.set_title(title_short)
         logs_subset = logs[subset_label]
         # Define the label
         # TODO
@@ -219,7 +220,8 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
                 logging.debug(f"lat: {lat}")
                 logging.debug(f"lon: {lon}")
                 logging.debug(f"title_short: {title_short}")
-                ax.scatter(lat, lon, c=time_elapsed, s=(relative_alt/100))
+                #ax.scatter(lat, lon, c=time_elapsed, s=(relative_alt/100))
+                ax.scatter(lat, lon, c=color, s=(relative_alt/100))
                 # logging.debug(f"color: {color}")
                 # logging.debug(f"type(color): {type(color)}")
                 ax.set_ylim(min(lon), max(lon))
@@ -232,7 +234,8 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
                 #logging.debug(f"x: {x}")
                 #logging.debug(f"y: {y}")
                 #logging.debug(f"title_short: {title_short}")
-                ax.scatter(x, y, c=time_elapsed, s=z)
+                # ax.scatter(x, y, c=time_elapsed, s=z)
+                ax.scatter(x, y, c=color, s=z)
                 ax.set_ylim(min(y), max(y))
                 ax.set_xlim(min(x), max(x))
                 ax.set_xlabel("X position")
@@ -240,7 +243,7 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
                 color = next_color(color)
 
     fig.savefig(f"MANY_FIG_{title_short}.png")
-
+    plt.close(fig)
     graph_time(logs)
 
 
