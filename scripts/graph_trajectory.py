@@ -30,6 +30,14 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
+def graph_logs_nominal_delay(one_mission, mission_fn="", mutation_fn="",
+                             log_type="ardu"):
+    print(one_mission)
+    
+
+    pass
+
+
 def graph_one_log(log: np.array, fn: str = "FIG.png", title: str = "None",
                   log_type: str = "ardu") -> None:
     fig, ax = plt.subplots()
@@ -221,9 +229,9 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
                 color = next_color(color)
             elif log_type == "husky":
                 x, y, z, time_elapsed = extract_series(log, log_type=log_type)
-                logging.debug(f"x: {x}")
-                logging.debug(f"y: {y}")
-                logging.debug(f"title_short: {title_short}")
+                #logging.debug(f"x: {x}")
+                #logging.debug(f"y: {y}")
+                #logging.debug(f"title_short: {title_short}")
                 ax.scatter(x, y, c=time_elapsed, s=z)
                 ax.set_ylim(min(y), max(y))
                 ax.set_xlim(min(x), max(x))
@@ -273,8 +281,8 @@ def main() -> None:
         graph_logs(one_mission, mission_fn=mission_fn_short, 
                    log_type=args.log_type)
         if args.nominal_delay:
-            graph_logs_nominal_delay(one_mission, title=mission_fn_short,
-                                     mutation_fn=mutation_fn_short,
+            graph_logs_nominal_delay(one_mission, mission_fn=mission_fn_short,
+                                     mutation_fn="None",
                                      log_type=args.log_type)
 
     #animate_logs(logs)
