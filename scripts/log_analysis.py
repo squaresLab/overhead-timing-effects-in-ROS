@@ -14,6 +14,42 @@ import numpy as np
 import rosbag
 
 
+def reaches_waypoints(log_fn: str, mission_fn: str,
+                      log_type: str = "ardu",
+                      tolerance: float = 0.05) -> Dict[int, bool]:
+    """
+    Does the robot hit all the waypoints (and return home for ardu)?
+    Returns a dict of waypoint number to boolean, as to whether reached.
+    (We'll need a measure of good enough --tolerance paramater?)
+    """
+    pass
+
+def closest_dist_to_waypoint(log_fn: str, mission_fn: str, 
+                             log_type: str = "ardu"):
+    """
+    What's the closest distance that the robot's path gets to a given
+    waypoint (at any point in the run or at the appropriate point in the run)? 
+    """
+    pass
+
+
+def end_distance(log_fn: str, mission_fn: str,
+                 log_type: str = "ardu"):
+    """
+    The distance between the end point and the intended end point.
+
+    """
+    
+    pass
+
+
+def nominal_vs_one_log(nominal_log, experimental_log, log_type: str = "ardu"):
+    """
+    Compare an experimental log against a representative nominal log
+    """
+    pass
+
+
 def access_bag_db(db_fn: str) -> Tuple[sqlite3.Cursor, sqlite3.Connection]:
     conn = sqlite3.connect(db_fn)
     if conn is not None:
@@ -52,18 +88,37 @@ def get_from_db(log_db: str, log_dir: str = "../bags",
     # TODO - DEBUG HERE -- ARE WE GETTING ALL THE FILES?
     # Keep track of the variations in the varied ones
 
-    filename = "None"
-    cursor.execute("select * from bagfns where mutation_fn=?", (filename,))
-    nominal_fns = get_fns_from_rows(cursor, log_dir, log_type=log_type)
-    log_fns['nominal'] = nominal_fns
-    logging.debug(f"len(nominal_fns): {len(nominal_fns)}")
-    logging.debug(f"len(log_fns['nominal']): {len(log_fns['nominal'])}")
-
-    cursor.execute("select * from bagfns where mutation_fn!=?", (filename,))
-    experimental_fns = get_fns_from_rows(cursor, log_dir)
-    log_fns['experimental'] = experimental_fns
-
+    cursor.execute("select * from bagfns")
+    rows = cursor.fetchall()
     conn.close()
+    for row in rows:
+        log_fn, docker_image_sha, docker_image, container_uuid, mission_sha, mission_fn, mutation_sha, mutation_fn, sources = row
+        logging.info(f"mutation_fn: {mutation_fn}")
+        if mutation_fn == "None":
+            label = "nominal"
+        else:
+            label = "experimental"
+        if log_type == "ardu":
+            log_fn = os.path.join(log_dir, f"{log_fn}.tlog")
+        elif log_type == "husky":
+            log_fn = os.path.join(log_dir, log_fn)
+        if label not in log_fns:
+            log_fns[label] = []
+        log_fns[label] = log_fns[label] + [(log_fn, mutation_fn, mission_fn)]
+        
+
+    # filename = "None"
+    # cursor.execute("select * from bagfns where mutation_fn=?", (filename,))
+    # nominal_fns = get_fns_from_rows(cursor, log_dir, log_type=log_type)
+    # log_fns['nominal'] = nominal_fns
+    #logging.debug(f"len(nominal_fns): {len(nominal_fns)}")
+    logging.debug(f"len(log_fns['nominal']): {len(log_fns['nominal'])}")
+    logging.debug(f"len(log_fns['experimental']): {len(log_fns['experimental'])}")
+    #cursor.execute("select * from bagfns where mutation_fn!=?", (filename,))
+    #experimental_fns = get_fns_from_rows(cursor, log_dir)
+    #log_fns['experimental'] = experimental_fns
+
+
     return log_fns
 
 
@@ -137,7 +192,7 @@ def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
         one_field_np = np.array(one_field_list)
         one_field_lists.append((log_fn, mutation_fn, mission_fn, one_field_np))
         fn_count += 1
-        logging.debug(f"File {fn_count} of {total_fns}")
+        logging.debug(f"Finished file {fn_count} of {total_fns}")
     return one_field_lists
 
 
@@ -277,17 +332,18 @@ def get_logs(args: argparse.Namespace) -> Dict[str, List[Tuple[str, str, str, np
 def logs_by_mission(logs: Dict[str, List[Tuple[str, str, str, np.array]]]) -> Dict[str, Dict[str, List[Tuple[str, str, np.array]]]]:
     by_mission: Dict[str, Dict[str, List[Tuple[str, str, np.array]]]] = dict()
     for label in logs.keys():
-        logging.debug(f"key: {label}")
+        logging.debug(f"logs_by_mission key: {label} length: {len(logs[label])}")
+        if len(logs[label]) == 0:
+            logging.debug(f"no logs for {label}")
         for log_fn, mutation_fn, mission_fn, log in logs[label]:
-            if mission_fn in by_mission:
-                if label in by_mission[mission_fn]:
-                    by_mission[mission_fn][label] = \
-                        by_mission[mission_fn][label] + \
-                        [(log_fn, mutation_fn, log)]
-                else:
-                    by_mission[mission_fn][label] = [(log_fn, mutation_fn, log)]
+            if mission_fn not in by_mission:
+                by_mission[mission_fn] = dict()
+            if label in by_mission[mission_fn]:
+                by_mission[mission_fn][label] = \
+                    by_mission[mission_fn][label] + \
+                    [(log_fn, mutation_fn, log)]
             else:
-                by_mission[mission_fn] = {label: [(log_fn, mutation_fn, log)]}
+                by_mission[mission_fn][label] = [(log_fn, mutation_fn, log)]
 
     return by_mission
 
