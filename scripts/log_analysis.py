@@ -21,7 +21,7 @@ def euclidean_distance(a: Tuple[float, float, float],
     return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2 + (a[2] - b[2])**2)
 
 
-def reaches_waypoints(log: np_array,
+def reaches_waypoints(dist_dict: Dict[int, float]
                       mission: List[Tuple[float, float, float]],
                       log_type: str = "ardu",
                       tolerance: float = 0.05) -> Dict[int, bool]:
@@ -31,7 +31,8 @@ def reaches_waypoints(log: np_array,
     (We'll need a measure of good enough --tolerance paramater?)
     """
 
-    pass
+    hits_all = dict([(x[0], x[1] <= tolerance) for x in dist_dict.items()])
+    return hits_all
 
 
 def distance_to_each_waypoint(one_log: np_array,
@@ -40,6 +41,8 @@ def distance_to_each_waypoint(one_log: np_array,
     """
     What's the closest distance the robot gets to each waypoint?
     Returns a dict of waypoint number to distance (float).
+    Note -- this doesn't account for going to the waypoints in order.
+    It's just the closest at any point in the execution.
 
     """
     waypoint_dict = dict()

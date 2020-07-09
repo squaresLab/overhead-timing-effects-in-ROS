@@ -26,6 +26,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--nominal_delay", action="store_true",
                         default=False,
                         help="make a graph separating nominal runs from delayed")
+    parser.add_argument("--alt_bag_base", type=str,
+                        help="specify where the bag files referenced in the log_db reside")
     args = parser.parse_args()
     return args
 
@@ -33,13 +35,13 @@ def parse_args() -> argparse.Namespace:
 def graph_logs_nominal_delay(one_mission, mission_fn="", mutation_fn="",
                              log_type="ardu"):
     print(one_mission)
-    
+
 
     pass
 
 
-def graph_one_log(log: np.array, fn: str = "FIG.png", title: str = "None",
-                  log_type: str = "ardu") -> None:
+def graph_one_log(log: np.array, fn: str = "FIG.png", mutation_fn: str = "None",
+                  mission_fn: str = "None", log_type: str = "ardu") -> None:
     fig, ax = plt.subplots()
     ax.ticklabel_format(useOffset=False)
 
@@ -55,8 +57,8 @@ def graph_one_log(log: np.array, fn: str = "FIG.png", title: str = "None",
         ax.set_xlabel("X Position")
         ax.set_ylabel("Y Position")
 
-    if title != "None":
-            ax.set_title(title)
+    if mission_fn != "None":
+            ax.set_title(mission_fn)
     logging.debug(f"saving to filename: {fn}")
     fig.savefig(fn)
     plt.close(fig)
@@ -117,7 +119,7 @@ def extract_series(log, log_type="ardu", discard_zero: bool=True) -> Tuple[np.ar
         return (x, y, z, time_elapsed)
 
 
-def get_delay_weight(mutation_fn: str, 
+def get_delay_weight(mutation_fn: str,
                      log_type:str ="ardu") -> Tuple[float, float]:
     logging.debug(f"mutation_fn: {mutation_fn}")
 
@@ -243,10 +245,10 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
                 logging.debug(f"lat: {lat}")
                 logging.debug(f"lon: {lon}")
                 logging.debug(f"title_short: {title_short}")
-                scatter = ax.scatter(lat, lon, c=time_elapsed, 
+                scatter = ax.scatter(lat, lon, c=time_elapsed,
                                      s=(relative_alt/100),
                            cmap=color_map)
-                # ax.scatter(lat, lon, c=[[color] * len(lat)], 
+                # ax.scatter(lat, lon, c=[[color] * len(lat)],
                 #           s=(relative_alt/100))
                 # logging.debug(f"color: {color}")
                 # logging.debug(f"type(color): {type(color)}")
@@ -270,7 +272,7 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
                 # ax.scatter(x, y, c=time_elapsed, s=z)
                 #color_array = [color] * len(x)
                 #assert(len(color_array) == len(x)), f"{len(color_array)}, {len(x)}"
-                legend_dict[subset_label] = ax.scatter(x, y, 
+                legend_dict[subset_label] = ax.scatter(x, y,
                                                        c=time_elapsed,
                                                        cmap=color_map,
                                                        s=z)
@@ -330,7 +332,7 @@ def main() -> None:
                     log_fn_short = log_fn.split("/")[-1].split(".")[0]
                     filename = f"ONE_LOG_{log_fn_short}_mission_{mission_fn_short}.png"
                     mutation_fn_short = mutation_fn.split("/")[-1].split(".")[0]
-                    graph_one_log(log, fn=filename, 
+                    graph_one_log(log, fn=filename,
                                   mutation_fn=mutation_fn_short,
                                   mission_fn=mission_fn_short,
                                   log_type=args.log_type)
@@ -338,7 +340,7 @@ def main() -> None:
 
     for mission_fn, one_mission in logs_by_mission.items():
         mission_fn_short = mission_fn.split("/")[-1].split(".")[0]
-        graph_logs(one_mission, mission_fn=mission_fn_short, 
+        graph_logs(one_mission, mission_fn=mission_fn_short,
                    log_type=args.log_type)
         if args.nominal_delay:
             graph_logs_nominal_delay(one_mission, mission_fn=mission_fn_short,
