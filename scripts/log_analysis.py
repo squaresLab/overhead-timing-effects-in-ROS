@@ -2,6 +2,7 @@ import argparse
 import datetime
 import json
 import logging
+import math
 import os
 import random
 import shlex
@@ -14,7 +15,14 @@ import numpy as np
 import rosbag
 
 
-def reaches_waypoints(log_fn: str, mission_fn: str,
+def euclidean_distance(a: Tuple[float, float, float],
+                       b: Tuple[float, float, float]) -> float:
+
+    return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2 + (a[2] - b[2])**2)
+
+
+def reaches_waypoints(log: np_array,
+                      mission: List[Tuple[float, float, float]],
                       log_type: str = "ardu",
                       tolerance: float = 0.05) -> Dict[int, bool]:
     """
@@ -22,32 +30,67 @@ def reaches_waypoints(log_fn: str, mission_fn: str,
     Returns a dict of waypoint number to boolean, as to whether reached.
     (We'll need a measure of good enough --tolerance paramater?)
     """
+
     pass
 
-def closest_dist_to_waypoint(log_fn: str, mission_fn: str, 
-                             log_type: str = "ardu"):
+
+def distance_to_each_waypoint(one_log: np_array,
+                              mission: List[Tuple[float, float, float]],
+                              log_type: str = "ardu") -> Dict[int, float]:
+    """
+    What's the closest distance the robot gets to each waypoint?
+    Returns a dict of waypoint number to distance (float).
+
+    """
+    waypoint_dict = dict()
+    for waypoint, index in zip(mission, range(len(mission))):
+        dist = waypoint_to_log_dist(one_log, waypoint, log_type=log_type)
+        waypoint_dict[index] = dist
+
+    return waypoint_dict
+
+
+def closest_dist_to_waypoint_by_num(one_log: np.array,
+                                    mission: List[Tuple[float, float, float]],
+                                    waypoint_num: int,
+                                    log_type: str = "ardu"):
     """
     What's the closest distance that the robot's path gets to a given
-    waypoint (at any point in the run or at the appropriate point in the run)? 
+    waypoint (at any point in the run or at the appropriate point in the run)?
     """
-    pass
+    assert(waypoint_num < len(mission))
+    waypoint = mission[waypoint_num]
+    return waypoint_to_log_dist(waypoint, one_log, log_type)
 
 
-def end_distance(log_fn: str, mission_fn: str,
+def waypoint_to_log_dist(log: np.array,
+                         waypoint: Tuple[float, float, float],
+                         log_type: str = "ardu") -> float:
+    """
+    What's the closest distance that the robot's path gets to a given
+    waypoint (at any point in the run or at the appropriate point in the run)?
+    """
+    min_dist = min([euclidean_distance(x, waypoint) for x in log])
+    return min_dist
+
+
+def end_distance(log: np.array, mission: List[Tuple[float, float, float]],
                  log_type: str = "ardu"):
     """
     The distance between the end point and the intended end point.
 
     """
-    
-    pass
+    last_location = log[-1]
+    last_waypoint = log[-1]
+    return euclidean_distance(last_location, last_waypoint)
 
 
 def nominal_vs_one_log(nominal_log, experimental_log, log_type: str = "ardu"):
     """
     Compare an experimental log against a representative nominal log
+    (instead of a waypoint) with various metrics
     """
-    pass
+    raise NotImplementedError
 
 
 def access_bag_db(db_fn: str) -> Tuple[sqlite3.Cursor, sqlite3.Connection]:
@@ -105,7 +148,7 @@ def get_from_db(log_db: str, log_dir: str = "../bags",
         if label not in log_fns:
             log_fns[label] = []
         log_fns[label] = log_fns[label] + [(log_fn, mutation_fn, mission_fn)]
-        
+
 
     # filename = "None"
     # cursor.execute("select * from bagfns where mutation_fn=?", (filename,))
@@ -150,21 +193,37 @@ def get_json(log_fn: str) -> List[Dict]:
     return json_data
 
 
+def change_bag_base(log_fn: str, bag_base: str):
+    bare_fn = os.path.basename(log_fn)
+    new_fn = os.path.join(bag_base, bare_fn)
+    return new_fn
+
+
 def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
-                       field_type: str="/ground_truth/state_map") -> List[Tuple[str, str, str, np.array]]:
+                       field_type: str="/ground_truth/state_map",
+                       alt_bag_base = None) -> List[Tuple[str, str, str, np.array]]:
     fn_count = 0
     one_field_lists = []
     total_fns = len(log_fns)
     logging.debug(f"convert_logs_husky log_fns: {log_fns}")
     for log_fn, mutation_fn, mission_fn in log_fns:
-        logging.debug(f"convert_logs log_fn: {log_fn}")
+
+        if alt_bag_base:
+            log_fn = change_bag_base(log_fn, alt_bag_base)
+
+        logging.debug(f"convert_logs_husky log_fn: {log_fn}")
 
         if not os.path.isfile(log_fn):
             logging.info(f"file missing: {log_fn}\nContinuing")
             fn_count += 1
             continue
 
-        bag = rosbag.Bag(log_fn)
+        try:
+            bag = rosbag.Bag(log_fn)
+        except rosbag.bag.ROSBagException as e:
+            logging.info(f"file problem: {log_fn}\nContinuing")
+            fn_count += 1
+            continue
         bag_contents = bag.read_messages()
         bag_name = bag.filename
 
@@ -250,7 +309,8 @@ def equalize_lengths(logs: List[np.array], length: int = 0) -> List[np.array]:
     return new_logs
 
 
-def logs_to_np(log_fns: Dict[str, List[Tuple[str, str, str]]], log_type="ardu") -> Dict[str, List[Tuple[str, str, str, Any]]]:
+def logs_to_np(log_fns: Dict[str, List[Tuple[str, str, str]]], log_type="ardu",
+               alt_bag_base=None) -> Dict[str, List[Tuple[str, str, str, Any]]]:
     all_logs = dict()
     # Turn the log files into np.arrays of the data
     for label, log_fns_subset in log_fns.items():
@@ -258,7 +318,7 @@ def logs_to_np(log_fns: Dict[str, List[Tuple[str, str, str]]], log_type="ardu") 
         if log_type == "ardu":
             logs_data = convert_logs_ardu(log_fns_subset)
         elif log_type == "husky":
-            logs_data = convert_logs_husky(log_fns_subset)
+            logs_data = convert_logs_husky(log_fns_subset, alt_bag_base=alt_bag_base)
         all_logs[label] = logs_data
 
     # logging.debug(f"all_logs: {all_logs}")
@@ -286,14 +346,16 @@ def json_to_np(json_logs: Dict[str, List[Tuple[str, str, str, List]]]) -> Dict[s
     return all_logs
 
 
-def memoize_log_db(log_db: str, log_type="ardu") -> Dict[str, List[Tuple[str, str, str, np.array]]]:
+def memoize_log_db(log_db: str, log_type="ardu",
+                   alt_bag_base=None) -> Dict[str, List[Tuple[str, str, str, np.array]]]:
     date = time.strftime("%m-%d-%Y")
     memoized_fn = f"{log_db}_{date}.json"
     logging.debug(memoized_fn)
 
     if not os.path.isfile(memoized_fn):
         log_fns = get_from_db(log_db, log_type=log_type)
-        all_logs = logs_to_np(log_fns, log_type=log_type)
+        all_logs = logs_to_np(log_fns, log_type=log_type,
+                              alt_bag_base=alt_bag_base)
         with open(memoized_fn, 'w') as memoized_file:
             json_ready_logs = to_json_ready(all_logs)
             json.dump(json_ready_logs, memoized_file)
@@ -324,7 +386,8 @@ def get_logs(args: argparse.Namespace) -> Dict[str, List[Tuple[str, str, str, np
     elif args.log_db:
         #TODO: This assumes all the logs in the database have the same
         # mission, which isn't always a good assumption. Fix it.
-        all_logs = memoize_log_db(args.log_db, args.log_type)
+        all_logs = memoize_log_db(args.log_db, args.log_type,
+                                  alt_bag_base=args.alt_bag_base)
 
     return all_logs
 
