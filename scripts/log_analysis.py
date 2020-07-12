@@ -17,12 +17,21 @@ import rosbag
 
 
 def euclidean_distance(a: Tuple[float, float, float],
-                       b: Tuple[float, float, float]) -> float:
+                       b: Tuple[float, float, float],
+                       log_type: str = "ardu") -> float:
 
-    print(type(a))
+    #print(type(a))
+    #print(f"point a: {a}, point b: {b}")
 
     try:
-        dist = math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2 + (a[2] - b[2])**2)
+        if log_type == "ardu":
+            dist = math.sqrt((float(a[0]) - float(b[0]))**2 +
+                             (float(a[1]) - float(b[1]))**2 +
+                             (float(a[2]) - float(b[2]))**2)
+        elif log_type == "husky":
+            dist = math.sqrt((float(a[0]) - float(b[0]))**2 +
+                             (float(a[1]) - float(b[1]))**2)
+
     except:
         logging.error(f"point a: {a}, point b: {b}")
         for i in a:
@@ -59,7 +68,7 @@ def distance_to_each_waypoint(one_log: np.array,
     """
     waypoint_dict = dict()
     for waypoint, index in zip(mission, range(len(mission))):
-        print(f"waypoint: {waypoint} index: {index}, one_log: {one_log}")
+        #print(f"waypoint: {waypoint} index: {index}, one_log: {one_log}")
         dist = waypoint_to_log_dist(one_log, waypoint, log_type=log_type)
         waypoint_dict[index] = dist
 
@@ -86,8 +95,10 @@ def waypoint_to_log_dist(log: np.array,
     What's the closest distance that the robot's path gets to a given
     waypoint (at any point in the run or at the appropriate point in the run)?
     """
-    print(f"type(log): {type(log)}")
-    min_dist = min([euclidean_distance(x, waypoint) for x in log])
+    #print(f"type(log): {type(log)}")
+    min_dist = min([euclidean_distance((x[1], x[2], x[3]), waypoint,
+                                       log_type=log_type)
+                    for x in log])
     return min_dist
 
 
@@ -256,7 +267,7 @@ def get_memoized_husky_data(log_fn: str, field_type: str) -> List[Any]:
             one_log_json = json.load(memoized_file)
         return one_log_json
     else:
-        return None
+        return []
 
 
 def memoize_husky_data(one_field_list: List[Any], log_fn: str, field_type: str) -> None:
@@ -288,7 +299,7 @@ def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
         # try to get the memoized data
         husky_data = get_memoized_husky_data(log_fn, field_type)
 
-        if husky_data:
+        if len(husky_data) > 0:
             one_field_list = husky_data
         else:
             if not os.path.isfile(log_fn):
