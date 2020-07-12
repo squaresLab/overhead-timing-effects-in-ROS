@@ -36,8 +36,7 @@ def graph_logs_nominal_delay(one_mission, mission_fn="", mutation_fn="",
                              log_type="ardu"):
     print(one_mission)
 
-
-    pass
+    raise NotImplementedError
 
 
 def graph_one_log(log: np.array, fn: str = "FIG.png", mutation_fn: str = "None",
