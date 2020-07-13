@@ -164,7 +164,7 @@ def get_from_db(log_db: str, log_dir: str = "../bags",
     conn.close()
     for row in rows:
         log_fn, docker_image_sha, docker_image, container_uuid, mission_sha, mission_fn, mutation_sha, mutation_fn, sources = row
-        logging.info(f"mutation_fn: {mutation_fn}")
+        #logging.info(f"mutation_fn: {mutation_fn}")
         if mutation_fn == "None":
             label = "nominal"
         else:

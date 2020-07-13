@@ -8,6 +8,21 @@ import numpy as np
 
 import log_analysis
 
+mission_num_to_fn = {
+1: "HUSKY_pose_array_5_156109eab4cc4c1f9432690d0b6e6ca9.yaml",
+2: "HUSKY_pose_array_5_c8629fc042474a9db240282a52448964.yaml",
+3: "HUSKY_pose_array_5_5f31cf0a67be40a4b9adcb331f43361c.yaml",
+4: "HUSKY_pose_array_5_350028c9199b4d15b236d85c10ff8b9e.yaml",
+5: "HUSKY_pose_array_5_2ce0b4fa2a4249b4b5057913b8c3d9ec.yaml",
+6: "HUSKY_pose_array_5_c787950abab14110836ae170213406d8.yaml",
+7: "HUSKY_pose_array_5_865a8b7817474e51861522bd435faff1.yaml",
+8: "HUSKY_pose_array_5_722ba706e1f34beca0bcaf193d7e0c4f.yaml",
+9: "HUSKY_pose_array_5_cdc8edbd1c2b4ce197a211ee64e7cbe4.yaml",
+10: "HUSKY_pose_array_5_de68abeac0924afc938d17e5acd1b825.yaml",
+11: "HUSKY_pose_array_5_a4d27db27974459a97a696b7d98cb403.yaml"}
+
+
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -19,8 +34,28 @@ def parse_args() -> argparse.Namespace:
                         help="specify where the bag files referenced in the log_db reside")
     parser.add_argument("--alt_mission_base", type=str)
     parser.add_argument("--logging_fn", type=str, default="generate_tables.log")
+    parser.add_argument("--topic", type=str, default="/husky_velocity_controller/odom")
     args = parser.parse_args()
     return args
+
+
+def print_table(dict_by_label_mission):
+    for label, mission_fn_dict in dict_by_label_mission.items():
+        print(f"label: {label}")
+        for i in range(1, len(mission_num_to_fn)):
+            str_to_print = f"M{i} & "
+            value_dict = [x[1] for x in mission_fn_dict.items() if
+                          mission_num_to_fn[i] in x[0]]
+            if len(value_dict) == 0:
+                continue
+            value_dict = value_dict[0]
+            for j in range(len(value_dict)):
+                str_to_print += f"{value_dict[j]:.2f} & "
+            sum_values = sum(value_dict.values())
+            str_to_print += f"{sum_values:.2f} & "
+            mean_values = statistics.mean(value_dict.values())
+            str_to_print += f"{mean_values:.2f} \\"
+            print(str_to_print)
 
 
 def topic_in_fn(fn: str, topic: str) -> bool:
@@ -60,7 +95,7 @@ def get_delay_topic_dict(log_fn_list: List[Tuple[str, str, str]],
             one_topic_fn_list = [x for x in one_delay_list if
                                  topic_in_fn(x[1],topic)] # and
                                  #str(delay) in x]
-            #print(f"one_topic_fn_list: {one_topic_fn_list}")
+            print(f"one_topic_fn_list: {one_topic_fn_list}")
             if log_type == "husky":
                 one_topic_data_list = \
                     log_analysis.convert_logs_husky(one_topic_fn_list,
@@ -70,6 +105,7 @@ def get_delay_topic_dict(log_fn_list: List[Tuple[str, str, str]],
                 raise NotImplementedError
 
             assert(len(one_topic_fn_list) == len(one_topic_data_list)), f"len_one_topic_fn_list: {len(one_topic_fn_list)}, len(one_topic_data_list): {len(one_topic_data_list)}"
+            logging.debug(f"len_one_topic_fn_list: {len(one_topic_fn_list)}, len(one_topic_data_list): {len(one_topic_data_list)}")
             topics_dict[topic] = one_topic_data_list
         delay_topics_dict[delay] = topics_dict
 
@@ -104,7 +140,7 @@ def get_experimental_runs_by_mission(args) -> Dict[str, Dict[float, Dict[str, Li
     return runs_by_mission
 
 
-def waypoint_distance(args):
+def waypoint_distance_old(args):
     # Get the set of experimental runs by mission
     experimental_runs_by_mission = get_experimental_runs_by_mission(args)
     # For each mission
@@ -186,9 +222,83 @@ def waypoint_distance(args):
 
 
 
+def waypoint_distance(args):
+    # get the appropriate group of data. do this only once.
+    bag_fns = log_analysis.get_from_db(args.log_db, log_type=args.log_type)
 
+    all_bag_fns_list = bag_fns["nominal"] + bag_fns["experimental"]
 
-    pass
+    mission_fns = set([x[2] for x in all_bag_fns_list])
+    logging.debug(f"mission_fns: {mission_fns}")
+
+    husky_bag_data: Dict[str, Tuple[str, str, np.array]] = dict()
+
+    dist_by_label_mission: Dict[str, Dict[str, List[Dict[int, float]]]] = dict()
+    mean_by_label_mission: Dict[str, Dict[str, Dict[int, float]]] = dict()
+    std_by_label_mission: Dict[str, Dict[str, Dict[int, float]]] = dict()
+
+    for label in ("nominal", "experimental"):
+
+        # bag_data is a list of Tuples.
+        # Each tuple is bag_fn, delay_fn, mission_fn, log_data
+        # log_data is an np.array of [time_elapsed, x_pos, y_pos, z_pos
+        bag_data = log_analysis.convert_logs_husky(
+            bag_fns[label],
+            alt_bag_base = args.alt_bag_base)
+
+        husky_bag_data[label] = bag_data
+
+        # Separate by mission
+        for mission_fn in mission_fns:
+            mission_as_list = log_analysis.mission_to_list(
+                mission_fn,
+                log_type="husky",
+                alt_mission_base=args.alt_mission_base)
+            mission_data = [x for x in bag_data if x[2] == mission_fn]
+            #logging.debug(f"*"*80)
+            #logging.debug(f"\n\nlabel: {label}, mission: {mission_fn}:\n {mission_data}")
+
+            dists_list = []
+
+            for bag_fn, delay_fn, mission_fn_loc, log_data in mission_data:
+                assert(mission_fn.strip() == mission_fn_loc.strip()), f"{mission_fn} {mission_fn_loc}"
+                dists = log_analysis.distance_to_each_waypoint(log_data,
+                                                               mission_as_list,
+                                                               log_type="husky")
+                dists_list.append(dists)
+            if label not in dist_by_label_mission:
+                dist_by_label_mission[label] = dict()
+            dist_by_label_mission[label][mission_fn] = dists_list
+            #logging.debug(f"*"*80)
+            #logging.debug(f"\n\ndist_by_label_mission[{label}][{mission_fn}]: {dist_by_label_mission[label][mission_fn]}")
+
+            mean_dist_dict = dict()
+            std_dict = dict()
+            for waypoint in dists_list[0].keys():
+                vals = [x[waypoint] for x in dists_list]
+                mean = statistics.mean(vals)
+                mean_dist_dict[waypoint] = mean
+                std = statistics.mean(vals)
+                std_dict[waypoint] = std
+            if label not in mean_by_label_mission:
+                mean_by_label_mission[label] = dict()
+            mean_by_label_mission[label][mission_fn] = mean_dist_dict
+            if label not in std_by_label_mission:
+                std_by_label_mission[label] = dict()
+
+    print_table(mean_by_label_mission)
+    #for label, mission_fn_dict in mean_by_label_mission.items():
+    #    for mission_fn, mean_dist_dict in mission_fn_dict.items():
+    #        print(f"label: {label} mission_fn: {mission_fn} mean")
+    #        print(f"{mean_dist_dict[0]:.2f} & {mean_dist_dict[1]:.2f} & {mean_dist_dict[2]:.2f} & {mean_dist_dict[3]:.2f} & {mean_dist_dict[4]:.2f} & {mean_dist_dict[5]:.2f} ")
+
+    #for label, mission_fn_dict in std_by_label_mission.items():
+    #    for mission_fn, std_dict in mission_fn_dict.items():
+    #        print(f"label: {label} mission_fn: {mission_fn} std_dev")
+    #        print(f"{std_dict[0]:.2f} & {std_dict[1]:.2f} & {std_dict[2]:.2f} & {std_dict[3]:.2f} & {std_dict[4]:.2f} & {std_dict[5]:.2f} ")
+
+    print_table(std_by_label_mission)
+
 
 
 def main():
@@ -199,7 +309,7 @@ def main():
     fh = logging.FileHandler(filename=args.logging_fn)
     ch = logging.StreamHandler()
     format_str = "%(asctime)s:%(levelname)s:%(name)s: %(message)s"
-    date_str = "%m/%d/%Y %I:%M%S %p"
+    date_str = "%m/%d/%Y %I:%M:%S %p"
     fh_formatter = logging.Formatter(fmt=format_str, datefmt=date_str)
     fh.setFormatter(fh_formatter)
     ch.setFormatter(fh_formatter)
