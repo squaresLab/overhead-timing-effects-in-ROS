@@ -36,6 +36,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--logging_fn", type=str, default="generate_tables.log")
     parser.add_argument("--topic", type=str, default="/husky_velocity_controller/odom")
     parser.add_argument("--one_mission", type=str)
+    parser.add_argument("--delay", type=float)
     args = parser.parse_args()
     return args
 
@@ -395,11 +396,80 @@ def waypoint_distance(args):
 
 
 def waypoint_distance_by_topic(args):
+    assert(type(args.delay) == float), args.delay
+    assert(args.one_mission), args.one_mission
 
     bag_fns = log_analysis.get_from_db(args.log_db, log_type=args.log_type)
-    all_bag_fns = bag_fns["nominal"] + bag_fns["experimental"]
+    all_bag_fns_list = bag_fns["nominal"] + bag_fns["experimental"]
+    logging.debug(f"all_bag_fns_list: {all_bag_fns_list}")
+
+    all_mission_fns = set([x[2] for x in all_bag_fns_list])
+
+    one_mission_fns = [x for x in all_mission_fns if args.one_mission in x]
+    assert(len(one_mission_fns) == 1)
+
+    bag_fns_one_mission = [x for x in all_bag_fns_list if x[2] ==
+                               one_mission_fns[0]]
+
+    # This is a bit sloppy. You should convert the mutation_fn (x[1])
+    # to topic and delay and choose from there.
+    bag_fns_one_mission_one_delay = [
+        x for x in bag_fns_one_mission if
+        (args.delay ==
+         log_analysis.mut_fn_to_topic_delay(x[1], log_type="husky")[1])]
+
+    logging.debug(f"len(bag_fns_one_mission_one_delay): {len(bag_fns_one_mission_one_delay)}")
+
+    bag_data_one_mission_one_delay = log_analysis.convert_logs_husky(
+        bag_fns_one_mission_one_delay,
+        alt_bag_base = args.alt_bag_base)
 
 
+    topic_dict = dict()
+    for bag_fn, topic_delay_fn, mission_fn, log_data \
+            in bag_data_one_mission_one_delay:
+        topic, delay = log_analysis.mut_fn_to_topic_delay(
+            topic_delay_fn,
+            log_type=args.log_type)
+        assert(delay == args.delay), f"delay_from_fn: {delay}, args.delay: {args.delay}\ntopic_delay_fn: {topic_delay_fn}"
+        mission_as_list = log_analysis.mission_to_list(
+            mission_fn,
+            log_type=args.log_type,
+            alt_mission_base=args.alt_mission_base)
+        waypoint_dict = log_analysis.distance_to_each_waypoint(
+            log_data,
+            mission_as_list,
+            log_type=args.log_type)
+        if topic not in topic_dict:
+            topic_dict[topic] = []
+        topic_dict[topic] = topic_dict[topic] + [waypoint_dict]
+
+    mean_topic_dict = dict()
+    std_topic_dict = dict()
+
+    for topic, topic_list in topic_dict.items():
+        logging.debug(f"topic: {topic} topic_list: {topic_list}")
+        num_data_points = len(topic_list)
+        num_waypoints = len(topic_list[0])
+        logging.debug(f"topic: {topic} num_data_points: {num_data_points} num_waypoints: {num_waypoints}")
+
+        for waypoint in sorted(topic_list[0].keys()):
+            vals = [x[waypoint] for x in topic_list]
+            mean = statistics.mean(vals)
+            std = statistics.stdev(vals)
+            if topic not in mean_topic_dict:
+                mean_topic_dict[topic] = dict()
+            if topic not in std_topic_dict:
+                std_topic_dict[topic] = dict()
+
+            mean_topic_dict[topic][waypoint] = mean
+            std_topic_dict[topic][waypoint] = std
+
+    print("Mean")
+    print_table(mean_topic_dict, "waypoint_distance_delay")
+    print("Standard Deviation")
+    print_table(std_topic_dict, "waypoint_distance_delay")
+    return
 
 
 def main():
@@ -423,6 +493,8 @@ def main():
 
     elif "waypoint_distance_delay" == args.graph:
         waypoint_distance_delay(args)
+    elif "waypoint_distance_by_topic" == args.graph:
+        waypoint_distance_by_topic(args)
 
 
 if __name__ == '__main__':
