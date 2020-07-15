@@ -58,12 +58,15 @@ def reaches_waypoints(dist_dict: Dict[int, float],
 
 def distance_to_each_waypoint(one_log: np.array,
                               mission: List[Tuple[float, float, float]],
-                              log_type: str = "ardu") -> Dict[int, float]:
+                              log_type: str = "ardu",
+                              final_dist: bool = True) -> Dict[int, float]:
     """
     What's the closest distance the robot gets to each waypoint?
     Returns a dict of waypoint number to distance (float).
     Note -- this doesn't account for going to the waypoints in order.
     It's just the closest at any point in the execution.
+    If final_dist is true, replace the last waypoint distance
+    with the end_distance_from_waypoint.
 
     """
     waypoint_dict = dict()
@@ -72,7 +75,46 @@ def distance_to_each_waypoint(one_log: np.array,
         dist = waypoint_to_log_dist(one_log, waypoint, log_type=log_type)
         waypoint_dict[index] = dist
 
+    assert(len(mission) == len(waypoint_dict))
+    logging.debug(f"waypoint_dict before: {waypoint_dict}")
+
+    if final_dist:
+        max_waypoint_num = max(waypoint_dict.keys())
+        last_dist = end_dist_from_waypoint(one_log, mission[max_waypoint_num],
+                                           log_type=log_type)
+        logging.debug(f"last_dist: {last_dist}")
+        waypoint_dict[max_waypoint_num] = last_dist
+
+        # pick a distance to the first waypoint from the first half
+        # of the log -- this is a sloppy approximation
+        half_log_length = int(len(one_log)/2)
+        half_log = one_log[:half_log_length]
+        min_waypoint_num = min(waypoint_dict.keys())
+        first_dist = waypoint_to_log_dist(half_log, mission[min_waypoint_num],
+                                          log_type=log_type)
+        logging.debug(f"first_dist: {first_dist}")
+        waypoint_dict[min_waypoint_num] = first_dist
+    logging.debug(f"waypoint_dict after: {waypoint_dict}")
+
+    assert(len(mission) == len(waypoint_dict))
+
     return waypoint_dict
+
+
+def end_dist_from_waypoint(one_log: np.array,
+                           waypoint: Tuple[float, float, float],
+                           log_type: str = "ardu") -> float:
+    """
+    How far is the last location in the log from the final waypoint?
+    """
+    last_location = one_log[-1]
+    dist = euclidean_distance(
+        (last_location[1], last_location[2], last_location[3]),
+        waypoint,
+        log_type=log_type)
+    #logging.debug(f"end_dist_from_waypoint: {dist}")
+
+    return dist
 
 
 def closest_dist_to_waypoint_by_num(one_log: np.array,
@@ -209,15 +251,24 @@ def mut_fn_to_topic_delay(fn: str, log_type: str = "ardu") -> Tuple[str, float]:
         basename = fn.split("/")[-1]
         base_var = basename.replace("husky_waypoints_ground_truth_remap_", "")
         delay_split = base_var.split("_")
-        delay_str = delay_split[-2]
         try:
+            delay_str = delay_split[-2]
             delay = float(delay_str)
+        except IndexError:
+            #logging.debug(f"cannot split filename.")
+            delay = 0.0
+            topic = "None"
+            return topic, delay
         except ValueError:
             logging.debug(f"{delay_split[-2]} is not a float for a delay amount")
-            delay = 0
-
-        topic = base_var.partition(delay_str)[0]
-        topic = fn_topic_to_topic(topic)
+            delay = 0.0
+            topic = "None"
+            return topic, delay
+        try:
+            topic = base_var.partition(delay_str)[0]
+            topic = fn_topic_to_topic(topic)
+        except IndexError:
+            topic = "None"
 
     elif log_type == "ardu":
         raise NotImplementedError
@@ -361,6 +412,8 @@ def convert_logs_ardu(log_fns: List[Tuple[str, str, str]],
         timestamp_list = [x["meta"]["timestamp"] for x in log_json if
                           x["meta"]["type"] == field_type]
         assert(len(one_field_dict) == len(timestamp_list))
+
+        one_field_list: List[Any] = []
 
         if field_type == "GLOBAL_POSITION_INT":
             one_field_list = ([(x[0]['time_boot_ms'], x[0]['lat'], x[0]['lon'],
