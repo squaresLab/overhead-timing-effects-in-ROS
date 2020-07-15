@@ -76,13 +76,13 @@ def distance_to_each_waypoint(one_log: np.array,
         waypoint_dict[index] = dist
 
     assert(len(mission) == len(waypoint_dict))
-    logging.debug(f"waypoint_dict before: {waypoint_dict}")
+    #logging.debug(f"waypoint_dict before: {waypoint_dict}")
 
     if final_dist:
         max_waypoint_num = max(waypoint_dict.keys())
         last_dist = end_dist_from_waypoint(one_log, mission[max_waypoint_num],
                                            log_type=log_type)
-        logging.debug(f"last_dist: {last_dist}")
+        #logging.debug(f"last_dist: {last_dist}")
         waypoint_dict[max_waypoint_num] = last_dist
 
         # pick a distance to the first waypoint from the first half
@@ -92,9 +92,9 @@ def distance_to_each_waypoint(one_log: np.array,
         min_waypoint_num = min(waypoint_dict.keys())
         first_dist = waypoint_to_log_dist(half_log, mission[min_waypoint_num],
                                           log_type=log_type)
-        logging.debug(f"first_dist: {first_dist}")
+        #logging.debug(f"first_dist: {first_dist}")
         waypoint_dict[min_waypoint_num] = first_dist
-    logging.debug(f"waypoint_dict after: {waypoint_dict}")
+    #logging.debug(f"waypoint_dict after: {waypoint_dict}")
 
     assert(len(mission) == len(waypoint_dict))
 
