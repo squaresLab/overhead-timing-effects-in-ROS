@@ -56,6 +56,13 @@ def reaches_waypoints(dist_dict: Dict[int, float],
     return hits_all
 
 
+def completion_time(one_log: np.array,
+                    log_type: str="ardu") -> float:
+    assert(type(one_log))
+    last_position = one_log[-1]
+    return last_position[0]
+
+
 def distance_to_each_waypoint(one_log: np.array,
                               mission: List[Tuple[float, float, float]],
                               log_type: str = "ardu",

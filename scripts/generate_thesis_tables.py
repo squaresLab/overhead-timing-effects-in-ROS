@@ -398,69 +398,7 @@ def waypoint_distance_by_topic(args):
 
 
 def crashes(args):
-
-    bag_fns = log_analysis.get_from_db(args.log_db, log_type=args.log_type)
-    all_bag_fns_list = bag_fns["nominal"] + bag_fns["experimental"]
-
-    all_mission_fns = set([x[2] for x in all_bag_fns_list])
-
-    one_mission_fns = [x for x in all_mission_fns if args.one_mission in x]
-    assert(len(one_mission_fns) <= 1)
-
-    bag_fns_one_mission = [x for x in all_bag_fns_list if x[2] ==
-                               one_mission_fns[0]]
-
-    bag_data_one_mission = log_analysis.convert_logs_husky(
-        bag_fns_one_mission,
-        alt_bag_base = args.alt_bag_base)
-
-    topic_dict = dict()
-    for bag_fn, topic_delay_fn, mission_fn, log_data in bag_data_one_mission:
-        topic, delay = log_analysis.mut_fn_to_topic_delay(
-            topic_delay_fn,
-            log_type=args.log_type)
-
-        mission = log_analysis.mission_to_list(
-            mission_fn,
-            log_type=args.log_type,
-            alt_mission_base=args.alt_mission_base)
-
-        dist_dict = log_analysis.distance_to_each_waypoint(
-            log_data, mission, log_type="husky",
-            final_dist=args.final_distance)
-
-        result_dict = log_analysis.reaches_waypoints(
-            dist_dict,
-            mission,
-            log_type="husky",
-            tolerance=args.threshold)
-
-        result = all([x for x in result_dict.values()])
-        logging.debug(result_dict)
-
-        if topic == None or topic == "None":
-            assert(delay == 0), delay
-
-
-        if topic not in topic_dict:
-            topic_dict[topic] = dict({delay: {"pass": 0, "fail": 0}})
-        if delay not in topic_dict[topic]:
-            topic_dict[topic][delay] = dict({"pass": 0, "fail": 0})
-
-        if result:
-            topic_dict[topic][delay]["pass"] = \
-                1 + topic_dict[topic][delay]["pass"]
-        else:
-            topic_dict[topic][delay]["fail"] = \
-                1 + topic_dict[topic][delay]["fail"]
-
-    logging.debug(topic_dict)
-
-    for topic in topic_dict.keys():
-        topic_dict[topic][0.0] = {"pass": topic_dict["None"][0.0]["pass"],
-                                  "fail": topic_dict["None"][0.0]["fail"]}
-        topic_dict[topic][0.0]["pass"] = topic_dict["None"][0.0]["pass"]
-        topic_dict[topic][0.0]["fail"] = topic_dict["None"][0.0]["fail"]
+    topic_dict, time_dict = get_topic_results_dict(args)
 
     all_delays = set()
     for topic, delay_dict in topic_dict.items():
@@ -489,6 +427,132 @@ def crashes(args):
         print(to_print)
 
 
+def get_topic_results_dict(args):
+    bag_fns = log_analysis.get_from_db(args.log_db, log_type=args.log_type)
+    all_bag_fns_list = bag_fns["nominal"] + bag_fns["experimental"]
+
+    all_mission_fns = set([x[2] for x in all_bag_fns_list])
+
+    one_mission_fns = [x for x in all_mission_fns if args.one_mission in x]
+    assert(len(one_mission_fns) <= 1)
+
+    bag_fns_one_mission = [x for x in all_bag_fns_list if x[2] ==
+                               one_mission_fns[0]]
+
+    bag_data_one_mission = log_analysis.convert_logs_husky(
+        bag_fns_one_mission,
+        alt_bag_base = args.alt_bag_base)
+
+    topic_dict = dict()
+    time_dict = dict()
+    for bag_fn, topic_delay_fn, mission_fn, log_data in bag_data_one_mission:
+
+        completion_time = log_analysis.completion_time(
+            log_data, log_type="husky")
+
+        topic, delay = log_analysis.mut_fn_to_topic_delay(
+            topic_delay_fn,
+            log_type=args.log_type)
+
+        mission = log_analysis.mission_to_list(
+            mission_fn,
+            log_type=args.log_type,
+            alt_mission_base=args.alt_mission_base)
+
+        dist_dict = log_analysis.distance_to_each_waypoint(
+            log_data, mission, log_type="husky",
+            final_dist=args.final_distance)
+
+        result_dict = log_analysis.reaches_waypoints(
+            dist_dict,
+            mission,
+            log_type="husky",
+            tolerance=args.threshold)
+        result = all([x for x in result_dict.values()])
+
+        if topic == None or topic == "None":
+            assert(delay == 0), delay
+
+        if topic not in topic_dict:
+            topic_dict[topic] = dict({delay: {"pass": 0, "fail": 0}})
+        if delay not in topic_dict[topic]:
+            topic_dict[topic][delay] = dict({"pass": 0, "fail": 0})
+        if topic not in time_dict:
+            time_dict[topic] = dict({delay: {"pass": [], "fail": []}})
+        if delay not in time_dict[topic]:
+            time_dict[topic][delay] = dict({"pass": [], "fail": []})
+
+        if result:
+            topic_dict[topic][delay]["pass"] = \
+                1 + topic_dict[topic][delay]["pass"]
+            time_dict[topic][delay]["pass"] = \
+                [completion_time] + time_dict[topic][delay]["pass"]
+        else:
+            topic_dict[topic][delay]["fail"] = \
+                1 + topic_dict[topic][delay]["fail"]
+            time_dict[topic][delay]["fail"] = \
+                [completion_time] + time_dict[topic][delay]["fail"]
+
+    logging.debug(f"topic_dict: {topic_dict}")
+    logging.debug(f"time_dict: {time_dict}")
+
+    assert(topic_dict.keys() == time_dict.keys())
+
+    for topic in topic_dict.keys():
+        topic_dict[topic][0.0] = {"pass": topic_dict["None"][0.0]["pass"],
+                                  "fail": topic_dict["None"][0.0]["fail"]}
+        topic_dict[topic][0.0]["pass"] = topic_dict["None"][0.0]["pass"]
+        topic_dict[topic][0.0]["fail"] = topic_dict["None"][0.0]["fail"]
+
+        time_dict[topic][0.0] = {"pass": time_dict["None"][0.0]["pass"],
+                                 "fail": time_dict["None"][0.0]["fail"]}
+
+    return topic_dict, time_dict
+
+
+def crashes_time(args: argparse.Namespace):
+    _, time_dict = get_topic_results_dict(args)
+
+    all_delays = set()
+    for topic, delay_dict in time_dict.items():
+        for delay in delay_dict.keys():
+            all_delays.add(delay)
+
+    for topic, delay_dict in sorted(time_dict.items()):
+        #logging.debug(f"delay_dict: {delay_dict}")
+        if topic == "None":
+            continue
+        to_print = f"{topic} & "
+        for delay in sorted(all_delays):
+            try:
+                results_dict = time_dict[topic][delay]
+            except KeyError:
+                #logging.debug(f"KeyError on {delay}")
+                to_print += f" & "
+                continue
+            try:
+                pass_times = results_dict["pass"]
+                fail_times = results_dict["fail"]
+            except KeyError as e:
+                print(e)
+                print(results_dict)
+            #logging.debug(pass_times)
+            #logging.debug(fail_times)
+            try:
+                pass_mean = (statistics.mean(pass_times)) * 1e-9
+                to_print += f" {pass_mean:.2f} & "
+            except statistics.StatisticsError:
+                pass_mean = ""
+            try:
+                fail_mean = statistics.mean(fail_times) * 1e-9
+                to_print += f" {fail_mean:.2f} & "
+            except statistics.StatisticsError:
+                fail_mean = ""
+
+        to_print += "\\\\"
+        print(to_print)
+
+
 def main():
     args = parse_args()
 
@@ -513,6 +577,9 @@ def main():
         waypoint_distance_by_topic(args)
     elif "crashes" == args.graph:
         crashes(args)
+    elif "crashes_time" == args.graph:
+        crashes_time(args)
+
 
 if __name__ == '__main__':
     main()
