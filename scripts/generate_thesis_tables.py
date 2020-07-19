@@ -8,7 +8,7 @@ import numpy as np
 
 import log_analysis
 
-mission_num_to_fn = {
+mission_num_to_fn_husky = {
 1: "HUSKY_pose_array_5_156109eab4cc4c1f9432690d0b6e6ca9.yaml",
 2: "HUSKY_pose_array_5_c8629fc042474a9db240282a52448964.yaml",
 3: "HUSKY_pose_array_5_5f31cf0a67be40a4b9adcb331f43361c.yaml",
@@ -21,6 +21,18 @@ mission_num_to_fn = {
 10: "HUSKY_pose_array_5_de68abeac0924afc938d17e5acd1b825.yaml",
 11: "HUSKY_pose_array_5_a4d27db27974459a97a696b7d98cb403.yaml"}
 
+mission_num_to_fn_ardu = {
+1: 'missions/auto/3f9c851f75a4421690482d330d496e09.wpl',
+2: 'missions/auto/42adb8a3b23c41649b348767b1372095.wpl',
+3: 'missions/auto/5839c2a439e64653bbf8d75088f2b11e.wpl',
+4: 'missions/auto/70f96678dda24bf9b5520c0c1b9b13d9.wpl',
+5: 'missions/auto/a33b9119fd0d4bd0a307bd0b516aa0fe.wpl',
+6: 'missions/auto/c288ab429d1d4b8a813ce76612c74764.wpl',
+7: 'missions/auto/ca9ce16f7a044203926a69d82f63b048.wpl',
+8: 'missions/auto/d009e94f7c044147973d129f33d4d0a3.wpl',
+9: 'missions/auto/d7cbe848579a44879651444bf3c29900.wpl',
+10: 'missions/auto/f3a59206b2674e14b50d3bfb2b5ea63b.wpl',
+11: 'missions/auto/f57767682748498caee204d6903018b0.wpl'}
 
 
 
@@ -46,15 +58,22 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def print_table(dict_by_label_mission, graph_type):
+def print_table(dict_by_label_mission, graph_type, log_type):
     if graph_type == "waypoint_distance":
+        #logging.debug(f"dict_by_label_mission: {dict_by_label_mission}")
         for label, mission_fn_dict in dict_by_label_mission.items():
             print(f"{label} \\\\")
+            #logging.debug(f"mission_fn_dict: {mission_fn_dict}")
+            if log_type == "husky":
+                mission_num_to_fn = mission_num_to_fn_husky
+            elif log_type == "ardu":
+                mission_num_to_fn = mission_num_to_fn_ardu
             for i in range(1, len(mission_num_to_fn)):
                 str_to_print = f"M{i} & "
+                #logging.debug(f"mission_fn_dict: {mission_fn_dict}")
                 value_dict = [x[1] for x in mission_fn_dict.items() if
                               mission_num_to_fn[i] in x[0]]
-                #logging.debug(value_dict)
+                #logging.debug(f"value_dict: {value_dict}")
                 if len(value_dict) == 0:
                     continue
                 value_dict = value_dict[0]
@@ -92,7 +111,17 @@ def print_table(dict_by_label_mission, graph_type):
             print(str_to_print)
 
 
+def escape_underscores(in_str: str) -> str:
+    if "_" not in in_str:
+        return in_str
+
+    out_str = in_str.replace("_", "\\_")
+    return out_str
+
+
 def waypoint_distance_delay(args):
+
+    assert(args.one_mission)
 
     bag_fns = log_analysis.get_from_db(args.log_db, log_type=args.log_type)
     all_bag_fns_list = bag_fns["nominal"] + bag_fns["experimental"]
@@ -105,13 +134,24 @@ def waypoint_distance_delay(args):
 
     bag_fns_one_mission = [x for x in all_bag_fns_list if x[2] ==
                                one_mission_fns[0]]
+    if args.log_type == "husky":
+        bag_data_one_mission = log_analysis.convert_logs_husky(
+            bag_fns_one_mission,
+            alt_bag_base = args.alt_bag_base)
 
-    bag_data_one_mission = log_analysis.convert_logs_husky(
-        bag_fns_one_mission,
-        alt_bag_base = args.alt_bag_base)
+    elif args.log_type == "ardu":
+        bag_data_one_mission = log_analysis.convert_logs_ardu(
+            bag_fns_one_mission,
+            alt_bag_base = args.alt_bag_base)
+
+    mut_fns = [x[1] for x in bag_data_one_mission]
+    logging.debug(f"mut_fns: {mut_fns}")
 
     delay_dict = dict()
     for bag_fn, topic_delay_fn, mission_fn, log_data in bag_data_one_mission:
+        if len(log_data) == 0:
+            logging.warn(f"no data for {bag_fn}")
+            continue
         topic, delay = log_analysis.mut_fn_to_topic_delay(
             topic_delay_fn,
             log_type=args.log_type)
@@ -134,6 +174,8 @@ def waypoint_distance_delay(args):
     for delay, delay_list in delay_dict.items():
         logging.debug(f"delay: {delay} delay_list: {delay_list}")
         num_data_points = len(delay_list)
+        if num_data_points < 2:
+            continue
         num_waypoints = len(delay_list[0])
         logging.debug(f"delay: {delay} num_data_points: {num_data_points} num_waypoints: {num_waypoints}")
 
@@ -149,10 +191,10 @@ def waypoint_distance_delay(args):
             mean_delay_dict[delay][waypoint] = mean
             std_delay_dict[delay][waypoint] = std
 
-    print("Mean")
-    print_table(mean_delay_dict, args.graph)
-    print("Standard Deviation")
-    print_table(std_delay_dict, args.graph)
+    print("Mean \\\\")
+    print_table(mean_delay_dict, args.graph, args.log_type)
+    print("Standard Deviation \\\\")
+    print_table(std_delay_dict, args.graph, args.log_type)
     return
 
 
@@ -173,6 +215,10 @@ def topic_in_fn(fn: str, topic: str) -> bool:
 def get_delay_topic_dict(log_fn_list: List[Tuple[str, str, str]],
                    delay: float = 0.0, alt_bag_base: str = None,
                    log_type: str = "ardu") -> Dict[float, Dict[str, List[np.array]]]:
+
+    mut_fns = [x[1] for x in log_fn_list]
+    logging.debug(f"mut_fns: {mut_fns}")
+
     topics_dict: Dict[str, List[np.array]] = dict()
     topics = set([log_analysis.mut_fn_to_topic_delay(x[1], log_type=log_type)[0]
                   for x in log_fn_list])
@@ -258,10 +304,14 @@ def waypoint_distance(args):
         # bag_data is a list of Tuples.
         # Each tuple is bag_fn, delay_fn, mission_fn, log_data
         # log_data is an np.array of [time_elapsed, x_pos, y_pos, z_pos
-        bag_data = log_analysis.convert_logs_husky(
-            bag_fns[label],
-            alt_bag_base = args.alt_bag_base)
-
+        if args.log_type == "husky":
+            bag_data = log_analysis.convert_logs_husky(
+                bag_fns[label],
+                alt_bag_base = args.alt_bag_base)
+        elif args.log_type == "ardu":
+            bag_data = log_analysis.convert_logs_ardu(
+                bag_fns[label],
+                alt_bag_base = args.alt_bag_base)
         husky_bag_data[label] = bag_data
 
         if args.one_mission:
@@ -272,7 +322,7 @@ def waypoint_distance(args):
         for mission_fn in mission_fns:
             mission_as_list = log_analysis.mission_to_list(
                 mission_fn,
-                log_type="husky",
+                log_type=args.log_type,
                 alt_mission_base=args.alt_mission_base)
             mission_data = [x for x in bag_data if x[2] == mission_fn]
             #logging.debug(f"*"*80)
@@ -282,10 +332,13 @@ def waypoint_distance(args):
 
             for bag_fn, delay_fn, mission_fn_loc, log_data in mission_data:
                 assert(mission_fn.strip() == mission_fn_loc.strip()), f"{mission_fn} {mission_fn_loc}"
+                if len(log_data) == 0:
+                    logging.error(f"log data missing for bag: {bag_fn}")
+                    continue
                 dists = log_analysis.distance_to_each_waypoint(
                     log_data,
                     mission_as_list,
-                    log_type="husky",
+                    log_type=args.log_type,
                     final_dist=args.final_distance)
                 dists_list.append(dists)
 
@@ -313,12 +366,11 @@ def waypoint_distance(args):
                     std_by_label_mission[label] = dict()
                 std_by_label_mission[label] = std_dict
 
-
-    if args.graph == "waypoint_distance":
-        print("Mean")
-        print_table(mean_by_label_mission, args.graph)
-        print("Standard Deviation")
-        print_table(std_by_label_mission, args.graph)
+    print("Mean \\\\")
+    print_table(mean_by_label_mission, args.graph, args.log_type)
+    logging.debug("Std deviation doesn't work yet")
+    # print("Standard Deviation \\\\")
+    # print_table(std_by_label_mission, args.graph, args.log_type)
 
 
 def waypoint_distance_by_topic(args):
@@ -390,10 +442,10 @@ def waypoint_distance_by_topic(args):
             mean_topic_dict[topic][waypoint] = mean
             std_topic_dict[topic][waypoint] = std
 
-    print("Mean")
-    print_table(mean_topic_dict, "waypoint_distance_delay")
-    print("Standard Deviation")
-    print_table(std_topic_dict, "waypoint_distance_delay")
+    print("Mean \\\\")
+    print_table(mean_topic_dict, "waypoint_distance_delay", args.log_type)
+    print("Standard Deviation \\\\")
+    print_table(std_topic_dict, "waypoint_distance_delay", args.log_type)
     return
 
 
@@ -408,7 +460,7 @@ def crashes(args):
     for topic, delay_dict in sorted(topic_dict.items()):
         if topic == "None":
             continue
-        to_print = f"{topic} & "
+        to_print = f"{escape_underscores(topic)} & "
         for delay in sorted(all_delays):
             try:
                 results_dict = delay_dict[delay]
@@ -521,9 +573,12 @@ def crashes_time(args: argparse.Namespace):
     for topic, delay_dict in sorted(time_dict.items()):
         #logging.debug(f"delay_dict: {delay_dict}")
         if topic == "None":
-            continue
-        to_print = f"{topic} & "
+            to_print = f"No Inserted Delay & "
+        else:
+            to_print = f"{escape_underscores(topic)} & "
         for delay in sorted(all_delays):
+            if delay == 0.0:
+                continue
             try:
                 results_dict = time_dict[topic][delay]
             except KeyError:
@@ -540,12 +595,12 @@ def crashes_time(args: argparse.Namespace):
             #logging.debug(fail_times)
             try:
                 pass_mean = (statistics.mean(pass_times)) * 1e-9
-                to_print += f" {pass_mean:.2f} & "
+                to_print += f" {pass_mean/60:.2f} & "
             except statistics.StatisticsError:
                 pass_mean = ""
             try:
                 fail_mean = statistics.mean(fail_times) * 1e-9
-                to_print += f" {fail_mean:.2f} & "
+                to_print += f" {fail_mean/60:.2f} & "
             except statistics.StatisticsError:
                 fail_mean = ""
 

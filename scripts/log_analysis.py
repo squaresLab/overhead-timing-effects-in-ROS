@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import hashlib
 import json
 import logging
 import math
@@ -24,13 +25,13 @@ def euclidean_distance(a: Tuple[float, float, float],
     #print(f"point a: {a}, point b: {b}")
 
     try:
-        if log_type == "ardu":
+        if log_type == "husky" or log_type == "ardu":
+            dist = math.sqrt((float(a[0]) - float(b[0]))**2 +
+                             (float(a[1]) - float(b[1]))**2)
+        else:
             dist = math.sqrt((float(a[0]) - float(b[0]))**2 +
                              (float(a[1]) - float(b[1]))**2 +
                              (float(a[2]) - float(b[2]))**2)
-        elif log_type == "husky":
-            dist = math.sqrt((float(a[0]) - float(b[0]))**2 +
-                             (float(a[1]) - float(b[1]))**2)
 
     except:
         logging.error(f"point a: {a}, point b: {b}")
@@ -77,13 +78,15 @@ def distance_to_each_waypoint(one_log: np.array,
 
     """
     waypoint_dict = dict()
+    #logging.debug(f"distance_to_each_waypoint mission: {mission}")
     for waypoint, index in zip(mission, range(len(mission))):
         #print(f"waypoint: {waypoint} index: {index}, one_log: {one_log}")
         dist = waypoint_to_log_dist(one_log, waypoint, log_type=log_type)
         waypoint_dict[index] = dist
 
-    assert(len(mission) == len(waypoint_dict))
     #logging.debug(f"waypoint_dict before: {waypoint_dict}")
+
+    assert(len(mission) == len(waypoint_dict))
 
     if final_dist:
         max_waypoint_num = max(waypoint_dict.keys())
@@ -144,7 +147,9 @@ def waypoint_to_log_dist(log: np.array,
     What's the closest distance that the robot's path gets to a given
     waypoint (at any point in the run or at the appropriate point in the run)?
     """
-    #print(f"type(log): {type(log)}")
+    #logging.debug(f"log: {log}")
+    #logging.debug(f"type(log): {type(log)}")
+    #logging.debug(f"len(log): {len(log)}")
     min_dist = min([euclidean_distance((x[1], x[2], x[3]), waypoint,
                                        log_type=log_type)
                     for x in log])
@@ -202,12 +207,6 @@ def get_from_db(log_db: str, log_dir: str = "../bags",
     log_fns: Dict[str, List[np.array]] = dict()
     cursor, conn = access_bag_db(log_db)
 
-    # TODO - Get separately for each mission
-    # TODO - Find all the mission names then get them all separately
-
-    # TODO - DEBUG HERE -- ARE WE GETTING ALL THE FILES?
-    # Keep track of the variations in the varied ones
-
     cursor.execute("select * from bagfns")
     rows = cursor.fetchall()
     conn.close()
@@ -226,18 +225,8 @@ def get_from_db(log_db: str, log_dir: str = "../bags",
             log_fns[label] = []
         log_fns[label] = log_fns[label] + [(log_fn, mutation_fn, mission_fn)]
 
-
-    # filename = "None"
-    # cursor.execute("select * from bagfns where mutation_fn=?", (filename,))
-    # nominal_fns = get_fns_from_rows(cursor, log_dir, log_type=log_type)
-    # log_fns['nominal'] = nominal_fns
-    #logging.debug(f"len(nominal_fns): {len(nominal_fns)}")
     logging.debug(f"len(log_fns['nominal']): {len(log_fns['nominal'])}")
     logging.debug(f"len(log_fns['experimental']): {len(log_fns['experimental'])}")
-    #cursor.execute("select * from bagfns where mutation_fn!=?", (filename,))
-    #experimental_fns = get_fns_from_rows(cursor, log_dir)
-    #log_fns['experimental'] = experimental_fns
-
 
     return log_fns
 
@@ -276,15 +265,23 @@ def mut_fn_to_topic_delay(fn: str, log_type: str = "ardu") -> Tuple[str, float]:
             topic = fn_topic_to_topic(topic)
         except IndexError:
             topic = "None"
-
+        return topic, delay
     elif log_type == "ardu":
-        raise NotImplementedError
+        logging.debug(f"mut_fn_to_topic_delay: {fn}")
 
-    return topic, delay
+        if fn == "None":
+            return "None", 0.0
+        basename = fn.split("/")[-1]
+        base_var = basename.replace("dir_", "")
+        base_var = base_var.replace(".diff", "")
+        delay_split = base_var.split("_")
+        delay = float(delay_split[0].strip("d"))
+        weight = float(delay_split[1].strip("w"))
+        return weight, delay
 
 
 def get_json(log_fn: str) -> List[Dict]:
-    logging.debug(f"log_fn: {log_fn}")
+    logging.debug(f"get_json log_fn: {log_fn}")
     json_data = []
     if log_fn.endswith(".json"):
         json_fn = log_fn
@@ -293,19 +290,19 @@ def get_json(log_fn: str) -> List[Dict]:
         if not os.path.isfile(json_fn):
             cmd = f"mavlogdump.py --format json {log_fn}"
             with open(json_fn, 'w') as json_file:
-                logging.debug(cmd)
+                logging.debug(f"get_json: {cmd}")
                 subprocess.Popen(shlex.split(cmd), stdout=json_file)
             time.sleep(1)
     else:
-        logging.debug(f"What does this end with?: {log_fn}")
+        logging.debug(f"get_json What does this end with?: {log_fn}")
         raise NotImplementedError
     with open(json_fn, 'r') as json_read:
-        logging.debug(json_fn)
+        logging.debug(f"get_json: {json_fn}")
         for line in json_read:
             try:
                 json_line = json.loads(line)
             except json.decoder.JSONDecodeError as e:
-                logging.warn(f"Cannot read json in line: {line}")
+                logging.warn(f"get_json Cannot read json in line: {line}")
                 continue
             json_data.append(json_line)
     return json_data
@@ -338,6 +335,41 @@ def memoize_husky_data(one_field_list: List[Any], log_fn: str, field_type: str) 
             json.dump(one_field_list, memoized_file)
 
 
+def get_ardu_memoized_fn(log_fns: List[Tuple[str, str, str]], field_type: str,
+                         alt_bag_base: str = None) -> str:
+    str_fns = (str(log_fns)).encode("utf8")
+    digest = hashlib.sha256(str_fns).hexdigest()
+    memoized_log_fn = f"{digest}_{field_type}.json"
+    if alt_bag_base:
+        memoized_log_fn = os.path.join(alt_bag_base, memoized_log_fn)
+
+    return memoized_log_fn
+
+
+def memoize_ardu_data(one_field_lists: List[Tuple[str, str, str, np.array]],
+                      log_fns: List[Tuple[str, str, str]],
+                      field_type: str, alt_bag_base: str = None) -> None:
+    memoized_log_fn = get_ardu_memoized_fn(log_fns, field_type, alt_bag_base)
+    if not os.path.isfile(memoized_log_fn):
+        with open(memoized_log_fn, 'w') as memoized_file:
+            json_ready_lists = to_json_ready_lists(one_field_lists)
+            json.dump(json_ready_lists, memoized_file)
+
+
+def get_memoized_logs_ardu(log_fns: List[Tuple[str, str, str]],
+                           field_type,
+                           alt_bag_base = None) -> List[Tuple[str, str, str, np.array]]:
+
+    memoized_log_fn = get_ardu_memoized_fn(log_fns, field_type, alt_bag_base)
+
+    if os.path.isfile(memoized_log_fn):
+        with open(memoized_log_fn, 'r') as memoized_file:
+            json_logs = json.load(memoized_file)
+        return json_logs
+    else:
+        return []
+
+
 def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
                        field_type: str="/ground_truth/state_map",
                        alt_bag_base = None) -> List[Tuple[str, str, str, np.array]]:
@@ -349,7 +381,6 @@ def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
     for log_fn, mutation_fn, mission_fn in log_fns:
 
         if alt_bag_base:
-            print("changing bag base")
             log_fn = change_bag_base(log_fn, alt_bag_base)
 
         print(f"convert_logs_husky log_fn: {log_fn}")
@@ -368,7 +399,7 @@ def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
             try:
                 bag = rosbag.Bag(log_fn)
             except rosbag.bag.ROSBagException as e:
-                logging.info(f"file problem: {log_fn}\nContinuing")
+                logging.info(f"convert_logs_husky file problem: {log_fn}\nContinuing")
                 fn_count += 1
                 continue
             bag_contents = bag.read_messages()
@@ -386,7 +417,7 @@ def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
             try:
                 data = logs_by_topic[field_type]
             except KeyError as e:
-                logging.warning(f"No field {field_type} in bag: {log_fn}.\nContinuing")
+                logging.warning(f"convert_logs_husky No field {field_type} in bag: {log_fn}.\nContinuing")
                 fn_count += 1
                 continue
             if field_type == "/ground_truth/state_map":
@@ -399,18 +430,27 @@ def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
         memoize_husky_data(one_field_list, log_fn, field_type)
         one_field_lists.append((log_fn, mutation_fn, mission_fn, one_field_np))
         fn_count += 1
-        logging.debug(f"Finished file {fn_count} of {total_fns}")
+        logging.debug(f"convert_logs_husky Finished file {fn_count} of {total_fns}")
     return one_field_lists
 
 
 def convert_logs_ardu(log_fns: List[Tuple[str, str, str]],
-                      field_type: str="GLOBAL_POSITION_INT") -> List[Tuple[str, str, str, np.array]]:
+                      field_type: str="GLOBAL_POSITION_INT",
+                      alt_bag_base = None) -> List[Tuple[str, str, str, np.array]]:
+    memoized_data = get_memoized_logs_ardu(log_fns, field_type,
+                                           alt_bag_base=alt_bag_base)
+    if len(memoized_data) > 0:
+        logging.debug(f"returning memoized data")
+        return memoized_data
+
     one_field_lists = []
     fn_count = 0
     total_fns = len(log_fns)
     logging.debug(f"convert_logs_ardu log_fns: {log_fns}")
     for log_fn, mutation_fn, mission_fn in log_fns:
-        logging.debug(f"convert_logs log_fn: {log_fn}")
+        if alt_bag_base:
+            log_fn = change_bag_base(log_fn, alt_bag_base)
+        logging.debug(f"convert_logs_ardu log_fn: {log_fn}")
         # convert the tlog to json, if it's not already json
         log_json = get_json(log_fn)
 
@@ -423,11 +463,13 @@ def convert_logs_ardu(log_fns: List[Tuple[str, str, str]],
         one_field_list: List[Any] = []
 
         if field_type == "GLOBAL_POSITION_INT":
+            #one_field_list = ([(x[0]['time_boot_ms'], x[0]['lat'], x[0]['lon'],
+            #                     x[0]['alt'], x[0]['relative_alt'], x[0]['vx'],
+            #                     x[0]['vy'], x[0]['vz'], x[0]['hdg'], x[1])
+            #                    for x in zip(one_field_dict, timestamp_list)])
             one_field_list = ([(x[0]['time_boot_ms'], x[0]['lat'], x[0]['lon'],
-                                 x[0]['alt'], x[0]['relative_alt'], x[0]['vx'],
-                                 x[0]['vy'], x[0]['vz'], x[0]['hdg'], x[1])
+                                 x[0]['alt'])
                                 for x in zip(one_field_dict, timestamp_list)])
-
         elif field_type == "MISSION_ITEM_REACHED":
             one_field_list = ([(x[0]['seq'], x[1])
                                for x in zip(one_field_dict, timestamp_list)])
@@ -441,6 +483,8 @@ def convert_logs_ardu(log_fns: List[Tuple[str, str, str]],
         one_field_lists.append((log_fn, mutation_fn, mission_fn, one_field_np))
         fn_count += 1
         logging.debug(f"File {fn_count} of {total_fns}")
+    memoize_ardu_data(one_field_lists, log_fns, field_type, alt_bag_base)
+
     return one_field_lists
 
 
@@ -466,7 +510,7 @@ def logs_to_np(log_fns: Dict[str, List[Tuple[str, str, str]]], log_type="ardu",
     for label, log_fns_subset in log_fns.items():
         logging.debug(f"label: {label}, log_fns_subset: {log_fns_subset}")
         if log_type == "ardu":
-            logs_data = convert_logs_ardu(log_fns_subset)
+            logs_data = convert_logs_ardu(log_fns_subset, alt_bag_base=alt_bag_base)
         elif log_type == "husky":
             logs_data = convert_logs_husky(log_fns_subset, alt_bag_base=alt_bag_base)
         all_logs[label] = logs_data
@@ -485,6 +529,12 @@ def to_json_ready(all_logs: Dict[str, List[Tuple[str, str, str, np.array]]]) -> 
     return json_ready
 
 
+def to_json_ready_lists(one_field_lists: List[Tuple[str, str, str, np.array]]) -> List[Tuple[Any, Any, Any, Any]]:
+    json_ready: List[Tuple[str, str, str, List[Any]]] = []
+    new_list = [(x[0], x[1], x[2], x[3].tolist()) for x in one_field_lists]
+    return new_list
+
+
 def json_to_np(json_logs: Dict[str, List[Tuple[str, str, str, List]]]) -> Dict[str, List[Tuple[str, str, str, np.array]]]:
     all_logs = dict()
     for key in json_logs:
@@ -498,11 +548,15 @@ def json_to_np(json_logs: Dict[str, List[Tuple[str, str, str, List]]]) -> Dict[s
 
 def memoize_log_db(log_db: str, log_type="ardu",
                    alt_bag_base=None) -> Dict[str, List[Tuple[str, str, str, np.array]]]:
+
+    if log_db.endswith(".json"):
+        memoized_fn = log_db
     date = time.strftime("%m-%d-%Y")
     memoized_fn = f"{log_db}_{date}.json"
     logging.debug(memoized_fn)
 
     if not os.path.isfile(memoized_fn):
+        logging.debug(f"Getting from db in file: {log_db}")
         log_fns = get_from_db(log_db, log_type=log_type)
         all_logs = logs_to_np(log_fns, log_type=log_type,
                               alt_bag_base=alt_bag_base)
@@ -531,7 +585,7 @@ def get_logs(args: argparse.Namespace) -> Dict[str, List[Tuple[str, str, str, np
 
         log_fns = insert(log_fns, "manual", [(x, "None", "None") for x
                                              in log_fn_list] )
-        logging.debug(f"log_fns: {log_fns}")
+        #logging.debug(f"log_fns: {log_fns}")
         all_logs = logs_to_np(log_fns, args.log_type)
     elif args.log_db:
         #TODO: This assumes all the logs in the database have the same
@@ -578,13 +632,32 @@ def mission_to_list(mission_fn: str,
     if alt_mission_base:
         mission_fn = change_bag_base(mission_fn, alt_mission_base)
 
-
-    try:
-        with open(mission_fn, 'r') as y:
-            data = yaml.load(y, Loader=yaml.BaseLoader)
-    except FileNotFoundError:
-        print(f"File not found: {mission_fn}")
-        return []
-    positions = [p["position"] for p in data["poses"]]
-    pos_list = [(p['x'], p['y'], p['z']) for p in positions]
+    if log_type == "husky":
+        try:
+            with open(mission_fn, 'r') as y:
+                data = yaml.load(y, Loader=yaml.BaseLoader)
+        except FileNotFoundError:
+            print(f"File not found: {mission_fn}")
+            return []
+        positions = [p["position"] for p in data["poses"]]
+        pos_list = [(p['x'], p['y'], p['z']) for p in positions]
+    elif log_type == "ardu":
+        try:
+            with open(mission_fn, 'r') as mission_file:
+                data_lines = mission_file.readlines()
+            #logging.debug(data_lines)
+        except FileNotFoundError:
+            print(f"File not found: {mission_fn}")
+            return []
+        lines_split = [x.split() for x in data_lines]
+        #logging.debug(f"lines_split: {lines_split}")
+        len_list = [len(x) for x in lines_split]
+        #logging.debug(len_list)
+        long_lines_list = [x for x in lines_split if len(x) > 10]
+        pos_list = [(x[8], x[9], x[10]) for x in long_lines_list if
+                     x[3] == str(16) or x[3] == str(22)]
+        logging.debug(f"pos_list: {pos_list}")
+    else:
+        logging.error(f"unsupported log_type: {log_type}")
+        raise NotImplementedError
     return pos_list
