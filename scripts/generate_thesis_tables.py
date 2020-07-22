@@ -4,6 +4,9 @@ import statistics
 import sys
 from typing import Dict, List, Tuple
 
+import matplotlib.pyplot as plt
+import matplotlib.colors
+from matplotlib.ticker import ScalarFormatter
 import numpy as np
 
 import log_analysis
@@ -54,6 +57,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--final_distance", action="store_true",
                         default=False,
                         help="When computing closest distances of a log to the waypoints, use the final position of the robot for the final waypoint, instead of the closest")
+    parser.add_argument("--visualize", action="store_true", default=False,
+                        help="Make a visualization in addition to the chart")
     args = parser.parse_args()
     return args
 
@@ -73,7 +78,7 @@ def print_table(dict_by_label_mission, graph_type, log_type):
                 #logging.debug(f"mission_fn_dict: {mission_fn_dict}")
                 value_dict = [x[1] for x in mission_fn_dict.items() if
                               mission_num_to_fn[i] in x[0]]
-                #logging.debug(f"value_dict: {value_dict}")
+                logging.debug(f"value_dict: {value_dict}")
                 if len(value_dict) == 0:
                     continue
                 value_dict = value_dict[0]
@@ -164,6 +169,7 @@ def waypoint_distance_delay(args):
             mission_as_list,
             log_type=args.log_type,
             final_dist=args.final_distance)
+        logging.debug(f"waypoint_distance_delay: waypoint_dict: {waypoint_dict}")
         if delay not in delay_dict:
             delay_dict[delay] = []
         delay_dict[delay] = delay_dict[delay] + [waypoint_dict]
@@ -284,6 +290,32 @@ def get_experimental_runs_by_mission(args) -> Dict[str, Dict[float, Dict[str, Li
     return runs_by_mission
 
 
+def box_plot(args, dist_by_label_mission, mission_fns):
+    vals_dict = dict()
+    for label in ("nominal", "experimental"):
+        for mission_fn in mission_fns:
+            dists_list = dist_by_label_mission[label][mission_fn]
+            for waypoint in dists_list[0].keys():
+                vals = [x[waypoint] for x in dists_list]
+                if mission_fn not in vals_dict:
+                    vals_dict[mission_fn] = dict()
+                if label not in vals_dict[mission_fn]:
+                    vals_dict[mission_fn][label] = dict()
+                vals_dict[mission_fn][label][waypoint] = vals
+
+    vectors_to_plot = []
+    vector_labels = []
+
+    for mission_fn, label_dict in vals_dict.items():
+        for label, waypoint_dict in label_dict.items():
+            for waypoint, vals in waypoint_dict:
+                vectors_to_plot.append(vals)
+                vector_labels.append(f"{mission_fn}_{label}_{waypoint}")
+
+    vectors_to_plot_np = np.array(vectors_to_plot)
+    plt.boxplot(vectors_to_plot_np, labels=vector_labels)
+
+
 def waypoint_distance(args):
     # get the appropriate group of data. do this only once.
     bag_fns = log_analysis.get_from_db(args.log_db, log_type=args.log_type)
@@ -340,6 +372,8 @@ def waypoint_distance(args):
                     mission_as_list,
                     log_type=args.log_type,
                     final_dist=args.final_distance)
+                #logging.debug(f"waypoint_distance: dists: {dists}")
+
                 dists_list.append(dists)
 
             if label not in dist_by_label_mission:
@@ -583,7 +617,7 @@ def crashes_time(args: argparse.Namespace):
                 results_dict = time_dict[topic][delay]
             except KeyError:
                 #logging.debug(f"KeyError on {delay}")
-                to_print += f" & "
+                to_print += f"n/a & "
                 continue
             try:
                 pass_times = results_dict["pass"]
@@ -591,20 +625,26 @@ def crashes_time(args: argparse.Namespace):
             except KeyError as e:
                 print(e)
                 print(results_dict)
+                to_print += f"n/a & "
             #logging.debug(pass_times)
             #logging.debug(fail_times)
             try:
-                pass_mean = (statistics.mean(pass_times)) * 1e-9
+                pass_mean = (statistics.mean(pass_times))
                 to_print += f" {pass_mean/60:.2f} & "
             except statistics.StatisticsError:
                 pass_mean = ""
+                to_print += "n/a & "
             try:
-                fail_mean = statistics.mean(fail_times) * 1e-9
+                fail_mean = statistics.mean(fail_times)
                 to_print += f" {fail_mean/60:.2f} & "
             except statistics.StatisticsError:
                 fail_mean = ""
+                to_print += "n/a & "
 
-        to_print += "\\\\"
+        to_print = to_print.strip()
+        if to_print.endswith("&"):
+            to_print = to_print.rstrip("&")
+        to_print += " \\\\"
         print(to_print)
 
 
