@@ -13,6 +13,7 @@ import time
 from typing import Any, Dict, List, Tuple
 import yaml
 
+from haversine import haversine, Unit
 import numpy as np
 import rosbag
 
@@ -40,6 +41,21 @@ def euclidean_distance(a: Tuple[float, float, float],
         for j in b:
             logging.error(f"type: {type(j)}")
 
+    return dist
+
+
+def haversine_distance(a: Tuple[float, float, float],
+                       b: Tuple[float, float, float],
+                       log_type: str = "ardu") -> float:
+    a_lat_lon = a[:-1]
+    b_lat_lon = b[:-1]
+    try:
+        dist = haversine(a_lat_lon, b_lat_lon, unit=Unit.METERS)
+
+    except TypeError as e:
+        logging.error(e)
+        logging.error(f"a_lat_lon: {a_lat_lon}, type(a_lat_lon): {type(a_lat_lon)}, type(a_lat_lon[0]): {type(a_lat_lon[0])}, type(a_lat_lon[1]: {type(a_lat_lon[1])}")
+        logging.error(f"b_lat_lon: {b_lat_lon}, type(b_lat_lon): {type(b_lat_lon)}, type(b_lat_lon[0]): {type(b_lat_lon[0])}, type(b_lat_lon[1]: {type(b_lat_lon[1])}")
     return dist
 
 
@@ -80,8 +96,10 @@ def distance_to_each_waypoint(one_log: np.array,
     waypoint_dict = dict()
     #logging.debug(f"distance_to_each_waypoint mission: {mission}")
     for waypoint, index in zip(mission, range(len(mission))):
-        #print(f"waypoint: {waypoint} index: {index}, one_log: {one_log}")
+        #logging.debug(f"waypoint: {waypoint} index: {index}")
+        #logging.debug(f"waypoint: {waypoint} index: {index}, one_log: {one_log}")
         dist = waypoint_to_log_dist(one_log, waypoint, log_type=log_type)
+        # logging.debug(f"distance_to_each_waypoint: dist: {dist}")
         waypoint_dict[index] = dist
 
     #logging.debug(f"waypoint_dict before: {waypoint_dict}")
@@ -118,10 +136,16 @@ def end_dist_from_waypoint(one_log: np.array,
     How far is the last location in the log from the final waypoint?
     """
     last_location = one_log[-1]
-    dist = euclidean_distance(
-        (last_location[1], last_location[2], last_location[3]),
-        waypoint,
-        log_type=log_type)
+    if log_type == "husky":
+        dist = euclidean_distance(
+            (last_location[1], last_location[2], last_location[3]),
+            waypoint,
+            log_type=log_type)
+    elif log_type == "ardu":
+        dist = haversine_distance(
+            (last_location[1], last_location[2], last_location[3]),
+            waypoint,
+            log_type=log_type)
     #logging.debug(f"end_dist_from_waypoint: {dist}")
 
     return dist
@@ -150,9 +174,14 @@ def waypoint_to_log_dist(log: np.array,
     #logging.debug(f"log: {log}")
     #logging.debug(f"type(log): {type(log)}")
     #logging.debug(f"len(log): {len(log)}")
-    min_dist = min([euclidean_distance((x[1], x[2], x[3]), waypoint,
-                                       log_type=log_type)
-                    for x in log])
+    if log_type == "husky":
+        min_dist = min([euclidean_distance((x[1], x[2], x[3]), waypoint,
+                                           log_type=log_type)
+                        for x in log])
+    elif log_type == "ardu":
+        min_dist = min([haversine_distance((x[1], x[2], x[3]), waypoint,
+                                           log_type=log_type)
+                        for x in log])
     return min_dist
 
 
@@ -421,7 +450,7 @@ def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
                 fn_count += 1
                 continue
             if field_type == "/ground_truth/state_map":
-                one_field_list = [ (x[1].to_nsec(),
+                one_field_list = [ (x[1].to_nsec() * 1e-9,
                                     x[0].pose.pose.position.x,
                                     x[0].pose.pose.position.y,
                                     x[0].pose.pose.position.z)
@@ -467,7 +496,9 @@ def convert_logs_ardu(log_fns: List[Tuple[str, str, str]],
             #                     x[0]['alt'], x[0]['relative_alt'], x[0]['vx'],
             #                     x[0]['vy'], x[0]['vz'], x[0]['hdg'], x[1])
             #                    for x in zip(one_field_dict, timestamp_list)])
-            one_field_list = ([(x[0]['time_boot_ms'], x[0]['lat'], x[0]['lon'],
+            one_field_list = ([((x[0]['time_boot_ms']/1000),
+                                (x[0]['lat'] * 1e-7),
+                                (x[0]['lon'] * 1e-7),
                                  x[0]['alt'])
                                 for x in zip(one_field_dict, timestamp_list)])
         elif field_type == "MISSION_ITEM_REACHED":
@@ -654,9 +685,9 @@ def mission_to_list(mission_fn: str,
         len_list = [len(x) for x in lines_split]
         #logging.debug(len_list)
         long_lines_list = [x for x in lines_split if len(x) > 10]
-        pos_list = [(x[8], x[9], x[10]) for x in long_lines_list if
+        pos_list = [(float(x[8]), float(x[9]), float(x[10])) for x in long_lines_list if
                      x[3] == str(16) or x[3] == str(22)]
-        logging.debug(f"pos_list: {pos_list}")
+        #logging.debug(f"pos_list: {pos_list}")
     else:
         logging.error(f"unsupported log_type: {log_type}")
         raise NotImplementedError

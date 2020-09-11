@@ -12,6 +12,32 @@ import numpy as np
 
 import log_analysis
 
+mission_num_to_fn_husky = {
+1: "HUSKY_pose_array_5_156109eab4cc4c1f9432690d0b6e6ca9.yaml",
+2: "HUSKY_pose_array_5_c8629fc042474a9db240282a52448964.yaml",
+3: "HUSKY_pose_array_5_5f31cf0a67be40a4b9adcb331f43361c.yaml",
+4: "HUSKY_pose_array_5_350028c9199b4d15b236d85c10ff8b9e.yaml",
+5: "HUSKY_pose_array_5_2ce0b4fa2a4249b4b5057913b8c3d9ec.yaml",
+6: "HUSKY_pose_array_5_c787950abab14110836ae170213406d8.yaml",
+7: "HUSKY_pose_array_5_865a8b7817474e51861522bd435faff1.yaml",
+8: "HUSKY_pose_array_5_722ba706e1f34beca0bcaf193d7e0c4f.yaml",
+9: "HUSKY_pose_array_5_cdc8edbd1c2b4ce197a211ee64e7cbe4.yaml",
+10: "HUSKY_pose_array_5_de68abeac0924afc938d17e5acd1b825.yaml",
+11: "HUSKY_pose_array_5_a4d27db27974459a97a696b7d98cb403.yaml"}
+
+mission_num_to_fn_ardu = {
+1: 'missions/auto/3f9c851f75a4421690482d330d496e09.wpl',
+2: 'missions/auto/42adb8a3b23c41649b348767b1372095.wpl',
+3: 'missions/auto/5839c2a439e64653bbf8d75088f2b11e.wpl',
+4: 'missions/auto/70f96678dda24bf9b5520c0c1b9b13d9.wpl',
+5: 'missions/auto/a33b9119fd0d4bd0a307bd0b516aa0fe.wpl',
+6: 'missions/auto/c288ab429d1d4b8a813ce76612c74764.wpl',
+7: 'missions/auto/ca9ce16f7a044203926a69d82f63b048.wpl',
+8: 'missions/auto/d009e94f7c044147973d129f33d4d0a3.wpl',
+9: 'missions/auto/d7cbe848579a44879651444bf3c29900.wpl',
+10: 'missions/auto/f3a59206b2674e14b50d3bfb2b5ea63b.wpl',
+11: 'missions/auto/f57767682748498caee204d6903018b0.wpl'}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -28,6 +54,15 @@ def parse_args() -> argparse.Namespace:
                         help="make a graph separating nominal runs from delayed")
     parser.add_argument("--alt_bag_base", type=str,
                         help="specify where the bag files referenced in the log_db reside")
+    parser.add_argument("--nominal_only", action="store_true", default=False,
+                        help="graph only the nominal runs")
+    parser.add_argument("--experimental_only", action="store_true",
+                        default=False, help="graph only the experimetnal runs")
+    parser.add_argument("--graph_all", action="store_true", default=False,
+                        help="graph all the logs together")
+    parser.add_argument("--with_waypoints", action="store_true",
+                        default=False)
+    parser.add_argument("--alt_mission_base", type=str, default=None)
     args = parser.parse_args()
     return args
 
@@ -57,7 +92,7 @@ def graph_one_log(log: np.array, fn: str = "FIG.png", mutation_fn: str = "None",
         ax.set_ylabel("Y Position")
 
     if mission_fn != "None":
-            ax.set_title(mission_fn)
+        ax.set_title(mission_fn)
     logging.debug(f"saving to filename: {fn}")
     fig.savefig(fn)
     plt.close(fig)
@@ -207,7 +242,12 @@ def graph_time(logs: Dict[str, List[Tuple[str, str, np.array]]],
 def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
                log_type="ardu",
                mission_fn: str="",
-               mutation_fn: str="") -> None:
+               mutation_fn: str="",
+               colormap:str=None,
+               title:str=None,
+               fn_insert:str=None,
+               with_waypoints:bool=False,
+               mission:List[Tuple[float,float,float]]=None) -> None:
 
     logging.debug(f"logs labels: {logs.keys()}")
 
@@ -219,10 +259,14 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
 
     zipped = zip(logs.keys(), colors, color_maps)
     title_short = mission_fn.split("/")[-1].split(".")[0]
-    ax.set_title(f"{title_short} {logs.keys()}")
+    if title:
+        ax.set_title(title)
+    else:
+        ax.set_title(f"{title_short} {logs.keys()}")
     legend_dict = dict()
     for subset_label, color, color_map in zipped:
-
+        if colormap:
+            color_map = colormap
         logging.debug(f"subset_label: {subset_label}")
 
         logs_subset = logs[subset_label]
@@ -287,23 +331,53 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
                 ax.set_ylabel("Y position")
                 color = next_color(color)
 
+    if with_waypoints:
+        waypoints = mission
+        logging.debug(mission)
+        waypoints_x = [i[0] for i in waypoints]
+        waypoints_y = [i[1] for i in waypoints]
+        logging.debug(waypoints_x)
+        logging.debug(waypoints_y)
+        ax.plot(waypoints_x, waypoints_y, color="black")
+        labels = range(1, len(waypoints) + 1)
+
+        for x, y, label in zip(waypoints_x, waypoints_y, labels):
+            ax.annotate(label, (x, y), textcoords="offset points",
+                        xytext=(0,10), ha='center', color="black")
+
     ax.set_ylim(y_min, y_max)
     ax.set_xlim(x_min, x_max)
 
     for subset_label in legend_dict:
-        cbar = fig.colorbar(legend_dict[subset_label])
+        cbar = fig.colorbar(legend_dict[subset_label], format=matplotlib.ticker.ScalarFormatter(useOffset=False))
         cbar.ax.set_xlabel(f"{subset_label}")
         cbar.ax.set_ylabel(f"total time elapsed")
-    logging.debug(f"legend_dict: {legend_dict}")
+        cbar.ax.yaxis.set_major_formatter(ScalarFormatter())
+        cbar.ax.ticklabel_format(useOffset=False)
+        logging.debug(f"legend_dict: {legend_dict}")
     items = sorted(list(legend_dict.items()))
     logging.debug(f"items: {items}")
     fig.legend(handles=[x[1] for x in items],
                labels=[x[0] for x in items])
 
-    fig.savefig(f"MANY_FIG_{title_short}.png")
+    if fn_insert:
+        fig.savefig(f"MANY_FIG_{title_short}_{fn_insert}.png")
+    else:
+        fig.savefig(f"MANY_FIG_{title_short}.png")
     plt.close(fig)
     graph_time(logs, log_type=log_type)
 
+
+def get_mission_num(mission_fn: str, log_type: str="husky") -> int:
+    if log_type == "husky":
+        missions = mission_num_to_fn_husky.items()
+
+    mission_num_list = [x[0] for x in missions if mission_fn in x[1] ]
+
+    assert(len(mission_num_list) == 1), f"mission_fn: {mission_fn}, missions: {missions}"
+
+    mission_num = mission_num_list[0]
+    return mission_num
 
 def main() -> None:
     args = parse_args()
@@ -321,7 +395,7 @@ def main() -> None:
 
     # logging.debug(f"logs: {logs}")
 
-    if (args.individual):
+    if args.individual:
         for mission_fn, one_mission in logs_by_mission.items():
             logging.debug(f"mission filename: {mission_fn}")
             mission_fn_short = mission_fn.split("/")[-1].split(".")[0]
@@ -338,13 +412,45 @@ def main() -> None:
                     filename_counter = filename_counter + 1
 
     for mission_fn, one_mission in logs_by_mission.items():
+        if args.with_waypoints:
+            waypoints = log_analysis.mission_to_list(
+                mission_fn,
+                log_type=args.log_type,
+                alt_mission_base=args.alt_mission_base)
+        else:
+            waypoints = None
         mission_fn_short = mission_fn.split("/")[-1].split(".")[0]
-        graph_logs(one_mission, mission_fn=mission_fn_short,
+        if args.graph_all:
+            graph_logs(one_mission, mission_fn=mission_fn_short,
                    log_type=args.log_type)
         if args.nominal_delay:
             graph_logs_nominal_delay(one_mission, mission_fn=mission_fn_short,
                                      mutation_fn="None",
                                      log_type=args.log_type)
+        if args.nominal_only:
+            one_mission_nominal = {"nominal": one_mission["nominal"]}
+            mission_num = get_mission_num(mission_fn_short)
+            graph_logs(one_mission_nominal, mission_fn=mission_fn_short,
+                       mutation_fn="None",
+                       log_type=args.log_type,
+                       colormap="viridis",
+                       title=f"Nominal executions for {args.log_type}, Mission {mission_num}",
+                       fn_insert="nominal",
+                       with_waypoints=args.with_waypoints,
+                       mission=waypoints)
+
+        if args.experimental_only:
+            one_mission_experimental = {"experimental": one_mission["experimental"]}
+            mission_num = get_mission_num(mission_fn_short)
+            graph_logs(one_mission_experimental, mission_fn=mission_fn_short,
+                       mutation_fn="None",
+                       log_type=args.log_type,
+                       colormap="viridis",
+                       title=f"Delayed executions for {args.log_type}, Mission {mission_num}",
+                       fn_insert="delayed",
+                       with_waypoints=args.with_waypoints,
+                       mission=waypoints)
+
 
     #animate_logs(logs)
 

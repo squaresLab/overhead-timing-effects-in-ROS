@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 import statistics
 import sys
 from typing import Dict, List, Tuple
@@ -63,6 +64,38 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
+def bar_chart(args, mean_by_label_mission, std_by_label_mission):
+
+    fig1, ax1 = plt.subplots()
+    labels = ("W1", "W2", "W3", "W4", "W5", "Final")
+    width = 0.35
+    mission = mission_num_to_fn_husky[1]
+    #mission = os.path.join(args.alt_mission_base, mission)
+    all_mission_keys = mean_by_label_mission["nominal"].keys()
+    for key in all_mission_keys:
+        if mission in key:
+            mission = key
+            break
+    nominal_means = mean_by_label_mission["nominal"][mission].values()
+    logging.debug(nominal_means)
+    experimental_means = mean_by_label_mission["experimental"][mission].values()
+    logging.debug(experimental_means)
+    nominal_std = std_by_label_mission["nominal"][mission].values()
+    logging.debug(nominal_std)
+    experimental_std = std_by_label_mission["experimental"][mission].values()
+    logging.debug(experimental_std)
+    x = np.arange(len(labels))
+    p1 = ax1.bar(x - width/2, nominal_means, width, yerr=nominal_std,
+                 label="Nominal")
+    p2 = ax1.bar(x + width/2, experimental_means, width, yerr=experimental_std,
+                 label="Delayed")
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(labels)
+    ax1.legend()
+    fig1.savefig(f"bar_whisker_experimental_nominal_husky.png")
+    plt.close(fig1)
+
+
 def print_table(dict_by_label_mission, graph_type, log_type):
     if graph_type == "waypoint_distance":
         #logging.debug(f"dict_by_label_mission: {dict_by_label_mission}")
@@ -78,7 +111,7 @@ def print_table(dict_by_label_mission, graph_type, log_type):
                 #logging.debug(f"mission_fn_dict: {mission_fn_dict}")
                 value_dict = [x[1] for x in mission_fn_dict.items() if
                               mission_num_to_fn[i] in x[0]]
-                logging.debug(f"value_dict: {value_dict}")
+                #logging.debug(f"value_dict: {value_dict}")
                 if len(value_dict) == 0:
                     continue
                 value_dict = value_dict[0]
@@ -292,28 +325,60 @@ def get_experimental_runs_by_mission(args) -> Dict[str, Dict[float, Dict[str, Li
 
 def box_plot(args, dist_by_label_mission, mission_fns):
     vals_dict = dict()
+    vectors_by_waypoint_one_mission = dict()
+    mission = mission_num_to_fn_husky[1]
+    all_mission_keys = dist_by_label_mission["nominal"].keys()
+    for key in all_mission_keys:
+        if mission in key:
+            mission = key
+            break
     for label in ("nominal", "experimental"):
         for mission_fn in mission_fns:
+            if mission_fn != mission:
+                continue
             dists_list = dist_by_label_mission[label][mission_fn]
             for waypoint in dists_list[0].keys():
+                if waypoint not in vectors_by_waypoint_one_mission:
+                    vectors_by_waypoint_one_mission["waypoint"] = dict()
                 vals = [x[waypoint] for x in dists_list]
                 if mission_fn not in vals_dict:
                     vals_dict[mission_fn] = dict()
                 if label not in vals_dict[mission_fn]:
                     vals_dict[mission_fn][label] = dict()
                 vals_dict[mission_fn][label][waypoint] = vals
+                if waypoint not in vectors_by_waypoint_one_mission:
+                    vectors_by_waypoint_one_mission[waypoint] = dict()
+                if label not in vectors_by_waypoint_one_mission[waypoint]:
+                    vectors_by_waypoint_one_mission[waypoint][label] = []
+                curr_vectors = vectors_by_waypoint_one_mission[waypoint][label]
+                vectors_by_waypoint_one_mission[waypoint][label] = \
+                    curr_vectors.append(vals)
 
     vectors_to_plot = []
     vector_labels = []
 
+    assert(len(vals_dict) == 1), vals_dict
+
     for mission_fn, label_dict in vals_dict.items():
         for label, waypoint_dict in label_dict.items():
-            for waypoint, vals in waypoint_dict:
+            for waypoint, vals in waypoint_dict.items():
                 vectors_to_plot.append(vals)
                 vector_labels.append(f"{mission_fn}_{label}_{waypoint}")
 
     vectors_to_plot_np = np.array(vectors_to_plot)
     plt.boxplot(vectors_to_plot_np, labels=vector_labels)
+
+    vectors_to_plot_2 = []
+    vector_labels_2 = []
+    for label, waypoint_dict in vectors_by_waypoint_one_mission.items():
+        for waypoint, vals_dict in waypoint_dict.items():
+            vectors_to_plot_2.append(list(vals_dict.values()))
+            vector_labels_2.append(f"{label}_{waypoint}")
+    vectors_np = np.array(vectors_to_plot_2)
+    fig, ax = plt.subplots()
+    ax.boxplot(vectors_np, labels=vector_labels_2)
+    fig.savefig(f"boxplot_type_2.png")
+    plt.close(fig)
 
 
 def waypoint_distance(args):
@@ -331,6 +396,9 @@ def waypoint_distance(args):
     mean_by_label_mission: Dict[str, Dict[str, Dict[int, float]]] = dict()
     std_by_label_mission: Dict[str, Dict[str, Dict[int, float]]] = dict()
 
+    values_by_label_mission: Dict[str, Dict[str, Dict[int, List[float]]]] = dict()
+
+    vals_list = []
     for label in ("nominal", "experimental"):
 
         # bag_data is a list of Tuples.
@@ -389,22 +457,34 @@ def waypoint_distance(args):
             if args.graph == "waypoint_distance":
                 for waypoint in dists_list[0].keys():
                     vals = [x[waypoint] for x in dists_list]
+                    vals_list.append(vals)
                     mean = statistics.mean(vals)
                     mean_dist_dict[waypoint] = mean
                     std = statistics.stdev(vals)
+                    #logging.debug(f"wp{waypoint} mean: {mean} stdev: {std} vals: {vals}")
                     std_dict[waypoint] = std
                 if label not in mean_by_label_mission:
                     mean_by_label_mission[label] = dict()
                 mean_by_label_mission[label][mission_fn] = mean_dist_dict
                 if label not in std_by_label_mission:
                     std_by_label_mission[label] = dict()
-                std_by_label_mission[label] = std_dict
+                std_by_label_mission[label][mission_fn] = std_dict
+
+
+    if args.visualize:
+        fig1, ax1 = plt.subplots()
+        box_plot(args, dist_by_label_mission, mission_fns)
+        ax1.boxplot(np.array(vals_list))
+        fig1.savefig(f"boxplot.png")
+        plt.close(fig1)
+
+        bar_chart(args, mean_by_label_mission, std_by_label_mission)
 
     print("Mean \\\\")
     print_table(mean_by_label_mission, args.graph, args.log_type)
     logging.debug("Std deviation doesn't work yet")
-    # print("Standard Deviation \\\\")
-    # print_table(std_by_label_mission, args.graph, args.log_type)
+    print("Standard Deviation \\\\")
+    print_table(std_by_label_mission, args.graph, args.log_type)
 
 
 def waypoint_distance_by_topic(args):

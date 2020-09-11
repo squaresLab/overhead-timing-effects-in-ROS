@@ -127,7 +127,7 @@ def main() -> None:
         print(rosrunner_yaml_fns)
 
     num_param_fns = len(rosrunner_yaml_fns)
-    for param_fn, index in zip(rosrunner_yaml_fns, 
+    for param_fn, index in zip(rosrunner_yaml_fns,
                                range(1, num_param_fns + 1)):
         logger.info(f"Param_fn: {param_fn} ({index}/{num_param_fns})")
         # Warm up the docker image
