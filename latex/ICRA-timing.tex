@@ -1,0 +1,1046 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%2345678901234567890123456789012345678901234567890123456789012345678901234567890
+%        1         2         3         4         5         6         7         8
+\RequirePackage{pdf14}
+\documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out if you need a4paper
+
+%\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4 paper
+%\usepackage[a-1b]{pdfx}
+
+\usepackage[backref,pageanchor=true,plainpages=false, pdfpagelabels, bookmarks,bookmarksnumbered,
+%pdfborder=0 0 0,  %removes outlines around hyper links in online display
+]{hyperref}
+\usepackage[nolist]{acronym}
+
+\IEEEoverridecommandlockouts                              % This command is only needed if 
+                                                          % you want to use the \thanks command
+
+\overrideIEEEmargins                                      % Needed to meet printer requirements.
+
+%In case you encounter the following error:
+%Error 1010 The PDF file may be corrupt (unable to open PDF file) OR
+%Error 1000 An error occurred while parsing a contents stream. Unable to analyze the PDF file.
+%This is a known problem with pdfLaTeX conversion filter. The file cannot be opened with acrobat reader
+%Please use one of the alternatives below to circumvent this error by uncommenting one or the other
+%\pdfobjcompresslevel=0
+%\pdfminorversion=4
+
+% See the \addtolength command later in the file to balance the column lengths
+% on the last page of the document
+
+% The following packages can be found on http:\\www.ctan.org
+%\usepackage{graphics} % for pdf, bitmapped graphics files
+%\usepackage{epsfig} % for postscript graphics files
+%\usepackage{mathptmx} % assumes new font selection scheme installed
+%\usepackage{times} % assumes new font selection scheme installed
+%\usepackage{amsmath} % assumes amsmath package installed
+%\usepackage{amssymb}  % assumes amsmath package installed
+\usepackage{xifthen}
+\usepackage{xcolor}
+\usepackage{adjustbox}
+\usepackage{booktabs}
+
+\newcommand\multiII[1]{\multicolumn{2}{c}{#1}}
+
+
+\title{\LARGE \bf
+The Effects of Timing Delays on ROS Systems
+}
+
+
+\author{Author Information Omitted for Double Blind Review% <-this % stops a space
+\thanks{*This work was not supported by any organization}% <-this % stops a space
+\thanks{$^{1}$Albert Author is with Faculty of Electrical Engineering, Mathematics and Computer Science,
+        University of Twente, 7500 AE Enschede, The Netherlands
+        {\tt\small albert.author@papercept.net}}%
+\thanks{$^{2}$Bernard D. Researcheris with the Department of Electrical Engineering, Wright State University,
+        Dayton, OH 45435, USA
+        {\tt\small b.d.researcher@ieee.org}}%
+}
+
+
+\newcommand{\tool}[1]{\textsc{#1}}
+
+
+\newboolean{draft}
+\setboolean{draft}{true}
+
+
+\ifthenelse{\boolean{draft}}{
+%\draftstamp{\today}{DRAFT}
+\newcommand{\todo}[1]{\textcolor{violet}{{\bfseries [[TODO: #1]]}}}
+}
+{\newcommand{\todo}[1]{}
+}
+
+
+\begin{document}
+
+
+
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+
+This electronic document is a live template. The various components of your paper [title, text, heads, etc.] are already defined on the style sheet, as illustrated by the portions given in this document.
+
+\end{abstract}
+
+\begin{acronym}
+\acro{QA}{Quality Assurance}
+\acro{SUT}{System Under Test}
+\acrodefplural{SUT}{Systems Under Test}
+\acroindefinite{SUT}{an}{a}
+\acro{LDCOF}{Local Density Cluster-Based Outlier Factor}
+\acroindefinite{LDCOF}{an}{a}
+\acro{DTW}{Dynamic Time Warping}
+\acro{BMB}{BenchMark Bot}
+\acro{ROS}{Robot Operating System}
+\acro{NREC}{National Robotics Engineering Center}
+\acroindefinite{NREC}{an}{a}
+\acro{FDR}{False Detection Rate}
+\acroindefinite{FDR}{an}{a}
+\acro{UAS}{Unmanned Autonomous System}
+\acro{ARS}{Autonomous and Robotics System}
+\acro{ML}{Machine Learning}
+\acro{IDS}{Intrusion Detection System}
+\acro{CPS}{Cyber-Physical System}
+\acro{DBI}{Dynamic Binary Instrumentation}
+\end{acronym}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+
+
+As demonstrated in Chapters~\ref{chap:ardu}, and
+\ref{chap:varied}, \acfp{ARS} are amenable to detection of faults by the use of
+low-level program monitoring.
+As discussed in those chapters, one primary concern about using these types of
+monitoring techniques is that the techniques can cause high overhead.
+\acp{CPS} such as \acp{ARS} can be sensitive to overhead that interferes with
+the timing of events --- a missed deadline
+or a sequence of messages received in an unexpected order can cause the system to fail.
+However, at the same time, these systems are particularly prone to variability in
+operating conditions because of their interaction with the real world and the
+unpredictable conditions therein.
+There are many situations in which the architectures of \acp{CPS} can absorb timing
+delays, when they
+take place during times when the system would otherwise be spent waiting for physical
+events or communication from other parts of the system.
+
+I hypothesize that the same properties that allow \acp{ARS} and \acp{CPS}
+to absorb timing delays that occur due to real-world unpredictability also allow these
+systems to absorb some of the delays that would be caused by program monitoring.
+
+I conduct a series of experiments to gain a more precise understanding of the amount
+and nature of delays that these systems can absorb.
+To do so, I run experiments in simulation.
+The nominal executions examine the behavior of an unmodified simulated \ac{ARS}
+while the executions with artificial delays examine the behavior of the same systems
+when message passing is delayed for various topics.
+
+\section{Experimental Methodology}
+\label{sec:approach-and-methodology}
+%\todo{Fill in more detail}
+
+This section sets out the approach to the experiments in determining the extent to 
+which timing delays interfere with the behavior of \ac{ARS}.
+To evaluate the extent to which timing delays deform the observable execution of an
+\ac{ARS}, I insert artificial timing delays in a controlled manner in the following experiments:
+
+For a given robot, I establish a set of commands, called a \emph{mission}.
+For the purposes of these experiments, each mission is represented as a series 
+of destinations in three dimensional space (two dimensional space for robots that 
+move in only two dimensions), 
+with the final destination being a return to the first destination.
+I create a series of missions within a simulation environment for each robot.
+
+The experiments consist of running two types of executions: \emph{nominal baseline}
+executions in which the system is run without modifications and \emph{experimental}
+executions in which the system is run with artificially-inserted timing delays.
+These two categories of executions are explained in the following subsections.
+
+\subsection{Nominal Baseline Executions}
+To establish a \emph{nominal baseline} --- a baseline for how a robot behaves under 
+normal conditions, without 
+any artificially-inserted delays --- 
+I run each unmodified \ac{ARS} repeatedly on each of its missions.
+%For the \tool{ArduPilot} experiments, I run the unmodified system on each mission 20 
+%times and for the \tool{ROS} experiments,
+%I run the unmodified system on each mission 200 times.
+%\todo{CHECK THESE NUMBERS}
+%\todo{these numbers don't belong here -- use before def. where do they belong?}
+
+%From the nominal executions, I use statistical methods, described below in
+%Section~\todo{cross-ref}, to choose a representative normal execution against
+%which to compare the artificially-delayed executions.
+%Actually, you didn't decide to do it this way -- don't say so.
+
+The executions to establish a nominal baseline serve several purposes in these experiments.
+First, the nominal executions establish a baseline for how often the unmodified
+\ac{ARS} fails.
+\acp{ARS} often behave in a nondeterministic manner, even in simulation.
+Factors that can affect the nondeterminism are variations in the order in which
+messages are received, sensor noise, perception systems' interpretation of the
+sensor data, autopilot systems, and obstacles in the environment.
+There can be nominal (unmodified) executions that fail in significant ways, such
+as failing to reach one or more waypoints; getting ``stuck'' and discontinuing
+attempts to follow the mission (e.g., when the perception system cannot determine
+the robot's location); software crashes; or liveness failures (e.g., hitting a
+timeout).
+Because there are failures in the nominal, unmodified system, we cannot simply measure the
+failure rate of the artificially-modified system.
+For a realistic measurement of the effect of the modifications, we must measure the
+extent to which the modified system fails as compared to the extent to which 
+the unmodified nominal system fails.
+As an approximate metric of these failures, I measure the percent of executions
+in which the robot never reaches the final waypoint.
+This metric allows comparison between the failure rate in nominal executions
+and the failure rate in the modified system.
+
+Second, the nominal executions establish a representative trajectory and other
+execution characteristics against which the characteristics of modified executions
+can be compared.
+Other potential characteristics of interest include the time taken for completion of 
+the mission and the rate at which messages are sent on various topics.
+% \todo{finish this paragraph}
+
+Third, the nominal executions establish the range of variation in nominal 
+trajectories and other execution characteristics. As mentioned above, 
+there is significant nondeterminism in the observed behavior of simulated robots,
+even when unmodified.
+Establishing the range in the nominal executions allows us to establish when the
+modified, experimental executions are within the range of nominal behavior or
+outside of it.
+
+% YOU DIDN'T DO IT THIS WAY -- GET RID OF ALL REFEENCES TO THIS METHOD
+%The statistical methods used to determine the range of nominal behavior are outlined
+%in Section~
+
+%To determine a representative nominal execution, I take the medoid of the time series 
+%representing the 3-dimensional positions of the robot in all nominal executions of a 
+%particular mission (without artificial delays).
+
+
+\subsection{Experimental Executions}
+For the \emph{experimental} executions, I add controlled artificial delays to the 
+execution of the \ac{ARS} code.
+The points within the program at which these delays are inserted, number, and length of these delays are experimental parameters.
+The method of inserting delays is set out below.
+
+Experimental executions are evaluated against 
+the nominal baseline and against
+the set of waypoints that they are supposed to reach. 
+\todo{add more about the experimental executions and how they're compared to the nominal baseline and why}
+
+\subsection{Method of Inserting Delays}
+\label{sec:timing-methodology-delays}
+This subsection explains how I insert artificial delays for the experimental 
+executions.
+
+\subsubsection{\tool{ArduCopter}}
+For the \tool{ArduCopter} experiments, the artificial delays are introduced
+by modifying source code in \tool{C++}.
+I insert a sleep statement before a return statement in the code.
+To do so, I identified the program point immediately before
+each return statement in all \tool{.cpp} files in the
+\tool{ArduPilot/ArduCopter} source code directory.
+For each of these program points, there was the possibility of inserting an
+artificial delay.
+The choice of whether to insert a delay was determined probabilistically, with a weighted coin flip.
+Different modified versions of the code were created,~\footnote{I used the tool \tool{Comby} for these program transformations. \url{https://comby.dev/}} each of which had
+(a) a fixed coin flip weight and
+(b) fixed delay amount added at each delay location.
+The weights for the weighted coin flip ranged from 0.1 to 1.0, with 1.0
+meaning a delay was inserted before every return statement,
+and the length of each delay ranged from 0.001953125 seconds to 8 seconds,
+with delay lengths chosen as powers of 2.
+
+\subsubsection{\tool{ROS}-based Systems}
+For the \tool{\ac{ROS}} experiments, the artificial delays are introduced at 
+communications
+barriers on \tool{\ac{ROS}} topics, taking advantage of the architecture of 
+\tool{ROS}-based systems.
+
+
+To give a simplified overview of the architecture of ROS-based systems,
+these systems consist of various nodes which communicate with each other by
+sending messages over a bus, as shown in Figure~\ref{fig:ros-arch-2}.
+
+\begin{figure*}
+  \centering
+  \adjustbox{max size={0.95\linewidth}{0.95\textheight}}%
+            {\includegraphics{figures/RosArchNamesWithLegend}}
+  \caption{\label{fig:ros-arch-2}Simplified \tool{ROS} Architecture}
+\end{figure*}
+
+\todo{Edit the ROS architecture diagram to show topics and message types traveling
+along those topics.}
+A publish-subscribe system determines which nodes receive which messages.
+A node can publish messages to a \emph{topic}.
+To receive those messages, another node subscribes to the same \emph{topic}.
+Generally, each topic only accepts messages of one type.
+\tool{\ac{ROS}} makes it easy to query a running system to find out information
+such as (a) the topics in that system; (b) the type of messages published to each
+topic; (c) the node or nodes that publish to a particular topic; and (d) the node
+or nodes that subscribe to the particular topic.
+This information makes it easy to infer certain properties about the relationships
+among nodes and the purposes of particular messages.
+We use this information to choose the topics to which we add artificial delays.
+For example, in \tool{Husky}, we run experiments that delay each topic published
+by or subscribed to by the \tool{/move\_base/} navigation node.
+We do this because navigation is a vital function, and we expect disruptions
+in navigation to have an effect on robot behavior.
+Conversely, we do not conduct experiments in which we delay the topics related to
+displaying logging messages, as these are unlikely to affect anything other than
+the logging messages displayed.
+
+Once we set a \tool{topic} or \tool{topics} to delay on a particular \tool{\ac{ROS}}
+system for a particular set of experiments, we insert delays on these topics by
+intercepting messages using topic renaming.
+\tool{\ac{ROS}} allows configuration of nodes such that topics can be renamed.
+For example, if Node A is originally designed to publish a topic 
+named \tool{/a\_very\_good\_topic}, I can change the system's configuration so that 
+when published,
+the topic is known in the namespace as something else, such 
+as \tool{/a\_very\_good\_topic\_intercepted}.
+Because the topic now has a different name than the system expects, the node or
+nodes that would have originally subscribed to the topic will not receive
+the messages published on the new topic.
+However, I wrote an extra node to be included with the \tool{\ac{ROS}} system.
+This node reads each message on a given topic, in this
+case \tool{/a\_very\_good\_topic\_intercepted}. 
+It then waits for the designated amount of time and then republishes the same
+message on the topic that was originally expected: \tool{/a\_very\_good\_topic}.
+The nodes that originally expected the messages on this topic from Node A now receive
+the same messages from the delay node.
+\todo{include diagram if you have time}
+
+Delays ranged in length from 0.00390625 seconds to 1 second and 
+were inserted for every message in a topic. 
+This range was chosen after a parameter sweep revealed that they
+result in a representative range of behaviors.
+
+\subsection{Subject Systems}
+
+I evaluate the experiments on the following systems.
+
+\begin{itemize}
+\item{\tool{ArduPilot}:} The open-source \tool{ArduPilot}
+project, written in C++, uses a common framework and
+collection of libraries to implement a set of general-purpose
+autopilot systems for use with a variety of vehicles, including,
+submarines, helicopters, multirotors, and
+airplanes. \tool{ArduPilot} is extremely popular with hobbyists
+and professionals. It is installed in over one million vehicles
+worldwide and used by organizations including NASA,
+Intel, and Boeing, as well as many institutions of higher-education~\cite{TimperleyCrashing2018}.
+These experiments focus on the \tool{ArduCopter} software, designed for
+helicopter and multi-rotor aircraft.\footnote{\url{https://ardupilot.org/copter/}}
+
+
+\item{\tool{Husky}:} The \tool{Husky} unmanned ground vehicle by Clearpath Robotics\footnote{\url{https://clearpathrobotics.com/husky-unmanned-ground-vehicle-robot/}} is a real world robot with an extensive simulation infrastructure. It is rugged, designed to be deployed in uneven terrain, and it is capable of carrying and integrating with a variety of input sources (sensors) and actuators. Husky is popular among researchers for its straightforward design and real world usage history.
+
+
+
+%\item{\tool{Fetch}:} Fetch robots are commercially available ``autonomous mobile robots that operate
+%safely in commercial and industrial environments shared by
+%people."\footnote{\url{http://fetchrobotics.com/automated-material-transport-v3/}}
+%They pick up and transport heavy payloads, such as items in a warehouse environment.
+%They have a mobile base and an arm for manipulation.
+%The robots are built on \ac{ROS}.
+%
+%
+%
+%\item{\tool{F 1/10}} This project is a 1/10th-scale open-source terrestrial vehicle designed to evaluate autonomous racing algorithms.\footnote{\url{https://f1tenth.org/}}
+%
+%\item{\tool{TurtleBot3}:} This project is a modular, customizable mobile terrestrial vehicle robot that allows for varied functionality. Applications such as automatic parking and leader-follower behavior have been implemented for \tool{TurtleBot3}.\footnote{\url{http://emanual.robotis.com/docs/en/platform/turtlebot3/overview/}}
+%
+%\item{\tool{Care-o-Bot 4}:} This is a service robot, designed to interact with humans in private or public settings, such as retail environments, museums, and airports. It is modular, with optional arms and optionally-jointed neck and hips. It can be configured to carry objects or provide information. The robot is developed and produced by Fraunhofer IPA.\footnote{\url{https://www.care-o-bot.de/en/care-o-bot-4.html}}
+
+
+\end{itemize}
+
+\section{Evaluation}
+
+\label{sec:evaluation}
+I evaluate the following research questions.
+\begin{description}
+\item[\textbf{RQ1:}] To what extent do the presence of timing delays in robot systems have an effect on observable behavior as defined by a set of performance metrics?
+\item[\textbf{RQ2:}] Are certain kinds of robotics components more robust or resilient to timing delays?
+%\item[\textbf{RQ3:}]  Are certain robotics systems more robust or resilient to timing delays?
+\item[\textbf{RQ3:}] Under what circumstances do timing delays lead to system crashes?
+\end{description}
+
+
+\subsection{Metrics}
+\label{sec:timing-methodology-metrics}
+To evaluate the research questions, I use the following metrics.
+
+\paragraph{Metrics Based on Euclidean Distances}
+These metrics are based on comparing the position in 3-dimensional 
+space between the robot in the deformed execution 
+versus 
+%the robot in the representative nominal execution and also versus 
+the waypoints to which the robot was instructed to go.
+Specifically, these include:
+\begin{itemize}
+
+%\item The Euclidean distance between the final position of the robot in the representative nominal and each deformed execution
+\item The Euclidean distance between the final position of the robot in the deformed execution and the final waypoint or home point
+%\item Given aligned time series between the representative nominal execution and each deformed execution, the greatest and the average Euclidean difference between each position on the path
+\item The sum of closest distances from each waypoint
+\item The average of the closest distances from each waypoint
+\item The greatest closest distance from each waypoint
+
+\end{itemize}
+
+\paragraph{Completeness metrics}
+These metrics are based on whether the robot completes its mission.
+They are closely related to RQ3, as discussed in Section~\ref{sec:timing-methodology-RQ-crash}.
+
+\begin{itemize}
+\item Whether the execution navigates to each waypoint and returns home.
+\item Whether there is a system crash before the route is executed.
+\item Whether a timeout occurs.
+\end{itemize}
+
+
+\paragraph{Timeliness metrics}
+\begin{itemize}
+\item The amount of time before completion of the execution (either successfully or unsuccessfully)
+\item Total amount of time taken to reach each waypoint (`reach' defined as when the system issues the instruction to go to the next waypoint)
+\end{itemize}
+
+
+
+\subsection{Effects on Observable Behavior}
+\label{sec:timing-methodology-RQ-observable}
+
+\textbf{RQ1:} To what extent do the presence of timing delays in robot systems have an effect on observable behavior as defined by a set of performance metrics?
+
+To evaluate RQ1, I look at the metrics enumerated in Section~\ref{sec:timing-methodology-metrics}.
+
+The clearest and most obvious effects on observable execution are crashes, both software crashes and crashes in physical space.
+I evaluate these deviations separately in RQ3 (Section~\ref{sec:timing-methodology-RQ-crash}).
+
+
+
+\subsubsection{\tool{Husky}}
+
+Table~\ref{table:husky-euclidean-distance} shows, for the nominal and 
+artificially-deformed 
+\tool{Husky} executions, how much their Euclidean distance deviates from the 
+waypoints the robot had been instructed to visit.
+%and the trajectory of the representative nominal execution.
+Data for each mission is listed on its own line.
+For the purposes of this chart, I look at the trajectories of all experimental
+runs that reach all of the waypoints for a given mission. 
+I take the robot's minimum distance from each waypoint for each of these experimental 
+executions.
+I then take the mean, over all of these experimental executions, of the minimum
+distance for each waypoint.
+\todo{report std. deviation too?}
+The same information is provided for the nominal executions for comparison.
+Note that the experimental executions include varying amounts of delay and
+delays on different \tool{rostopics}.
+I will explore the effects of different delay amounts and delays on different topics
+in Table~\ref{table:husky-delay-variable}.
+
+Note that in Table~\ref{table:husky-euclidean-distance}, the mean closest distance
+to the waypoint is always smaller in the nominal group (which is taken from
+unmodified executions) than in the experimental group (which is taken from
+executions with delays).
+\todo{More discussion of these results.}
+While the closest distance from the destination waypoint usually increases
+over subsequent waypoints, that is not always the case.
+
+\newcommand\multiVI[1]{\multicolumn{6}{c}{#1}}
+
+\begin{table}[t]
+\centering
+\caption{Husky: Mean Minimum Euclidean Distance from Waypoints in Meters for Nominal Executions and Experimental Executions 
+\label{table:husky-euclidean-distance}}
+\begin{tabular}{r | r r r r r r | r r r}%| r r}
+\toprule
+Mission & \multiVI{Distance from Waypoint} & WP & WP \\%& Nominal & Nominal \\
+        & W1 & W2 & W3 & W4 & W5 & Final & Total & Mean \\%& Final & Mean \\
+\midrule
+%Nominal \\
+%M1 & 0.23 & 0.66 & 1.65 & 1.47 & 2.01 & 1.10 & 7.13 & 1.19 \\
+%M2 & 0.08 & 0.18 & 0.25 & 0.15 & 0.30 & 0.41 & 1.37 & 0.23 \\
+%M3 & 0.22 & 0.38 & 0.54 & 0.58 & 2.85 & 1.45 & 6.02 & 1.00 \\
+%M4 & 0.52 & 1.91 & 1.78 & 2.28 & 1.02 & 1.92 & 9.44 & 1.57 \\
+%M5 & 0.39 & 1.01 & 1.12 & 0.57 & 2.09 & 2.67 & 7.86 & 1.31 \\
+%M6 & 0.25 & 0.31 & 0.70 & 0.27 & 0.76 & 1.44 & 3.71 & 0.62 \\
+%M7 & 0.31 & 0.27 & 0.28 & 0.35 & 0.42 & 0.55 & 2.18 & 0.36 \\
+%M8 & 0.28 & 0.45 & 0.23 & 0.98 & 0.68 & 0.95 & 3.57 & 0.60 \\
+%M9 & 0.80 & 0.53 & 0.75 & 0.59 & 0.83 & 3.43 & 6.93 & 1.16 \\
+%M10 & 0.07 & 0.07 & 0.08 & 0.66 & 1.09 & 1.91 & 3.89 & 0.65 \\
+%\midrule
+%Experimental \\
+%M1 & 0.83 & 1.13 & 3.14 & 2.69 & 3.37 & 1.79 & 12.96 & 2.16 \\
+%M2 & 0.72 & 0.45 & 1.37 & 0.83 & 1.20 & 0.93 & 5.50 & 0.92 \\
+%M3 & 1.40 & 1.84 & 1.84 & 1.93 & 4.53 & 3.22 & 14.76 & 2.46 \\
+%M4 & 1.33 & 2.91 & 3.23 & 3.14 & 1.97 & 2.28 & 14.85 & 2.47 \\
+%M5 & 1.69 & 1.95 & 2.39 & 1.60 & 3.39 & 3.44 & 14.46 & 2.41 \\
+%M6 & 0.99 & 1.29 & 2.56 & 0.75 & 2.81 & 1.99 & 10.39 & 1.73 \\
+%M7 & 1.44 & 0.77 & 1.04 & 1.55 & 1.98 & 1.52 & 8.30 & 1.38 \\
+%M8 & 1.21 & 2.86 & 1.92 & 3.94 & 2.74 & 1.87 & 14.54 & 2.42 \\
+%M9 & 1.06 & 0.66 & 1.01 & 0.83 & 0.99 & 2.88 & 7.43 & 1.24 \\
+%M10 & 2.03 & 1.37 & 0.28 & 1.93 & 2.33 & 3.82 & 11.77 & 1.96 \\
+Nominal \\
+M1 & 0.23 & 0.66 & 1.65 & 1.47 & 2.01 & 1.10 & 7.13 & 1.19 \\
+M2 & 0.08 & 0.18 & 0.25 & 0.15 & 0.30 & 0.41 & 1.37 & 0.23 \\
+M3 & 0.22 & 0.38 & 0.54 & 0.58 & 2.85 & 1.45 & 6.02 & 1.00 \\
+M4 & 0.52 & 1.91 & 1.78 & 2.28 & 1.02 & 1.92 & 9.44 & 1.57 \\
+M5 & 0.39 & 1.01 & 1.12 & 0.57 & 2.09 & 2.67 & 7.86 & 1.31 \\
+M6 & 0.25 & 0.31 & 0.70 & 0.27 & 0.76 & 1.44 & 3.71 & 0.62 \\
+M7 & 0.31 & 0.27 & 0.28 & 0.35 & 0.42 & 0.55 & 2.18 & 0.36 \\
+M8 & 0.28 & 0.45 & 0.23 & 0.98 & 0.68 & 0.95 & 3.57 & 0.60 \\
+M9 & 0.80 & 0.53 & 0.75 & 0.59 & 0.83 & 3.43 & 6.93 & 1.16 \\
+M10 & 0.07 & 0.07 & 0.08 & 0.66 & 1.09 & 1.91 & 3.89 & 0.65 \\
+\midrule
+Experimental \\
+M1 & 1.00 & 1.20 & 3.56 & 2.92 & 3.61 & 1.89 & 14.19 & 2.37 \\
+M2 & 0.89 & 0.52 & 1.67 & 1.00 & 1.40 & 1.12 & 6.60 & 1.10 \\
+M3 & 1.85 & 2.38 & 2.25 & 2.34 & 5.04 & 3.48 & 17.34 & 2.89 \\
+M4 & 1.42 & 2.83 & 3.26 & 3.06 & 2.03 & 2.34 & 14.94 & 2.49 \\
+M5 & 1.86 & 2.01 & 2.48 & 1.72 & 3.56 & 3.73 & 15.36 & 2.56 \\
+M6 & 1.03 & 1.34 & 2.67 & 0.79 & 2.96 & 2.05 & 10.83 & 1.80 \\
+M7 & 1.61 & 0.86 & 1.15 & 1.73 & 2.21 & 1.69 & 9.24 & 1.54 \\
+M8 & 1.21 & 2.85 & 1.87 & 3.85 & 2.70 & 1.93 & 14.42 & 2.40 \\
+M9 & 1.41 & 0.87 & 1.32 & 1.07 & 1.25 & 3.10 & 9.02 & 1.50 \\
+M10 & 2.57 & 1.73 & 0.34 & 2.39 & 2.68 & 4.12 & 13.82 & 2.30 \\
+
+
+
+\bottomrule
+\end{tabular}
+
+\end{table}
+\todo{MAKE THIS A BOX PLOT INSTEAD? SOMETHING TO BETTER MAKE THE COMPARISONS?}
+%M1 HUSKY_pose_array_5_156109eab4cc4c1f9432690d0b6e6ca9.yaml
+%M2 HUSKY_pose_array_5_c8629fc042474a9db240282a52448964.yaml
+%M3 HUSKY_pose_array_5_5f31cf0a67be40a4b9adcb331f43361c.yaml
+%M4 HUSKY_pose_array_5_350028c9199b4d15b236d85c10ff8b9e.yaml
+%M5 HUSKY_pose_array_5_2ce0b4fa2a4249b4b5057913b8c3d9ec.yaml
+%M6 HUSKY_pose_array_5_c787950abab14110836ae170213406d8.yaml
+%M7 HUSKY_pose_array_5_865a8b7817474e51861522bd435faff1.yaml
+%M8 HUSKY_pose_array_5_722ba706e1f34beca0bcaf193d7e0c4f.yaml
+%M9 HUSKY_pose_array_5_cdc8edbd1c2b4ce197a211ee64e7cbe4.yaml
+%M10 HUSKY_pose_array_5_de68abeac0924afc938d17e5acd1b825.yaml
+%M11 HUSKY_pose_array_5_a4d27db27974459a97a696b7d98cb403.yaml
+
+
+
+\begin{table}
+\centering
+\caption{\tool{ArduCopter}: Mean Minimum Euclidean Distance from Waypoints in Meters for Nominal Executions and Experimental Executions 
+\todo{check units!}
+\label{table:ardu-euclidean-distance}}
+\begin{tabular}{r | r r r r r r | r r r}%| r r}
+\toprule
+Mission & \multiVI{Distance from Waypoint} & WP & WP \\%& Nominal & Nominal \\
+        & W1 & W2 & W3 & W4 & W5 & Final & Total & Mean \\%& Final & Mean \\
+\midrule
+
+Nominal \\
+M1 & 52.37 & 52.37 & 52.37 & 52.36 & 52.36 & 52.37 & 314.20 & 52.37 \\
+M2 & 176.79 & 176.79 & 176.78 & 176.78 & 176.78 & 176.78 & 1060.70 & 176.78 \\
+M3 & 81.98 & 81.98 & 81.98 & 81.98 & 81.98 & 81.98 & 491.86 & 81.98 \\
+M4 & 60.56 & 60.56 & 60.57 & 60.57 & 60.57 & 60.56 & 363.39 & 60.56 \\
+M5 & 63.32 & 63.32 & 63.32 & 63.32 & 63.32 & 63.31 & 379.91 & 63.32 \\
+M6 & 94.99 & 94.99 & 94.99 & 94.99 & 94.99 & 94.99 & 569.93 & 94.99 \\
+M7 & 172.64 & 172.64 & 172.65 & 172.65 & 172.64 & 172.64 & 1035.86 & 172.64 \\
+M8 & 88.61 & 88.61 & 88.61 & 88.61 & 88.61 & 88.60 & 531.64 & 88.61 \\
+M9 & 51.51 & 51.51 & 51.51 & 51.51 & 51.51 & 51.52 & 309.08 & 51.51 \\
+M10 & 105.83 & 105.83 & 105.83 & 105.83 & 105.83 & 105.83 & 634.98 & 105.83 \\
+\midrule
+Experimental \\
+M1 & 52.37 & 52.37 & 52.37 & 52.36 & 52.36 & 52.37 & 314.20 & 52.37 \\
+M2 & 176.79 & 176.79 & 176.78 & 176.78 & 176.78 & 176.78 & 1060.70 & 176.78 \\
+M3 & 81.98 & 81.98 & 81.98 & 81.98 & 81.98 & 81.98 & 491.86 & 81.98 \\
+M4 & 60.56 & 60.56 & 60.57 & 60.57 & 60.57 & 60.56 & 363.39 & 60.56 \\
+M5 & 63.32 & 63.32 & 63.32 & 63.32 & 63.32 & 63.31 & 379.91 & 63.32 \\
+M6 & 94.99 & 94.99 & 94.99 & 94.99 & 94.99 & 94.99 & 569.93 & 94.99 \\
+M7 & 172.64 & 172.64 & 172.65 & 172.65 & 172.64 & 172.64 & 1035.86 & 172.64 \\
+M8 & 88.61 & 88.61 & 88.61 & 88.61 & 88.61 & 88.60 & 531.64 & 88.61 \\
+M9 & 51.51 & 51.51 & 51.51 & 51.51 & 51.51 & 51.52 & 309.08 & 51.51 \\
+M10 & 105.83 & 105.83 & 105.83 & 105.83 & 105.83 & 105.83 & 634.98 & 105.83 \\
+
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Husky: Mean Minimum Euclidean Distance (in Meters) from Waypoints for Varied Delays
+on Mission 1, Topic \tool{/husky\_velocity\_controller/odom}
+\label{table:husky-delay-variable}}
+\begin{tabular}{l | r r r r r r | r r }%| r r}
+\toprule
+Delay & \multiVI{Distance from Waypoint} & WP & WP \\%& Nominal & Nominal \\
+(s)      & W1 & W2 & W3 & W4 & W5 & Final & Total & Mean \\%& Final & Mean \\
+\midrule
+
+Mean \\
+0.0 & 0.23 & 0.66 & 1.65 & 1.47 & 2.01 & 1.10 & 7.13 & 1.19 \\
+0.00390625 & 1.09 & 1.18 & 3.34 & 2.49 & 2.97 & 1.97 & 13.04 & 2.17 \\
+0.015625 & 0.80 & 0.90 & 3.43 & 2.54 & 4.54 & 2.70 & 14.92 & 2.49 \\
+0.0625 & 1.22 & 1.26 & 3.83 & 3.52 & 3.80 & 2.19 & 15.82 & 2.64 \\
+0.25 & 0.81 & 1.29 & 3.07 & 2.56 & 2.78 & 1.10 & 11.61 & 1.94 \\
+1.0 & 1.11 & 1.39 & 4.15 & 3.46 & 3.96 & 1.51 & 15.57 & 2.59 \\
+\midrule
+Standard Deviation \\
+0.0 & 0.41 & 1.13 & 2.62 & 2.89 & 3.49 & 1.80 & 12.35 & 2.06 \\
+0.00390625 & 1.80 & 1.52 & 4.38 & 3.88 & 4.12 & 2.68 & 18.39 & 3.06 \\
+0.015625 & 1.53 & 1.24 & 3.92 & 3.26 & 4.27 & 2.80 & 17.04 & 2.84 \\
+0.0625 & 1.91 & 1.64 & 4.63 & 4.07 & 4.39 & 2.21 & 18.85 & 3.14 \\
+0.25 & 1.53 & 1.52 & 3.97 & 3.89 & 4.15 & 1.54 & 16.59 & 2.77 \\
+1.0 & 1.79 & 1.67 & 4.33 & 4.20 & 4.49 & 1.97 & 18.46 & 3.08 \\
+
+
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+
+
+
+\todo{Graph: Final Euclidean distance of robot, vs waypoint vs representative nominal for various delay groups}
+
+\todo{Graph: subgraph1: Trajectories of nominal runs; subgraph2: trajectories of experimental runs}
+
+%\todo{Graph: for each waypoint, what percentage is reached for each mission? how do we want to vary this? by delay amount? Graph or table?}
+
+
+\todo{SECTION ON ARDUPILOT}
+
+
+
+
+\subsection{Different Effects on Different Components}
+\textbf{RQ2:} 
+To evaluate RQ2, are certain kinds of robotics components more robust or resilient to timing delays,
+I conduct separate experiments in which I insert delays that affect different
+components.
+For example, on \tool{ROS} systems, different experiments have delays on different
+\tool{rostopics}.
+A \tool{rostopic} conveys messages to the nodes that subscribe to it.
+When I delay the messages on a particular \tool{rostopic}, those delays affect the
+nodes that subscribe to that topic.
+By delaying different topics separately, I can evaluate the different effects on the subscriber nodes.
+In \tool{ArduPilot}, I achieve a similar effect by conducting several separate 
+experiments involving modifying only one source code file at a time.
+This file conceptually corresponds to the component being tested.
+
+\subsubsection{Results}
+Table~\ref{table:husky-topic-variable} shows the effect of delays on different
+topics in Husky.
+
+
+
+\begin{table}[t]
+\centering
+\caption{Husky: Mean Minimum Euclidean Distance from Waypoints for Varied Topics
+on Mission 1, Delay 0.25 Seconds
+\label{table:husky-topic-variable}}
+\begin{tabular}{l | r r r r r r | r r }%| r r}
+\toprule
+Topic & \multiVI{Distance from Waypoint} & WP & WP \\%& Nominal & Nominal \\
+      & W1 & W2 & W3 & W4 & W5 & Final & Total & Mean \\%& Final & Mean \\
+
+Mean \\
+/gazebo/link\_states & 0.25 & 0.93 & 1.92 & 1.80 & 3.65 & 0.88 & 9.43 & 1.57 \\
+/husky\_velocity\_controller/cmd\_vel & 0.25 & 0.30 & 0.09 & 0.18 & 0.09 & 0.55 & 1.46 & 0.24 \\
+/husky\_velocity\_controller/odom & 1.07 & 2.87 & 6.43 & 6.68 & 5.49 & 1.18 & 23.71 & 3.95 \\
+/imu/data & 1.15 & 0.96 & 2.27 & 1.89 & 1.87 & 1.47 & 9.61 & 1.60 \\
+/imu/data/bias & 1.91 & 1.77 & 6.98 & 3.77 & 3.65 & 1.96 & 20.04 & 3.34 \\
+/navsat/fix & 0.23 & 0.92 & 0.76 & 1.03 & 1.95 & 0.55 & 5.43 & 0.91 \\
+\midrule
+Standard Deviation \\
+/gazebo/link\_states & 0.13 & 1.51 & 2.55 & 3.97 & 4.91 & 1.39 & 14.46 & 2.41 \\
+/husky\_velocity\_controller/cmd\_vel & 0.11 & 0.13 & 0.08 & 0.10 & 0.05 & 0.41 & 0.89 & 0.15 \\
+/husky\_velocity\_controller/odom & 1.99 & 1.54 & 3.01 & 3.82 & 4.77 & 1.93 & 17.07 & 2.85 \\
+/imu/data & 1.94 & 1.56 & 4.88 & 4.06 & 3.97 & 1.81 & 18.23 & 3.04 \\
+/imu/data/bias & 2.48 & 1.83 & 4.50 & 4.92 & 4.87 & 2.43 & 21.02 & 3.50 \\
+/navsat/fix & 0.15 & 1.12 & 1.09 & 2.08 & 4.03 & 0.47 & 8.94 & 1.49 \\
+
+
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+
+%\paragraph{Different Effects on Different Systems}
+%\textbf{RQ3:} Are certain robotics systems more robust or resilient to timing delays?
+%
+%To evaluate RQ3, I evaluate several different robotics systems. I experiment, in simulation, on the following systems.
+%
+%
+%
+%
+%
+%I construct the following experiments, which are designed to compare the effects on the different systems.
+%Because each system has a slightly different architecture, it is not always possible to
+%conduct identical experiments across systems.
+%We take advantage of \tool{rostopics} that are used in several different systems,
+%as they generally serve similar functions across systems.
+%\todo{examples}
+%Where possible, we run these experiments using different \tool{rostopics}, to
+%evaluate whether different systems are more able to tolerate delays in different
+%components.
+%
+%\begin{itemize}
+%\item Given a chosen fixed delay inserted on every message on a \tool{rostopic} that is used in \todo{all/several} systems, which of the systems experience software crashes?
+%\item Given the same chosen fixed delay inserted on every message on a \tool{rostopic} that
+%is used in \todo{all/several} systems, is the three-dimensional position of the
+%robot, as measured by the metrics in Section~\ref{sec:timing-methodology-metrics},
+%deformed more in some systems than others? (In these comparisons, distances are
+%normalized to reflect that some robots cover greater distances than others.)
+%\item Given the same chosen fixed delay inserted on every message on a \tool{rostopic} that
+%is used in \todo{all/several} systems, is the time to completion deformed more in
+%some systems than in others? (In these comparisons, timing is normalized in the same way as distance.)
+%\end{itemize}
+
+%\subsubsection{Results}
+%
+%
+%By comparing the results of the experiments on these systems, I note the following effects. [System X can tolerate greater delays than system Y; system Z can tolerate some delays that system M cannot but system M can tolerate some delays that system Z cannot, etc.]
+%
+%\todo{Insert results here}
+
+
+\subsection{When Delays Cause Software Crashes}
+\label{sec:timing-methodology-RQ-crash}
+
+\textbf{RQ3:} Under what circumstances do timing delays lead to system crashes?
+
+To evaluate RQ3, I look at several indicators of software crashes that can be observed from experiments.
+It is interesting to find out when timing causes a system crash because system crashes have different practical implications for recovery techniques than other failures, such as incorrect trajectories or delays. System crashes can lead to, for example, losing contact with the system or damage to the hardware. Under some circumstances, a system that has crashed without hardware damage can simply be restarted.
+It is important to separate system crashes from other successful executions so that we can exclude any trajectories and timing data that are invalid because of system crashes.
+
+I establish a baseline of software crashes that occur in the nominal data set. Robotics systems are often nondeterministic and difficult to simulate and,
+therefore, even nominal executions can experience software crashes.
+I compare the rate of software crashes in nominal executions against the rate of software crashes under the experimental conditions.
+
+The presence of a core dump file --- such as would be produced when a segmentation fault occurs --- indicates a system crash
+The absence of logs that would have normally been produced during a proper execution indicates a system crash.
+If the test harness exits abnormally, we classify that execution as a system crash.
+
+
+\subsubsection{Results}
+
+Table~\ref{table:husky-crashes} shows the percent of \tool{Husky} executions
+that either crash or do not reach the end goal (within a tolerance of 0.5 meters).
+For the purposes of these results, I group all executions that do not reach the final
+goal within the established tolerance for any reason.
+\todo{clarify why not reaching all the waypoints is a proxy for crashing}
+
+\begin{table}[t]
+\centering
+\caption{Husky: Percent of Executions That Crash or Do Not Reach all Waypoints on Mission 1
+%TODO: change this to not reaching end goal. or better yet, show both.
+\label{table:husky-crashes}}
+\begin{tabular}{l | r r r r r r  r r }%| r r}
+\toprule
+Topic & \multiVI{Percent Failure by Delay Amount}  \\%& Nominal & Nominal \\
+      & 0.0 & 0.00390625 & 0.015625 & 0.0625 & 0.25 & 1.0\\%& Final & Mean \\
+\midrule
+%/gazebo/link\_states & 37.10 & 60.00 & 20.00 & 0.00 & 0.00 & 20.00 & \\
+%/husky\_velocity\_controller/cmd\_vel & 37.10 & 0.00 & 0.00 & 20.00 & 60.00 & 60.00 & \\
+%/husky\_velocity\_controller/odom & 37.10 & 20.00 & 0.00 & 60.00 & 0.00 &  & \\
+%/imu/data & 37.10 & 0.00 & 40.00 & 20.00 & 20.00 & 20.00 & \\
+%/imu/data/bias & 37.10 & 20.00 & 20.00 & 20.00 &  &  & \\
+%/navsat/fix & 37.10 & 40.00 & 0.00 &  &  &  & \\
+
+
+%/gazebo/link\_states & 37.10 & 60.00 & 20.00 & 0.00 & 0.00 & 20.00 & \\
+%/husky\_velocity\_controller/cmd\_vel & 37.10 & 0.00 & 0.00 & 20.00 & 60.00 & 60.00 & \\
+%/husky\_velocity\_controller/odom & 37.10 & 20.00 & 0.00 & 60.00 & 0.00 & 60.00 & \\
+%/imu/data & 37.10 & 0.00 & 40.00 & 20.00 & 20.00 & 20.00 & \\
+%/imu/data/bias & 37.10 & 20.00 & 20.00 & 20.00 & 20.00 & 0.00 & \\
+%/navsat/fix & 37.10 & 40.00 & 0.00 & 40.00 & 20.00 & 0.00 & \\
+
+/gazebo/link\_states & 37.10 & 15.79 & 5.26 & 5.26 & 5.26 & 5.26 & \\
+/husky\_velocity\_controller/cmd\_vel & 37.10 & 0.00 & 0.00 & 5.26 & 21.05 & 20.00 & \\
+/husky\_velocity\_controller/odom & 37.10 & 5.26 & 0.00 & 20.00 & 0.00 & 15.79 & \\
+/imu/data & 37.10 & 0.00 & 10.00 & 10.53 & 5.26 & 5.00 & \\
+/imu/data/bias & 37.10 & 5.26 & 10.53 & 5.26 & 5.26 & 0.00 & \\
+/navsat/fix & 37.10 & 10.53 & 5.00 & 15.79 & 5.26 & 0.00 & \\
+
+
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\newcommand\multiX[1]{\multicolumn{10}{c}{#1}}
+
+\begin{table}
+\centering
+\caption{Husky: Mean Time Taken (seconds) for Executions That Reach (P) and Do Not Reach (F) the Final Waypoint on Mission 1
+\label{table:husky-time}}
+\begin{tabular}{l | r r | r r | r r | r r | r r | r r r r r r}
+\toprule
+Topic & \multiX{Delays (Seconds)}  \\
+(abbreviated)  & \multiII{0.00390625} & \multiII{0.015625} & \multiII{0.0625} & \multiII{0.25} & \multiII{1.0}\\%& Final & Mean \\
+      & P & F & P & F & P & F & P & F & P & F  \\
+\midrule
+
+
+/gazebo/link\_states &  27.45 &  33.99 &  28.14 &  32.99 &  26.64 &  33.92 &  26.40 &  32.47 &  26.48 &  32.54  \\
+/husky.../cmd\_vel & n/a &  32.02 & n/a &  33.03 &  27.87 &  32.84 &  27.51 &  33.29 &  27.26 &  33.25  \\
+/husky.../odom &  27.38 &  33.10 & n/a &  32.48 &  27.48 &  33.01 & n/a &  32.85 &  27.58 &  33.96  \\
+/imu/data & n/a &  33.09 &  27.80 &  32.95 &  27.63 &  32.53 &  28.15 &  32.92 &  26.62 &  32.58  \\
+/imu/data/bias &  28.64 &  33.70 &  27.58 &  33.01 &  26.90 &  32.84 &  27.93 &  33.28 & n/a &  32.50  \\
+/navsat/fix &  26.90 &  32.55 &  27.15 &  32.68 &  27.99 &  33.94 &  29.09 &  32.70 & n/a &  33.44  \\
+
+
+\bottomrule
+
+\end{tabular}
+
+\end{table}
+
+\section{Discussion and Conclusions}
+
+This section discusses threats to validity, future directions,
+and implications of these experiments.
+While \ac{ARS} systems are largely able to absorb overhead timing,
+the effect varies based on the amount of delay and the location of the injected
+delay.
+
+\subsection{Threats to Validity}
+
+\paragraph{Simulation}
+I run these experiments in simulation.
+While it is possible to gain many insights about robotics in simulation~\cite{TimperleyCrashing2018, SotiropoulosNavigationBugs2017},
+simulation may not accurately reflect the influence of overhead on timing
+in real hardware.
+For example, real robotics hardware often has distributed computing resources
+which may not be accurately reflected in the centralized computing power available in simulation.
+A component with less computing power may encounter bottlenecks that are not
+seen in simulation.
+Simulation also has imperfect fidelity to real world situations~\cite{AfzalSimulation2020}.
+
+However, this threat is mitigated by the fact that much of the monitoring
+and bug detection can also take place in simulation.
+
+\paragraph{Limited Input Data}
+These experiments are limited to the input data provided, which includes relatively
+simple simulated environments and missions.
+More complex behaviors may not have been tested.
+
+\paragraph{Limitation to Observed 3-Dimensional Position}
+
+These experiments did not test effects other than deviations in the observed three-dimensional position of the robot. 
+It is possible that delays can affect other properties.
+However, this threat is mitigated by the idea that any major failures in robot
+execution are likely to affect three-dimensional position.
+
+\subsection{Future Directions}
+
+There are several questions that arise directly from the work presented here.
+
+\subsubsection{Violations of Other Desired Properties}
+
+The work presented here looks at the extent to which artificial timing delays deform execution
+in robotics programs in simulation by looking at whether the software crashes
+and physically-observable properties, such as how far the robot is from the expected
+position in physical space and how long the robot takes to reach waypoints.
+However, there are other desired properties in robotics execution.
+For example, there are safety properties that robots should maintain during
+execution, such as that they should not crash into an obstacle or that they
+should not violate speed limits.
+In addition, robots should maintain liveness --- they should not time out.
+It would be interesting to investigate the extent to which timing delays cause these properties to be violated.
+
+\subsubsection{Error Handling and Desired Corner Case Behavior}
+
+It would be further interesting to investigate to what extent timing delays cause
+robotics systems to enter into error-handling behavior.
+For example, many systems are designed with \emph{fail safe} behavior, in which
+the robot is designed to shut down in a non-damaging state when the system encounters
+an unrecoverable error.
+Error handling for less severe faults may cause the robot to execute a recovery
+behavior, such as clearing its position and using its sensors to attempt to
+identify where it is with respect to its environment.
+Such a recovery behavior can occur even in nominal execution and is a normal part
+of providing resiliency and accounting for nondeterminism in normal robotics executions.
+However, timing delays may cause these behaviors to be more frequent (because
+the timing delays may cause errors).
+
+\subsection{Examination of Variation in Nominal Behavior}
+\acp{ARS} are noisy.
+There is considerable variation in their nominal behavior, especially when a
+perception system, an autopilot system, and obstacles are involved. 
+This leads to considerable variation in paths taken by an unmodified system.
+The unmodified system sometimes fails to reach all waypoints or simply gets stuck.
+Additional work should examine the expected amount of variation in unmodified systems
+and the causes of that variation.
+
+\subsection{Varied Amounts of Timing Delays}
+The strategy for inserting timing delays in these experiments is relatively
+simple --- a constant delay amount added to every message in the \tool{\ac{ROS}}
+experiments and a constant delay amount added before probabilistically selected
+return statements in the \tool{ArduPilot} experiments.
+More targeted delay injections may reveal more precisely the circumstances under
+which overhead is absorbed versus produces observable behavior deviations.
+
+
+
+
+%\section{INTRODUCTION}
+%
+%This template provides authors with most of the formatting specifications needed for preparing electronic versions of their papers. All standard paper components have been specified for three reasons: (1) ease of use when formatting individual papers, (2) automatic compliance to electronic requirements that facilitate the concurrent or later production of electronic products, and (3) conformity of style throughout a conference proceedings. Margins, column widths, line spacing, and type styles are built-in; examples of the type styles are provided throughout this document and are identified in italic type, within parentheses, following the example. Some components, such as multi-leveled equations, graphics, and tables are not prescribed, although the various table text styles are provided. The formatter will need to create these components, incorporating the applicable criteria that follow.
+%
+%\section{PROCEDURE FOR PAPER SUBMISSION}
+%
+%\subsection{Selecting a Template (Heading 2)}
+%
+%First, confirm that you have the correct template for your paper size. This template has been tailored for output on the US-letter paper size. 
+%It may be used for A4 paper size if the paper size setting is suitably modified.
+%
+%\subsection{Maintaining the Integrity of the Specifications}
+%
+%The template is used to format your paper and style the text. All margins, column widths, line spaces, and text fonts are prescribed; please do not alter them. You may note peculiarities. For example, the head margin in this template measures proportionately more than is customary. This measurement and others are deliberate, using specifications that anticipate your paper as one part of the entire proceedings, and not as an independent document. Please do not revise any of the current designations
+%
+%\section{MATH}
+%
+%Before you begin to format your paper, first write and save the content as a separate text file. Keep your text and graphic files separate until after the text has been formatted and styled. Do not use hard tabs, and limit use of hard returns to only one return at the end of a paragraph. Do not add any kind of pagination anywhere in the paper. Do not number text heads-the template will do that for you.
+%
+%Finally, complete content and organizational editing before formatting. Please take note of the following items when proofreading spelling and grammar:
+%
+%\subsection{Abbreviations and Acronyms} Define abbreviations and acronyms the first time they are used in the text, even after they have been defined in the abstract. Abbreviations such as IEEE, SI, MKS, CGS, sc, dc, and rms do not have to be defined. Do not use abbreviations in the title or heads unless they are unavoidable.
+%
+%\subsection{Units}
+%
+%\begin{itemize}
+%
+%\item Use either SI (MKS) or CGS as primary units. (SI units are encouraged.) English units may be used as secondary units (in parentheses). An exception would be the use of English units as identifiers in trade, such as Ò3.5-inch disk driveÓ.
+%\item Avoid combining SI and CGS units, such as current in amperes and magnetic field in oersteds. This often leads to confusion because equations do not balance dimensionally. If you must use mixed units, clearly state the units for each quantity that you use in an equation.
+%\item Do not mix complete spellings and abbreviations of units: ÒWb/m2Ó or Òwebers per square meterÓ, not Òwebers/m2Ó.  Spell out units when they appear in text: Ò. . . a few henriesÓ, not Ò. . . a few HÓ.
+%\item Use a zero before decimal points: Ò0.25Ó, not Ò.25Ó. Use Òcm3Ó, not ÒccÓ. (bullet list)
+%
+%\end{itemize}
+%
+%
+%\subsection{Equations}
+%
+%The equations are an exception to the prescribed specifications of this template. You will need to determine whether or not your equation should be typed using either the Times New Roman or the Symbol font (please no other font). To create multileveled equations, it may be necessary to treat the equation as a graphic and insert it into the text after your paper is styled. Number equations consecutively. Equation numbers, within parentheses, are to position flush right, as in (1), using a right tab stop. To make your equations more compact, you may use the solidus ( / ), the exp function, or appropriate exponents. Italicize Roman symbols for quantities and variables, but not Greek symbols. Use a long dash rather than a hyphen for a minus sign. Punctuate equations with commas or periods when they are part of a sentence, as in
+%
+%$$
+%\alpha + \beta = \chi \eqno{(1)}
+%$$
+%
+%Note that the equation is centered using a center tab stop. Be sure that the symbols in your equation have been defined before or immediately following the equation. Use Ò(1)Ó, not ÒEq. (1)Ó or Òequation (1)Ó, except at the beginning of a sentence: ÒEquation (1) is . . .Ó
+%
+%\subsection{Some Common Mistakes}
+%\begin{itemize}
+%
+%
+%\item The word ÒdataÓ is plural, not singular.
+%\item The subscript for the permeability of vacuum ?0, and other common scientific constants, is zero with subscript formatting, not a lowercase letter ÒoÓ.
+%\item In American English, commas, semi-/colons, periods, question and exclamation marks are located within quotation marks only when a complete thought or name is cited, such as a title or full quotation. When quotation marks are used, instead of a bold or italic typeface, to highlight a word or phrase, punctuation should appear outside of the quotation marks. A parenthetical phrase or statement at the end of a sentence is punctuated outside of the closing parenthesis (like this). (A parenthetical sentence is punctuated within the parentheses.)
+%\item A graph within a graph is an ÒinsetÓ, not an ÒinsertÓ. The word alternatively is preferred to the word ÒalternatelyÓ (unless you really mean something that alternates).
+%\item Do not use the word ÒessentiallyÓ to mean ÒapproximatelyÓ or ÒeffectivelyÓ.
+%\item In your paper title, if the words Òthat usesÓ can accurately replace the word ÒusingÓ, capitalize the ÒuÓ; if not, keep using lower-cased.
+%\item Be aware of the different meanings of the homophones ÒaffectÓ and ÒeffectÓ, ÒcomplementÓ and ÒcomplimentÓ, ÒdiscreetÓ and ÒdiscreteÓ, ÒprincipalÓ and ÒprincipleÓ.
+%\item Do not confuse ÒimplyÓ and ÒinferÓ.
+%\item The prefix ÒnonÓ is not a word; it should be joined to the word it modifies, usually without a hyphen.
+%\item There is no period after the ÒetÓ in the Latin abbreviation Òet al.Ó.
+%\item The abbreviation Òi.e.Ó means Òthat isÓ, and the abbreviation Òe.g.Ó means Òfor exampleÓ.
+%
+%\end{itemize}
+%
+%
+%\section{USING THE TEMPLATE}
+%
+%Use this sample document as your LaTeX source file to create your document. Save this file as {\bf root.tex}. You have to make sure to use the cls file that came with this distribution. If you use a different style file, you cannot expect to get required margins. Note also that when you are creating your out PDF file, the source file is only part of the equation. {\it Your \TeX\ $\rightarrow$ PDF filter determines the output file size. Even if you make all the specifications to output a letter file in the source - if your filter is set to produce A4, you will only get A4 output. }
+%
+%It is impossible to account for all possible situation, one would encounter using \TeX. If you are using multiple \TeX\ files you must make sure that the ``MAIN`` source file is called root.tex - this is particularly important if your conference is using PaperPlaza's built in \TeX\ to PDF conversion tool.
+%
+%\subsection{Headings, etc}
+%
+%Text heads organize the topics on a relational, hierarchical basis. For example, the paper title is the primary text head because all subsequent material relates and elaborates on this one topic. If there are two or more sub-topics, the next level head (uppercase Roman numerals) should be used and, conversely, if there are not at least two sub-topics, then no subheads should be introduced. Styles named ÒHeading 1Ó, ÒHeading 2Ó, ÒHeading 3Ó, and ÒHeading 4Ó are prescribed.
+%
+%\subsection{Figures and Tables}
+%
+%Positioning Figures and Tables: Place figures and tables at the top and bottom of columns. Avoid placing them in the middle of columns. Large figures and tables may span across both columns. Figure captions should be below the figures; table heads should appear above the tables. Insert figures and tables after they are cited in the text. Use the abbreviation ÒFig. 1Ó, even at the beginning of a sentence.
+%
+%\begin{table}[h]
+%\caption{An Example of a Table}
+%\label{table_example}
+%\begin{center}
+%\begin{tabular}{|c||c|}
+%\hline
+%One & Two\\
+%\hline
+%Three & Four\\
+%\hline
+%\end{tabular}
+%\end{center}
+%\end{table}
+%
+%
+%   \begin{figure}[thpb]
+%      \centering
+%      \framebox{\parbox{3in}{We suggest that you use a text box to insert a graphic (which is ideally a 300 dpi TIFF or EPS file, with all fonts embedded) because, in an document, this method is somewhat more stable than directly inserting a picture.
+%}}
+%      %\includegraphics[scale=1.0]{figurefile}
+%      \caption{Inductance of oscillation winding on amorphous
+%       magnetic core versus DC bias magnetic field}
+%      \label{figurelabel}
+%   \end{figure}
+%   
+%
+%Figure Labels: Use 8 point Times New Roman for Figure labels. Use words rather than symbols or abbreviations when writing Figure axis labels to avoid confusing the reader. As an example, write the quantity ÒMagnetizationÓ, or ÒMagnetization, MÓ, not just ÒMÓ. If including units in the label, present them within parentheses. Do not label axes only with units. In the example, write ÒMagnetization (A/m)Ó or ÒMagnetization {A[m(1)]}Ó, not just ÒA/mÓ. Do not label axes with a ratio of quantities and units. For example, write ÒTemperature (K)Ó, not ÒTemperature/K.Ó
+%
+%\section{CONCLUSIONS}
+%
+%A conclusion section is not required. Although a conclusion may review the main points of the paper, do not replicate the abstract as the conclusion. A conclusion might elaborate on the importance of the work or suggest applications and extensions. 
+
+\addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
+                                  % on the last page of the document manually. It shortens
+                                  % the textheight of the last page by a suitable amount.
+                                  % This command does not take effect until the next page
+                                  % so it should come on the page before the last. Make
+                                  % sure that you do not shorten the textheight too much.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{ACKNOWLEDGMENTS}
+
+\todo{Add acknowledgements}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%\renewcommand{\bibsection}{\chapter{\bibname}}
+%\newcommand{\bibpreamble}{This text goes between the ``Bibliography''
+%  header and the actual list of references}
+\bibliographystyle{IEEEtran}
+\bibliography{dsk_ref}
+
+
+
+
+
+\end{document}
