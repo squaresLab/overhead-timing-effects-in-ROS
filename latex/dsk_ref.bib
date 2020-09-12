@@ -26,7 +26,7 @@
 
 @article{ErnstDaikon2001,
   author    = {Michael D. Ernst and Jake Cockrell and William G. Griswold and David Notkin},
-  journal   = {IEEE Transactions on Software Engineering},
+  journal   = {{IEEE} Transactions on Software Engineering},
   title     = {Dynamically discovering likely program invariants to support program evolution},
   year      = {2001},
   volume    = {27},
@@ -53,7 +53,7 @@
   year      = {2005},
   pages     = {775--778},
   dsk_notes = {Dynamic invariant inference, just applied to hardware.}
-} 
+}
 
 @inproceedings{HangalTracking2002,
   author    = {Hangal, Sudheendra and Lam, Monica S.},
@@ -96,6 +96,56 @@
   pages     = {35--45},
   dsk_notes = {Fuller treatment of Daikon; Daikon can do several programming languages but needs source code and to be specifically extended to new languages}
 }
+
+@inproceedings{LutzAnalyzing1993,
+  author    = {Lutz, Robyn R.},
+  booktitle = {Requirements Engineering},
+  title     = {Analyzing software requirements errors in safety-critical, embedded systems},
+  year      = {1993},
+  series    = {RE '93},
+  pages     = {126--133}
+}
+
+@inproceedings{LeSpecification2018,
+  author    = {Le, Tien-Duy B. and Lo, David},
+  booktitle = {International Symposium on Software Testing and Analysis},
+  title     = {Deep Specification Mining},
+  year      = {2018},
+  series    = {ISSTA '18},
+  pages     = {106--117}
+}
+
+@inproceedings{KrkaAutomatic2014,
+  author    = {Krka, Ivo and Brun, Yuriy and Medvidovic, Nenad},
+  booktitle = {Foundations of Software Engineering},
+  title     = {Automatic Mining of Specifications from Invocation Traces and Method Invariants},
+  year      = {2014},
+  series    = {FSE '14},
+  pages     = {178--189}
+}
+
+@article{JiangInferring2017,
+  title     = {Inferring and monitoring invariants in robotic systems},
+  author    = {Jiang, Hengle and Elbaum, Sebastian and Detweiler, Carrick},
+  journal   = {Autonomous Robots},
+  volume    = {41},
+  number    = {4},
+  pages     = {1027--1046},
+  year      = {2017},
+  publisher = {Springer}
+}
+
+@inproceedings{JiangReducing2013,
+  title     = {Reducing failure rates of robotic systems though inferred invariants monitoring},
+  author    = {Jiang, Hengle and Elbaum, Sebastian and Detweiler, Carrick},
+  booktitle = {Intelligent Robots and Systems},
+  pages     = {1899--1906},
+  year      = {2013},
+  series    = {IROS '13}
+}
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Robustness
 %
@@ -114,8 +164,17 @@
   dsk_notes = {motivates testing COTS components, robustness testing}
 }
 
+@inbook{KoopmanInterface2008,
+  author    = {Koopman, Philip and Devale, Kobey and Devale, John},
+  title     = {Interface Robustness Testing: Experience and Lessons Learned from the Ballista Project},
+  booktitle = {Dependability Benchmarking for Computer Systems},
+  chapter   = {11},
+  pages     = {201--226},
+  year      = {2008}
+}
+
 @inproceedings{HutchisonRobustness2018,
-  author    = {Hutchison, Casidhe and Zizyte, Milda and Lanigan, Patrick E.  and Guttendorf, David and Wagner, Michael and {Le Goues}, Claire and Koopman, Philip},
+  author    = {Hutchison, Casidhe and Zizyte, Milda and Lanigan, Patrick E.  and Guttendorf, David and Wagner, Michael and {Le~Goues}, Claire and Koopman, Philip},
   title     = {Robustness Testing of Autonomy Software},
   booktitle = {International Conference on Software Engineering - Software Engineering in Practice},
   series    = {ICSE-SEIP '18},
@@ -136,11 +195,56 @@
   year      = {2004}
 }
 
+@inproceedings{KatzRIOT2020,
+  author    = {Katz, Deborah S. and Zizyte, Milda and Hutchison, Casidhe and Guttendorf, David and Lanigan, Patrick E. and Sample, Eric and Koopman, Philip and Wagner, Michael and {Le~Goues}, Claire},
+  title     = {Robustness Inside Out Testing},
+  booktitle = {Dependable Systems and Networks -- Industry Track},
+  series    = {DSN-I},
+  year      = {2020},
+  pages     = {to appear}
+}
+
+@inproceedings{DeValeRobust2002,
+  author    = {DeVale, John and Koopman, Philip J.},
+  title     = {Robust Software -- No More Excuses},
+  booktitle = {Dependable Systems and Networks},
+  series    = {DSN '02},
+  year      = {2002},
+  pages     = {145--154}
+}
+
+@inproceedings{GuCharacterization2003,
+  author    = {Gu, Weining and Kalbarczyk, Zbigniew and Iyer, Ravishankar K. and Yang, Zhenyu},
+  title     = {Characterization of {L}inux kernel behavior under errors},
+  booktitle = {Dependable Systems and Networks},
+  series    = {DSN '03},
+  year      = {2003},
+  pages     = {459--468}
+
+}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Autonomous Vehicle / Robot Testing
 % SotiropoulosNavigationBugs2017, TuncaliStaliro2016, QuigleyROS2009, TimperleyArdu2018, MadrigalWaymo2017, FraadeBlanarMeasuring2018, KoopmanFramework2018, KoopmanAutonomous2017, TheisslerAutomotive2017, ForrestChallenges2014, HutchisonRobustness2018, RisterModular2007, BeschastnikhDistributed2016
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{TianDeepTest2018,
+  author    = {Tian, Yuchi and Pei, Kexin and Jana, Suman and Ray, Baishakhi},
+  title     = {DeepTest: Automated Testing of Deep-Neural-Network-driven Autonomous Cars},
+  booktitle = {International Conference on Software Engineering},
+  series    = {ICSE '18},
+  pages     = {303--314},
+  year      = {2018}
+}
+
+@inproceedings{PezzementiImage2018,
+  author    = {Pezzementi, Zachary and Tabor, Trenton and Yim, Samuel and Chang, Jonathan K. and Drozd, Bill and Guttendorf, David and Wagner, Michael and Koopman, Philip},
+  booktitle = {Safety, Security, and Rescue Robotics (SSRR)},
+  title     = {Putting Image Manipulations in Context: Robustness Testing for Safe Perception},
+  year      = {2018},
+  pages     = {1--8}
+}
 
 @inproceedings{SotiropoulosNavigationBugs2017,
   title     = {Can Robot Navigation Bugs Be Found In Simulation? An Exploratory Study},
@@ -169,7 +273,7 @@
   year      = {2009}
 }
 
-@inproceedings{TimperleyArdu2018,
+@inproceedings{TimperleyCrashing2018,
 	title     = {Crashing simulated planes is cheap: {Can} simulation detect robotics bugs early?},
 	author    = {Timperley, Christopher Steven and Afzal, Afsoon and Katz, Deborah S. and Hernandez, Jam Marcos and {Le~Goues}, Claire},
 	booktitle = {International Conference on Software Testing, Validation, and Verification},
@@ -234,10 +338,10 @@ ensemble-based anomaly detection},
 }
 
 @inproceedings{RisterModular2007,
-  author    = {Rister, Benjamin 
+  author    = {Rister, Benjamin
   D. and Campbell, Jason and Pillai, Padmanabhan and Mowry, Todd C.},
   title     = {Integrated Debugging of Large Modular Robot Ensembles},
-  booktitle = {Robotics and Automation},
+  booktitle = {International Conference on Robotics and Automation},
   series    = {ICRA '07},
   year      = {2007},
   pages     = {2227--2234},
@@ -253,6 +357,87 @@ ensemble-based anomaly detection},
   pages     = {91--110},
   year      = {2016},
   dsk_notes = {heterogeneity, distributed state, concurerrency, partial features. existing approaches: testing, model checking, theorem proving, tracing, log analysis, visualization. lists things wrong with each existing approach.}
+}
+
+@article{AfzalSimulation2020,
+  title     = {A Study on the Challenges of Using Robotics Simulators for Testing},
+  author    = {Afzal, Afsoon and Katz, Deborah S. and {Le~Goues}, Claire and Timperley, Christopher S.},
+  journal   = {arXiv preprint arXiv:2004.07368},
+  year      = {2020}
+}
+
+@inproceedings{YeoImmersive2020,
+  author    = {Yeo, Dohyeon and Kim, Gwangbin and Kim, Seungjun},
+  title     = {Toward Immersive Self-Driving Simulations: Reports from a User Study across Six Platforms},
+  year      = {2020},
+  booktitle = {Conference on Human Factors in Computing Systems},
+  pages     = {1--12},
+  series    = {CHI ’20}
+}
+
+@article{ChenNovel2019,
+  author    = {Chen, Shitao and Chen, Yu and Zhang, Songyi and Zheng, Nanning},
+  journal   = {{IEEE} Transactions on Intelligent Vehicles},
+  title     = {A Novel Integrated Simulation and Testing Platform for Self-Driving Cars With Hardware in the Loop},
+  year      = {2019},
+  volume    = {4},
+  number    = {3},
+  pages     = {425--436}
+}
+
+@inproceedings{GambiAutomatically2019,
+  author    = {Gambi, Alessio and Mueller, Marc and Fraser, Gordon},
+  title     = {Automatically Testing Self-Driving Cars with Search-Based Procedural Content Generation},
+  year      = {2019},
+  booktitle = {International Symposium on Software Testing and Analysis},
+  pages     = {318--328},
+  series    = {ISSTA '19}
+}
+
+@inproceedings{GambiGenerating2019,
+  author    = {Gambi, Alessio and Huynh, Tri and Fraser, Gordon},
+  title     = {Generating Effective Test Cases for Self-Driving Cars from Police Reports},
+  year      = {2019},
+  booktitle = {Joint Meeting of the European Software Engineering Conference and the Symposium on The Foundations of Software Engineering},
+  pages     = {257--267},
+  series    = {ESEC/FSE '19}
+}
+  
+@inproceedings{AbeysirigoonawardenaGenerating2019,
+  author    = {Abeysirigoonawardena, Yasasa and Shkurti,  Florian and Dudek, Gregory},  
+  booktitle = {International Conference on Robotics and Automation},   
+  title     = {Generating Adversarial Driving Scenarios in High-Fidelity Simulators},   
+  year      = {2019},
+  pages     = {8271--8277},
+  series    = {ICRA '19}
+}
+  
+@article{DrivingCoelingh2018,
+  author    = {E. {Coelingh} and J. {Nilsson} and J. {Buffum}},
+  journal   = {IEEE Spectrum},
+  title     = {Driving tests for self-driving cars},   
+  year      = {2018},  
+  volume    = {55},  
+  number    = {3},  
+  pages     = {40--45}
+}
+
+@inproceedings{BanerjeeHands2018,
+  author    = {S. S. {Banerjee} and S. {Jha} and J. {Cyriac} and Z. T. {Kalbarczyk} and R. K. {Iyer}},  
+  booktitle = {Dependable Systems and Networks},
+  series    = {DSN '18},
+  title     = {Hands Off the Wheel in Autonomous Vehicles?: A Systems Perspective on over a Million Miles of Field Data},
+  year      = {2018},
+  pages     = {586--597}
+}
+
+@inproceedings{DuySonSimulation2019,
+  author    = {Duy Son, Tong and Bhave, Ajinkya and Van der Auweraer, Herman},
+  booktitle = {International Conference on Mechatronics (ICM)},
+  title     = {Simulation-Based Testing Framework for Autonomous Driving Development},
+  series    = {ICM '19},
+  year      = {2019},
+  pages     = {576--583}
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -310,7 +495,7 @@ ensemble-based anomaly detection},
 }
 
 @misc{introclassBenchmarks,
-  author    = {Claire {Le Goues} and Neal Holtschulte and Edward K. Smith and Yuriy Brun and Premkumar Devanbu and Stephanie Forrest and Westley Weimer},
+  author    = {Claire {Le~Goues} and Neal Holtschulte and Edward K. Smith and Yuriy Brun and Premkumar Devanbu and Stephanie Forrest and Westley Weimer},
   title     = {Autorepair Benchmarks},
   url = {http://dijkstra.cs.virginia.edu/genprog/resources/autorepairbenchmarks/}
 }
@@ -371,7 +556,7 @@ ensemble-based anomaly detection},
   year      = {2007},
   pages     = {15:1--15:16},
   dsk_notes = {relies on two different implementations of the same specification. "our approach works on binaries directly, without access to the source code. This is important for wide applicability, since implementations may be proprietary and thus not have the source code available. In addition, the binary is what gets executed, and thus it represents the true behavior of the program."}
-} 
+}
 
 @inproceedings{SchulteEmbedded2013,
   author    = {Schulte, Eric and DiLorenzo, Jonathan and Weimer, Westley and Forrest, Stephanie},
@@ -381,7 +566,7 @@ ensemble-based anomaly detection},
   year      = {2013},
   pages     = {317--328},
   dsk_notes = {"Source code with debugging information may not be available, so statements and abstract syntax trees cannot be accurately identified to reduce search-space size (as used by [35]), and, formal pre- and post-condition annotations are unlikely to be present"; architecture independent}
-} 
+}
 
 @inproceedings{SchulteEnergy2014,
   author    = {Schulte, Eric and Dorn, Jonathan and Harding, Stephen and Forrest, Stephanie and Weimer, Westley},
@@ -391,7 +576,7 @@ ensemble-based anomaly detection},
   year      = {2014},
   pages     = {639--652},
   dsk_notes = {Maybe in string cite -- not the most relevant}
-} 
+}
 
 @inproceedings{PerkinsClearview2009,
   title     = {Automatically patching errors in deployed software},
@@ -418,7 +603,7 @@ ensemble-based anomaly detection},
   series     = {GECCO Companion '15},
   year       = {2015},
   pages      = {847--854}
-} 
+}
 
 @inproceedings{SchulteExact2018,
   author    = {Eric Schulte and Jason Ruchti and Matt Noonan and David Ciarletta and Alexy Loginov},
@@ -506,12 +691,12 @@ The implementation is limited to Java.}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 @article{HeImbalanced2009,
-  author    = {Haibo He and Garcia, E.A.}, 
-  journal   = {IEEE Transactions on Knowledge and Data Engineering}, 
-  title     = {Learning from Imbalanced Data}, 
-  year      = {2009}, 
-  volume    = {21}, 
-  number    = {9}, 
+  author    = {Haibo He and Garcia, E.A.},
+  journal   = {{IEEE} Transactions on Knowledge and Data Engineering},
+  title     = {Learning from Imbalanced Data},
+  year      = {2009},
+  volume    = {21},
+  number    = {9},
   pages     = {1263-1284}
 }
 
@@ -601,7 +786,7 @@ The implementation is limited to Java.}
   number    = {7},
   year      = {2009},
   pages     = {10206--10222}
-} 
+}
 
 @article{SebastianiText2002,
   author    = {Sebastiani, Fabrizio},
@@ -611,7 +796,7 @@ The implementation is limited to Java.}
   number    = {1},
   year      = {2002},
   pages     = {1--47}
-} 
+}
 
 @inproceedings{RinottSVM2012,
   author    = {Rinott, Ruty and Carmeli, Boaz and Kent, Carmel and Maman, Yonatan and Rubin, Yoav and Slonim, Noam},
@@ -620,7 +805,7 @@ The implementation is limited to Java.}
   series    = {IHI '12},
   year      = {2012},
   pages     = {493--502}
-} 
+}
 
 @book{CristianiniSVM2000,
   author    = {Cristianini, Nello and Shawe-Taylor, John},
@@ -686,7 +871,7 @@ The implementation is limited to Java.}
   year      = {2005},
   issn      = {0163-5948},
   pages     = {146--155}
-} 
+}
 
 @inproceedings{LeonVisualization2000,
   author    = {Leon, David and Podgurski, Andy and White, Lee J.},
@@ -695,11 +880,11 @@ The implementation is limited to Java.}
   series    = {ICSE '00},
   year      = {2000},
   pages     = {116--125}
-} 
+}
 
 @article{PedregosaScikit2011,
   title     = {Scikit-learn: Machine Learning in {P}ython},
-  author    = {Pedregosa, Fabian and Varoquaux, Ga\"{e}l and Gramfort, Alexandre and Michel, Vincent and Thirion, Bertrand and Grisel, Olivier and Blondel, Mathieu and Prettenhofer, Peter and Weiss, Ron and Dubourg, Vincent and Vanderplas, Jake and Passos, Alexandre and Cournapeau, David and Brucher, Matthieu and Perrot, Matthieu and Duchesnay, \'{E}douard}, 
+  author    = {Pedregosa, Fabian and Varoquaux, Ga\"{e}l and Gramfort, Alexandre and Michel, Vincent and Thirion, Bertrand and Grisel, Olivier and Blondel, Mathieu and Prettenhofer, Peter and Weiss, Ron and Dubourg, Vincent and Vanderplas, Jake and Passos, Alexandre and Cournapeau, David and Brucher, Matthieu and Perrot, Matthieu and Duchesnay, \'{E}douard},
   journal   = {Journal of Machine Learning Research},
   volume    = {12},
   number    = {Oct},
@@ -779,6 +964,17 @@ The implementation is limited to Java.}
 % PnueliTemporal1977, AlurTimedAutomata1994, ShanahanEvent1999, CrochemoreReactive2011, LeGallFormal1996, HieronsFormal2009, CardelliType1996, MilnerTheory1978, ZhengVerification2015, ShresthaAssertions2011, CoppitSpecification2005
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+@inproceedings{FonsecaEmpirical2017,
+  author    = {Fonseca, Pedro and Zhang, Kaiyuan and Wang, Xi and Krishnamurthy, Arvind},
+  title     = {An Empirical Study on the Correctness of Formally Verified Distributed Systems},
+  year      = {2017},
+  booktitle = {European Conference on Computer Systems},
+  pages     = {328--343},
+  series    = {EuroSys ’17}
+}
+
+
+
 @inproceedings{ZhengVerification2015,
   author    = {Xi Zheng and Christine Julien},
   booktitle = {Software Engineering for Smart Cyber-Physical Systems},
@@ -796,6 +992,27 @@ The implementation is limited to Java.}
   number    = {4},
   pages     = {2614--2627},
   month={Dec}
+}
+
+@article{ZhengEfficient2018,
+  author    = {X. {Zheng} and C. {Julien} and R. {Podorozhny} and F. {Cassez} and T. {Rakotoarivelo}},
+  journal   = {{IEEE} Systems Journal},
+  title     = {Efficient and Scalable Runtime Monitoring for Cyber–Physical System},   
+  year      = {2018},  
+  volume    = {12},
+  number    = {2},
+  pages     = {1667--1678}
+}
+
+@TechReport{ClarkRun2013,
+  author =       {Matthew Clark and Xenofon Koutsoukos and Ratnesh Kumar and Insup Lee and
+George Pappas and Lee Pike and Joseph Porter and Oleg Sokolsky},
+  title =        {Study on Run Time Assurance for Complex Cyber Physical Systems},
+  institution =  {Air Force Research Lab},
+  year =         {2013},
+  number =       {ADA585474},
+  month =        {April},
+  note =         {Available at \url{https://leepike.github.io/pubs/RTA-CPS.pdf}}
 }
 
 @incollection{LeGallFormal1996,
@@ -822,13 +1039,13 @@ The implementation is limited to Java.}
 @article{KleinVerification2014,
   author    = {Klein, Gerwin and Andronick, June and Elphinstone, Kevin and Murray, Toby and Sewell, Thomas and Kolanski, Rafal and Heiser, Gernot},
   title     = {Comprehensive Formal Verification of an OS Microkernel},
-  journal   = {ACM Transactions on Computer Systems},
+  journal   = {{ACM} Transactions on Computer Systems},
   volume    = {32},
   number    = {1},
   month     = {Feb},
   year      = {2014},
   pages     = {2:1--2:70}
-} 
+}
 
 @article{KleinVerification2010,
   author    = {Klein, Gerwin and Andronick, June and Elphinstone, Kevin and Heiser, Gernot and Cock, David and Derrin, Philip and Elkaduwe, Dhammika and Engelhardt, Kai and Kolanski, Rafal and Norrish, Michael and Sewell, Thomas and Tuch, Harvey and Winwood, Simon},
@@ -839,7 +1056,7 @@ The implementation is limited to Java.}
   month     = {Jun},
   year      = {2010},
   pages     = {107--115}
-} 
+}
 
 @article{HieronsFormal2009,
   author    = {Hierons, Robert M. and Bogdanov, Kirill and Bowen, Jonathan P. and Cleaveland, Rance and Derrick, John and Dick, Jeremy and Gheorghe, Marian and Harman, Mark and Kapoor, Kalpesh and Krause, Paul and L\"{u}ttgen, Gerald and Simons, Anthony J. H. and Vilkomir, Sergiy and Woodward, Martin R. and Zedan, Hussein},
@@ -850,7 +1067,7 @@ The implementation is limited to Java.}
   year      = {2009},
   pages     = {9:1--9:76},
   publisher = {ACM}
-} 
+}
 
 @inbook{BengtssonTimedAutomata2004,
   author    = {Bengtsson, Johan and Yi, Wang},
@@ -871,7 +1088,7 @@ The implementation is limited to Java.}
   number    = {2-3},
   year      = {2005},
   pages     = {131--146}
-} 
+}
 
 @inproceedings{PnueliTemporal1977,
   title     = {The temporal logic of programs},
@@ -987,7 +1204,7 @@ The implementation is limited to Java.}
   series    = {ESEC/FSE '01},
   year      = {2001},
   pages     = {246--255}
-} 
+}
 
 % Anomaly
 
@@ -1016,7 +1233,7 @@ The implementation is limited to Java.}
   series    = {ISSTA '04},
   year      = {2004},
   pages     = {195--205}
-} 
+}
 
 @article{PimentelNovelty2014,
   title     = {A review of novelty detection},
@@ -1034,10 +1251,10 @@ The implementation is limited to Java.}
   series    = {KDD '09},
   year      = {2009},
   pages     = {557--566}
-} 
+}
 
 @article{HodgeOutliers2004,
-  year      = {2004},	
+  year      = {2004},
   journal   = {Artificial Intelligence Review},
   volume    = {22},
   number    = {2},
@@ -1107,7 +1324,7 @@ The implementation is limited to Java.}
 @article{HaranDeployed2007,
   author    = {Haran, Murali and Karr, Alan and Last, Michael and Orso, Alessandro and Porter, Adam A. and Sanil, Ashish and Fouche, Sandro},
   title     = {Techniques for Classifying Executions of Deployed Software to Support Software Engineering Tasks},
-  journal   = {IEEE Transactions on Software Engineering},
+  journal   = {{IEEE} Transactions on Software Engineering},
   volume    = {33},
   number    = {5},
   year      = {2007},
@@ -1122,7 +1339,77 @@ The implementation is limited to Java.}
   year      = {2015},
   pages     = {3:1--3:8},
   dsk_notes = {Reducing overhead and avoiding mimicry attacks in embedded systems.}
-} 
+}
+
+@article{FreyClustering2007,
+  author    = {Frey, Brendan J. and Dueck, Delbert},
+  journal   = {Science},
+  number    = {5814},
+  pages     = {972--976},
+  title     = {Clustering by Passing Messages Between Data Points},
+  volume    = {315},
+  year      = {2007}
+}
+
+
+@inproceedings{BerndtDTW1994,
+  author    = {Berndt, Donald J. and Clifford, James},
+  title     = {Using Dynamic Time Warping to Find Patterns in Time Series},
+  booktitle = {Knowledge Discovery and Data Mining Workshop},
+  series    = {KDD Workshop '94},
+  year      = {1994},
+  pages     = {359--370}
+}
+
+
+@inproceedings{KatzDetecting2020,
+  author    = {Katz, Deborah S. and Hutchison, Casidhe and Zizyte, Milda and {Le~Goues}, Claire},
+  title     = {Detecting Execution Anomalies As an Oracle for Autonomy Software
+Robustness},
+  booktitle = {International Conference on Robotics and Automation},
+  series    = {ICRA '20},
+  year      = {2020},
+  pages     = {9367--9373}
+}
+
+@inproceedings{YuHardware2019,
+  author    = {Yu, Miao and Halak, Basel and Zwolinski, Mark},
+  booktitle = {International Verification and Security Workshop}, 
+  title     = {Using Hardware Performance Counters to Detect Control Hijacking Attacks}, 
+  series    = {IVSW '19},
+  year      = {2019},
+  pages     = {1--6}
+}
+
+
+@inproceedings{HamadPrediction2018,
+  author    = {Hamad, Mohammad and Hammadeh, Zain A. H. and Saidi, Selma and Prevelakis, Vassilis and Ernst, Rolf},
+  title     = {Prediction of Abnormal Temporal Behavior in Real-Time Systems},
+  year      = {2018},
+  booktitle = {Symposium on Applied Computing},
+  pages     = {359--367},
+  series    = {SAC ’18}
+}
+
+@article{RaoProbabalistic2018,
+  author    = {Rao, Aakarsh and Carre\'{o}n, Nadir and Lysecky, Roman and Rozenblit, Jerzy},
+  title     = {Probabilistic Threat Detection for Risk Management in Cyber-physical Medical Systems},
+  year      = {2018},
+  journal   = {IEEE Software},
+  pages     = {38--43},
+  volume    = {35},
+  number    = {1}
+}  
+
+@article{DominguesOutlier2018,
+  author    = {Domingues, R\'{e}mi and Filippone, Maurizio and Michiardi, Pietro and Zouaoui, Jihane},
+  title     = {A comparative evaluation of outlier detection algorithms: Experiments
+and analyses},
+  year      = {2018},
+  journal   = {Pattern Recognition},
+  pages     = {406--421},
+  volume    = {74}
+}
 
 
 
@@ -1132,9 +1419,9 @@ The implementation is limited to Java.}
 % BarrOracle15, KanewalaOracle2013, PezzeAutomated2014, ShresthaAssertions2011, CoppitSpecification2005, AutomatedStaats2012
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-@article{BarrOracle15,
+@article{BarrOracle2015,
   author    = {Barr, Earl T. and Harman, Mark and Mcminn, Phil and Shahbaz, Muzammil and Yoo, Shin},
-  journal   = {IEEE Transactions on Software Engineering}, 
+  journal   = {{IEEE} Transactions on Software Engineering},
   number    = {5},
   pages     = {507--525},
   title     = {The Oracle Problem in Software Testing : A Survey},
@@ -1150,7 +1437,7 @@ The implementation is limited to Java.}
   year      = {2013},
   pages     = {48--57}
 }
- 
+
 @article{PezzeAutomated2014,
   title     = {Automated Test Oracles: A Survey},
   author    = {Pezze, Mauro and Zhang, Cheng},
@@ -1175,7 +1462,7 @@ The implementation is limited to Java.}
   title     = {On the Use of Specification-Based Assertions as Test Oracles},
   year      = {2005},
   pages     = {305--314},
-  series    = {SEW '05} 
+  series    = {SEW '05}
 }
 
 
@@ -1186,7 +1473,7 @@ The implementation is limited to Java.}
   series    = {ICSE '12},
   year      = {2012},
   pages     = {870--880}
-} 
+}
 
 @article{FrounchiSegmentation2011,
   title = {Automating image segmentation verification and validation by learning test oracles},
@@ -1221,16 +1508,23 @@ The implementation is limited to Java.}
   series    = {GECCO '09},
   year      = {2009},
   pages     = {947--954}
-} 
+}
 
 @inproceedings{WeimerGenProg2009ICSE,
-  author    = {Weimer, Westley and Nguyen, ThanhVu and Le Goues, Claire and Forrest, Stephanie},
+  author    = {Weimer, Westley and Nguyen, ThanhVu and {Le~Goues}, Claire and Forrest, Stephanie},
   title     = {Automatically Finding Patches Using Genetic Programming},
   booktitle = {International Conference on Software Engineering},
   series    = {ICSE '09},
   year      = {2009},
   pages     = {364--374}
-} 
+} @inproceedings{TimperleyMutation2017,
+  author    = {Timperley, Christopher Steven and Stepney, Susan and {Le~Goues}, Claire},
+  title     = {An Investigation into the Use of Mutation Analysis for Automated Program Repair},
+  booktitle = {Search Based Software Engineering},
+  series    = {SSBSE '17},
+  year      = {2017},
+  pages     = {99--114}
+}
 
 @inproceedings{LeGouesGenProgICSE2012,
   author    = {Claire {Le~Goues} and
@@ -1276,7 +1570,7 @@ The implementation is limited to Java.}
 @article{LeGouesGenProg2012,
   title     = {{GenProg}: {A} generic method for automatic software repair},
   author    = {{Le~Goues}, Claire and Nguyen, ThanhVu and Forrest, Stephanie and Weimer, Westley},
-  journal   = {IEEE Transactions on Software Engineering},
+  journal   = {{IEEE} Transactions on Software Engineering},
   volume    = {38},
   number    = {1},
   pages     = {54--72},
@@ -1485,7 +1779,7 @@ The implementation is limited to Java.}
 @article{CadarEXE2008,
   title     = {EXE: automatically generating inputs of death},
   author    = {Cadar, Cristian and Ganesh, Vijay and Pawlowski, Peter M. and Dill, David L. and Engler, Dawson R.},
-  journal   = {ACM Transactions on Information and System Security (TISSEC)},
+  journal   = {{ACM} Transactions on Information and System Security (TISSEC)},
   volume    = {12},
   number    = {2},
   year      = {2008},
@@ -1532,11 +1826,11 @@ The implementation is limited to Java.}
   series    = {CEC '13},
   pages     = {829--836},
   year      = {2013}
-} 
+}
 
 @inproceedings{MocaoShrinking2013,
   author    = {Ana Claudia B. {Loureiro Moncao} and
-               Celso G. {Camilo-Junior} andLeGouesGenProg2012
+               Celso G. {Camilo-Junior} and
                Leonardo T. Queiroz and
                C{\'{a}}ssio L. Rodrigues and
                Plinio de {Sa~Leitao-Junior} and
@@ -1548,12 +1842,12 @@ The implementation is limited to Java.}
   year      = {2013}
 }
 
-@article{FraserMemetic2015, 
-  title     = {A Memetic Algorithm for whole test suite generation}, 
-  journal   = {Journal of Systems and Software}, 
-  volume    = {103}, 
-  number    = {0}, 
-  pages     = {311 - 327}, 
+@article{FraserMemetic2015,
+  title     = {A Memetic Algorithm for whole test suite generation},
+  journal   = {Journal of Systems and Software},
+  volume    = {103},
+  number    = {0},
+  pages     = {311 - 327},
   year      = {2015},
   author    = {Gordon Fraser and Andrea Arcuri and Phil McMinn}
  }
@@ -1566,7 +1860,7 @@ The implementation is limited to Java.}
   number    = {1},
   year      = {2003},
   pages     = {47--55}
-} 
+}
 
 @article{LiRegression2007,
   author   = {Z. Li and M. Harman and R. M. Hierons},
@@ -1595,7 +1889,7 @@ The implementation is limited to Java.}
   series    = {ICSE '08},
   year      = {2008},
   pages     = {71--80}
-} 
+}
 
 @inproceedings{AndrewsTool2006,
   author    = {Andrews, James H. and Haldar, Susmita and Lei, Yong and Li, Felix Chun Hang},
@@ -1613,8 +1907,8 @@ The implementation is limited to Java.}
   series    = {ICSE '13},
   year      = {2013},
   pages     = {672--681}
-} 
- 
+}
+
 @book{BinderTesting2000,
   author    = {Binder, Robert},
   booktitle = {Testing object-oriented systems: models, patterns, and tools},
@@ -1660,6 +1954,27 @@ The implementation is limited to Java.}
   pages     = {147--158}
 }
 
+@inproceedings{BertolinoTesting2003,
+  author    = {Bertolino, Antonia},
+  title     = {Software Testing Research and Practice},
+  booktitle = {Abstract State Machines},
+  series    = {ASM '03},
+  year      = {2003},
+  pages     = {1--21}
+}
+
+@article{TaipaleTradeoff2011,
+  author    = {Taipale, Ossi and Kasurinen, Jussi and Karhu, Katja and Smolander, Kari},
+  title     = {Trade-off between automated and manual software testing},
+  journal   = {International Journal of System Assurance Engineering and Management},
+  volume    = {2},
+  number    = {2},
+  month     = {June},
+  year      = {2011},
+  pages     = {114--125}
+}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Bug Classification / Bug Types
 %
@@ -1669,7 +1984,7 @@ The implementation is limited to Java.}
 @article{AvizienisTaxonomy2004,
   author = {Avizienis, Algirdas and Laprie, Jean-Claude and Randell, Brian and Landwehr, Carl},
   title = {Basic Concepts and Taxonomy of Dependable and Secure Computing},
-  journal = {IEEE Transactions on Dependable and Secure Computing},
+  journal = {{IEEE} Transactions on Dependable and Secure Computing},
   volume = {1},
   number = {1},
   month = {Jan},
@@ -1677,7 +1992,7 @@ The implementation is limited to Java.}
   pages = {11--33},
   publisher = {IEEE Computer Society Press},
   address = {Los Alamitos, CA, USA}
-} 
+}
 
 @inproceedings{CotroneoTriggers2013,
   author    = {Domenico Cotroneo and Michael Grottke and Roberto Natella and Roberto Pietrantuono and Kishor S. Trivedi},
@@ -1812,7 +2127,7 @@ The implementation is limited to Java.}
   isbn      = {0321118847},
   publisher = {Addison-Wesley Longman Publishing Co., Inc.},
   address   = {Boston, MA, USA}
-} 
+}
 
 @article{OneSmashing1996,
   title     = {Smashing the stack for fun and profit},
@@ -1911,7 +2226,7 @@ The implementation is limited to Java.}
 @article{OstertagSimilarity1992,
   author    = {Ostertag, Eduardo and Hendler, James and D\'{\i}az, Rub{\'e}n Prieto and Braun, Christine},
   title     = {Computing Similarity in a Reuse Library System: An AI-based Approach},
-  journal   = {ACM Transactions on Software Engineering and Methodology},
+  journal   = {{ACM} Transactions on Software Engineering and Methodology},
   volume    = {1},
   number    = {3},
   year      = {1992},
