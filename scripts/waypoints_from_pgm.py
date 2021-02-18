@@ -236,5 +236,6 @@ def main():
     pose_fn = f"{base_fn}_pose_array_{args.num_waypoints}_{uuid_id}.yaml"
     yaml_from_dict(pose_array, pose_fn)
 
+
 if __name__ == '__main__':
     main()

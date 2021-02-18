@@ -26,12 +26,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--nominal_delay", action="store_true",
                         default=False,
                         help="make a graph separating nominal runs from delayed")
+    parser.add_argument("--alt_bag_base", type=str,
+                        help="specify where the bag files referenced in the log_db reside")
     args = parser.parse_args()
     return args
 
 
-def graph_one_log(log: np.array, fn: str = "FIG.png", title: str = "None",
-                  log_type: str = "ardu") -> None:
+def graph_logs_nominal_delay(one_mission, mission_fn="", mutation_fn="",
+                             log_type="ardu"):
+    print(one_mission)
+
+    raise NotImplementedError
+
+
+def graph_one_log(log: np.array, fn: str = "FIG.png", mutation_fn: str = "None",
+                  mission_fn: str = "None", log_type: str = "ardu") -> None:
     fig, ax = plt.subplots()
     ax.ticklabel_format(useOffset=False)
 
@@ -47,8 +56,8 @@ def graph_one_log(log: np.array, fn: str = "FIG.png", title: str = "None",
         ax.set_xlabel("X Position")
         ax.set_ylabel("Y Position")
 
-    if title != "None":
-            ax.set_title(title)
+    if mission_fn != "None":
+            ax.set_title(mission_fn)
     logging.debug(f"saving to filename: {fn}")
     fig.savefig(fn)
     plt.close(fig)
@@ -109,30 +118,45 @@ def extract_series(log, log_type="ardu", discard_zero: bool=True) -> Tuple[np.ar
         return (x, y, z, time_elapsed)
 
 
-def get_delay_weight(mutation_fn: str) -> Tuple[float, float]:
+def get_delay_weight(mutation_fn: str,
+                     log_type:str ="ardu") -> Tuple[float, float]:
     logging.debug(f"mutation_fn: {mutation_fn}")
 
-    if mutation_fn.endswith(".diff"):
-        mutation_fn = mutation_fn[:-5]
 
-    split = mutation_fn.split("_")
+    if log_type == "ardu":
+        if mutation_fn.endswith(".diff"):
+            mutation_fn = mutation_fn[:-5]
 
-    logging.debug(f"split: {split}")
-    for section in split:
-        logging.debug("section: {section}")
-        if section.startswith("d") or section.startswith("w"):
-            try:
-                value = float(section[1:])
-            except ValueError:
-                logging.debug(f"{section[1:]} is not a float")
-                continue
-            logging.debug(f"value: {value}")
-            if section.startswith("d"):
-                delay = value
-            elif section.startswith("w"):
-                weight = value
-            else:
-                assert (False), "Incompatible if logic."
+        split = mutation_fn.split("_")
+
+        logging.debug(f"split: {split}")
+        for section in split:
+            logging.debug(f"section: {section}")
+            if section.startswith("d") or section.startswith("w"):
+                try:
+                    value = float(section[1:])
+                except ValueError:
+                    logging.debug(f"{section[1:]} is not a float")
+                    continue
+                logging.debug(f"value: {value}")
+                if section.startswith("d"):
+                    delay = value
+                elif section.startswith("w"):
+                    weight = value
+                else:
+                    assert (False), "Incompatible if logic."
+
+    elif log_type == "husky":
+        weight = 1.0
+        if "/" in mutation_fn:
+            mutation_fn = mutation_fn.split("/")[-1]
+        mutation_fn = mutation_fn.replace("husky_waypoint_ground_truth_remap_", "")
+        logging.debug(f"mutation_fn (short): {mutation_fn}")
+        fn_split = mutation_fn.split("_")
+        try:
+            delay = float(fn_split[-2])
+        except ValueError:
+            logging.debug(f"{fn_split[-2]} is not a float for a delay amount")
 
     return delay, weight
 
@@ -151,7 +175,7 @@ def get_total_time(log: np.array, use_external_time: bool=True) -> float:
 
 
 def graph_time(logs: Dict[str, List[Tuple[str, str, np.array]]],
-               use_external_time: bool=True) -> None:
+               use_external_time: bool=True, log_type="ardu") -> None:
     delays = []
     weights = []
     times = []
@@ -159,7 +183,7 @@ def graph_time(logs: Dict[str, List[Tuple[str, str, np.array]]],
         for log_fn, mutation_fn, log in logs_subset:
             if mutation_fn == "None" or mutation_fn == None:
                 continue
-            delay, weight = get_delay_weight(mutation_fn)
+            delay, weight = get_delay_weight(mutation_fn, log_type=log_type)
             delays.append(delay)
             weights.append(weight)
             total_time = get_total_time(log, use_external_time)
@@ -177,6 +201,7 @@ def graph_time(logs: Dict[str, List[Tuple[str, str, np.array]]],
     cbar = fig.colorbar(scatter)
     cbar.ax.set_ylabel("total time elapsed (s)")
     fig.savefig("TOTAL_TIME.png")
+    plt.close(fig)
 
 
 def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
@@ -184,56 +209,100 @@ def graph_logs(logs: Dict[str, List[Tuple[str, str, np.array]]],
                mission_fn: str="",
                mutation_fn: str="") -> None:
 
+    logging.debug(f"logs labels: {logs.keys()}")
+
     fig, ax = plt.subplots()
     ax.ticklabel_format(useOffset=False)
 
     colors = [matplotlib.colors.to_rgb(x) for x in ('r', 'g', 'b', 'c', 'm', 'y')]
-    zipped = zip(logs.keys(), colors)
+    color_maps = ["copper", "cool", "hot"] * 10
+
+    zipped = zip(logs.keys(), colors, color_maps)
     title_short = mission_fn.split("/")[-1].split(".")[0]
-    for subset_label, color in zipped:
+    ax.set_title(f"{title_short} {logs.keys()}")
+    legend_dict = dict()
+    for subset_label, color, color_map in zipped:
 
         logging.debug(f"subset_label: {subset_label}")
 
-        ax.set_title(title_short)
         logs_subset = logs[subset_label]
         # Define the label
         # TODO
         #logging.debug(f"logs_subset[0]: {logs_subset[0]}")
         #logging.debug(f"type(logs_subset[0]): {type(logs_subset[0])}")
 
+        y_min = 0
+        x_min = 0
+        y_max = 0
+        x_max = 0
 
         for log_fn, mutation_fn, log in logs_subset:
             if log_type == "ardu":
                 lat, lon, time_elapsed, \
                     alt, relative_alt = extract_series(log,
                                                        log_type=log_type)
-
                 logging.debug(f"lat: {lat}")
                 logging.debug(f"lon: {lon}")
                 logging.debug(f"title_short: {title_short}")
-                ax.scatter(lat, lon, c=time_elapsed, s=(relative_alt/100))
+                scatter = ax.scatter(lat, lon, c=time_elapsed,
+                                     s=(relative_alt/100),
+                           cmap=color_map)
+                # ax.scatter(lat, lon, c=[[color] * len(lat)],
+                #           s=(relative_alt/100))
                 # logging.debug(f"color: {color}")
                 # logging.debug(f"type(color): {type(color)}")
-                ax.set_ylim(min(lon), max(lon))
+                if min(lon) < y_min or y_min == 0:
+                    y_min = min(lon)
+                if min(lat) < x_min or x_min == 0:
+                    x_min = min(lat)
+                if max(lon) > y_max or y_max == 0:
+                    y_max = max(lon)
+                if max(lat) > x_max or x_max == 0:
+                    x_max = max(lat)
                 ax.set_xlim(min(lat), max(lat))
                 ax.set_xlabel("Latitude")
                 ax.set_ylabel("Longitude")
                 color = next_color(color)
             elif log_type == "husky":
                 x, y, z, time_elapsed = extract_series(log, log_type=log_type)
-                logging.debug(f"x: {x}")
-                logging.debug(f"y: {y}")
-                logging.debug(f"title_short: {title_short}")
-                ax.scatter(x, y, c=time_elapsed, s=z)
-                ax.set_ylim(min(y), max(y))
-                ax.set_xlim(min(x), max(x))
+                #logging.debug(f"x: {x}")
+                #logging.debug(f"y: {y}")
+                #logging.debug(f"title_short: {title_short}")
+                # ax.scatter(x, y, c=time_elapsed, s=z)
+                #color_array = [color] * len(x)
+                #assert(len(color_array) == len(x)), f"{len(color_array)}, {len(x)}"
+                legend_dict[subset_label] = ax.scatter(x, y,
+                                                       c=time_elapsed,
+                                                       cmap=color_map,
+                                                       s=z)
+                if min(y) < y_min or y_min == 0:
+                    y_min = min(y)
+                if min(x) < x_min or x_min == 0:
+                    x_min = min(x)
+                if max(y) > y_max or y_max == 0:
+                    y_max = max(y)
+                if max(x) > x_max or x_max == 0:
+                    x_max = max(x)
                 ax.set_xlabel("X position")
                 ax.set_ylabel("Y position")
                 color = next_color(color)
 
-    fig.savefig(f"MANY_FIG_{title_short}.png")
+    ax.set_ylim(y_min, y_max)
+    ax.set_xlim(x_min, x_max)
 
-    graph_time(logs)
+    for subset_label in legend_dict:
+        cbar = fig.colorbar(legend_dict[subset_label])
+        cbar.ax.set_xlabel(f"{subset_label}")
+        cbar.ax.set_ylabel(f"total time elapsed")
+    logging.debug(f"legend_dict: {legend_dict}")
+    items = sorted(list(legend_dict.items()))
+    logging.debug(f"items: {items}")
+    fig.legend(handles=[x[1] for x in items],
+               labels=[x[0] for x in items])
+
+    fig.savefig(f"MANY_FIG_{title_short}.png")
+    plt.close(fig)
+    graph_time(logs, log_type=log_type)
 
 
 def main() -> None:
@@ -262,7 +331,7 @@ def main() -> None:
                     log_fn_short = log_fn.split("/")[-1].split(".")[0]
                     filename = f"ONE_LOG_{log_fn_short}_mission_{mission_fn_short}.png"
                     mutation_fn_short = mutation_fn.split("/")[-1].split(".")[0]
-                    graph_one_log(log, fn=filename, 
+                    graph_one_log(log, fn=filename,
                                   mutation_fn=mutation_fn_short,
                                   mission_fn=mission_fn_short,
                                   log_type=args.log_type)
@@ -270,11 +339,11 @@ def main() -> None:
 
     for mission_fn, one_mission in logs_by_mission.items():
         mission_fn_short = mission_fn.split("/")[-1].split(".")[0]
-        graph_logs(one_mission, mission_fn=mission_fn_short, 
+        graph_logs(one_mission, mission_fn=mission_fn_short,
                    log_type=args.log_type)
         if args.nominal_delay:
-            graph_logs_nominal_delay(one_mission, title=mission_fn_short,
-                                     mutation_fn=mutation_fn_short,
+            graph_logs_nominal_delay(one_mission, mission_fn=mission_fn_short,
+                                     mutation_fn="None",
                                      log_type=args.log_type)
 
     #animate_logs(logs)

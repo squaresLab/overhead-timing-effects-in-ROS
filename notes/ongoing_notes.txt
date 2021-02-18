@@ -1,0 +1,2100 @@
+Status update from Monday:
+Last week, there was a lot of fiddling with code in service of running experiments. This included some long debugging sessions with Chris to get the Fetch robot running properly in simulation for running experiments on it. I also submitted a paper to the DSN-industry track. This week, I'm focusing on data analysis and scaling up experiments.
+
+What I told Claire I plan to do today:
+So, I think some goals for today are: (a) checking the logs to make sure the robots reached all waypoints; (b) finishing the work I started yesterday on visualizing a time element in these graphs, to see if we can pick up the variation there; and (c) running some more simulations with even greater timing delays than I'd tried before, to see if I can get something that sends the copter to the wrong place.
+
+Also:
+Meeting with Chris and Afsoon
+
+
+Since my last update, I mainly focused on data analysis and visualization. I found that my quadcopter physical trajectories (as measured in latitude and longitude) were not varying as much as expected in the presence of artificial delays. In the process, I made some graphs illustrating trajectories.
+Goals for the rest of the week/immediate future:
+-write a simple checker to tell if a copter fell out of the sky or failed to reach a waypoint, based on the logs I have.
+-adding a time element to my graph visualizations
+-running some more simulations with greater timing delays to see if I can get something that sends the copter to the wrong place or makes it fall out of the sky
+-Online meeting with Chris and Afsoon about getting the simulated robots to consistently run
+
+
+
+-----------------
+3-30-20
+
+I have:
+-Debugged some robots in simulation
+-Analyzed data from the ArduPilot experiments I ran
+-debugged some data analsysis code
+-visualized data from the ArduPilot experiments
+-added time and altitude components to visualizations
+-found a configuration with greater timing delays that made the ArduPilot copter crash
+
+I plan to:
+-automate a simple check for copter crashes/dramatic trajetory deviations
+-narrow down what it takes to drive a copter wildly off course/crash
+-double check some aspects of my earlier data analysis, with an eye towards understanding the conditions that make a copter crash/behave very badly
+-work towards getting another robotics system integrated into experiments
+
+-----------------
+I've found inputs that do cause a copter to not embark on its mission
+-traceability for graphs -- I know better what I'm graphing
+-initial variations varied on time and other factors but still got the copter to its waypoints
+-I'm going to try to find
+
+
+=================
+
+
+Dissertation
+-more room to talk about things that didn't work
+-more room for future work, ideas
+-things that didn;t work
+-more about conclusions
+
+--> put it in the github
+---------------------------------
+
+
+Graphs to do:
+-x=weight, y=delay, color=time elapsed
+
+-----------------------------------------------------------
+Plan of concrete tasks for the next few days:
+-make a graph using the external timestamps to calculate elapsed time, rather than the internal
+-write code to double-check that I'm graphing data that belong to what I think they belong to (steps to this involve: double checking that, when running an experiment, the diff file containing the code with the delays I think is being applied is actually being applied; double checking that, when retrieving a log file, it corresponds to the experiment I think it corresponds to)
+-continue to run the additional ArduPilot experiments and analyze the data, in service of picking a better set of timing delays to better illustrate the range of behaviors
+-do some additional work on pr2, in service of asking Chris the right questions (I've got the robot up and running in an empty world, but I can't run the demos included with the robot. I want to take a closer look at the error messages and what shows up in the visualization so that I can ask Chris about it.)
+-further work on turning the dissertation file into a dissertation, including starting to add some substance of the work I'm doing now to it
+-write the automated checker that I meant to write in the past few days that looks at a log and tells me if the copter very obviously failed
+
+
+Done:
+-I played around a bit more with visualizing time in data visualizations and concluded that either (a) my delays inserted into ArduPilot did not create disruptions in time taken to execute the program beyond the normal noise or (b) there was some kind of flaw in how I associated output data with the execution it came with.
+-I took steps to check on both counts: running a new set of experiments with a greater variation in timing delays and also double checking the data traceability
+-Work with Chris and Afsoon to set up more robots in simulation (especially Fetch and pr2)
+-Started a dissertation latex document, although it's currently in rough shape
+
+Todo:
+-make a graph using the external timestamps to calculate elapsed time, rather than the internal (DONE. They look pretty much the same. Using the system timestamps gives a longer total elapsed time but dosen't seem to alter the relative ordering.)
+-write code to double-check that I'm graphing data that belong to what I think they belong to (steps to this involve: double checking that, when running an experiment, the diff file containing the code with the delays I think is being applied is actually being applied; double checking that, when retrieving a log file, it corresponds to the experiment I think it corresponds to)
+-continue to run the additional ArduPilot experiments and analyze the data, in service of picking a better set of timing delays to better illustrate the range of behaviors
+-do some additional work on pr2
+-further work on turning the dissertation file into a dissertation, including starting to add some substance of the work I'm doing now to it
+-write the extremely simple automated checker that looks at a log and tells me if the copter very obviously failed
+-fix the assumption in log_analysis.py:187 that all logs in a database have the same mission
+-do the rviz and robot demo hacking and scripting referenced in dsk_notes from the april 3 meeting with Chris
+
+
+
+4-6-20
+Done:
+-Graphed ArduPilot data using external vs. internal simulation timestamps. Concluded that the choice of timestamp does not significantly affect performance
+-Found variations in delays that would cause the ArduCopter trial runs to behave out of intended behavior (This is a goal of the experiments, because I'm trying to find what kinds of delays are tolerated and what kinds of delays are not)
+-Created additional patch files to use to run a wider set of variations in the ArduPilot experiments
+-Made preparations to launch a broader set of ArduCopter experiments
+-Increased traceability in the ArduCopter data
+-Worked on several ROS-based systems, bringing them closer to the point where I can script experiments on them
+-Realized that there are a few extra steps in scaling up the experiments in the ROS-based systems than I'd previously realized
+
+Todo:
+-Review the code changes that Chris asked me to review
+-Set up and run the new set of ArduCopter experiments on a different server
+-Break down the extra steps in scaling up the ROS-based experiments into more concrete steps and start attacking them
+-continue to talk to Chris and Afsoon about progress in the ROS-based systems, especially with regard to scripting and scenarios for testing
+-Make some progress on the dissertation document, especially in writing up the current work.
+
+
+4-9-20
+Done:
+-Launched a big batch of ArduCopter experiments on a server, which can run mostly unsupervised
+-Investigated and broke down some of the elements involved in scaling up testing on the ROS-based systems (e.g., creating scenarios for testing, scripting large batches of executions)
+
+Todo:
+-check in occasionally on my big batch of test runs, to make sure they're going as expected
+-Coordinate with Afsoon and Chris, especially trying to make sure we aren't duplicating work on our similar goals of testing ROS systems in automated situations
+-Do the work necessary to get big batches of test runs working on ROS systems, including creating mission/scenario equivalents and automated tooling/scripting to run the tests in batches. There is likely to be debugging involved in this process.
+-Work on writing while things are running.
+
+
+4-13-20
+Done:
+-Big batch of ArduCopter experiments on server is done. Started analyzing data
+-Started scripting Fetch experiments to run headless/in bulk; debugging of process
+-Started analzying Fetch logs to feed into existing data analysis pipeline
+-Wrote more code for data analysis, to cover cases/insights I hadn't previously considered
+-Considered drawbacks of my first approach for adding timing delays in ROS systems and considered possible mitigations and possibilities for a different approach.
+
+Todo:
+-Launch another big batch of ArduCopter experiments on server
+-Write more of dissertation
+-Start writing up data analysis for ArduPilot experiments
+-Confer with Chris and Afsoon about overlap in our testing needs for ROS systems
+-Finalize the approach for adding controlled timing delays in generalized ROS systems.
+-Get automated tooling for Fetch in a place where I can launch a big batch of experiments
+
+4-14-20
+Plan for today:
+Morning - timing delay approach checking -- ask Chris, Milda, and Cas
+Afternoon - 2 hrs writing
+-tasks from Chris and Afsoon meeting
+
+
+
+4-15-20
+Timing delay approach
+-interception/redirection vs. comby on "publish" statements
+Rerun the ardu experiments
+
+
+Questions about interception/redirection
+-the topic tools are all about redirecting to other topics
+--I'm not sure whether this works for what I'm trying to do
+
+
+                 /--------->Topic A                             /-----> Topic A
+                /                                              /
+Message --------                                              /Forward
+                \                                            /
+                 \-----topic tool plus delay------->Topic B--
+
+
+
+
+Message---------->topic tool plus delay------> Topic A
+
+-Write node Z (forwards from topic A to topic A' with delay)
+-check on the failing ArduCopter runs on isri and see if I fixed it X
+-unify the state of the github repo X
+-waypoints object
+
+
+--------------------------------------------------------
+Updates 4-16-20
+
+The major things I'm working on:
+1) Missions for ROS systems
+--I've tested ROS systems on things that are less mision-like, but for the purposes of my experiments, mission-like tests are much better (concrete metrics for how much they deviate)
+--Afsoon and I are coordinating on this; should be done by Wednesday
+2) Timing delays for ROS systems communications boundaries
+--I've decided on the approach I'm taking and have make significant progress. Should be done by the end of this week
+3) Writing up
+--I haven't gotten as much done as I wanted. Will refocus on it.
+4) ArduPilot experiments -- run more and Data analysis
+--ongoing, in concert with the writing up
+5) Batching ROS tests
+--ongoing progress. Now dependent on 1 and 2
+
+Todo:
+-Write more of dissertation
+-Start writing up data analysis for ArduPilot experiments
+-Confer with Chris and Afsoon about overlap in our testing needs for ROS systems
+-Finalize the approach for adding controlled timing delays in generalized ROS systems.
+-Get automated tooling for Fetch in a place where I can launch a big batch of experiments
+
+
+Done:
+-Launched another big batch of ArduCopter experiments
+-Conferred with Chris and Afsoon about overlap in our testing needs for ROS systems and split up work on next steps
+-Figured out what was wrong with my approach for controlled timing delays in generalized ROS systems and started working ot fix it
+
+Todo:
+-Write more of dissertation
+-write up more of analysis of ArduPilot experiments and surrounding setup
+-Finish the work on adding controlled timing delays in generalized ROS systems
+-Finish creating the waypoint objects (missions) for the controlled testing infrastructure I'm working on with Afsoon and Chris
+-Continue to adapt existing test infrastructure to scale up ROS tests
+`
+
+Chris meeting:
+-Simpler DTW
+--1:1 mapping -- account for small constant lag
+-use metric to align different executions of same mission
+look at largest instantaneous deviation in space distance
+
+multiple simple QoS metrics
+-timeliness
+-how far off from the intended endpoint
+-how far off from each waypoint (or sum of waypoints, mean, max)
+-progressively get more complex with metrics
+
+Memory and efficiency tips:
+-don't read entire json file into memory at once
+--read lazily
+-avoid using python lists to store data
+--fixed size array instead
+--numpy matrix
+
+
+----------------------------------------------------
+4-20-20
+
+Done:
+-Conferred with Chris about plans and timing for the rest of the experiments and writeup
+-Made more concrete plans about what needs to be done for the dissertation and the timeline for doing those things
+-Worked on writing the correct time delay infrastructure for ROS messages
+-Worked on writing the infrastructure to create Waypoint objects (for the work I'm doing with Chris and Afsoon)
+
+Todo:
+-finish writing the ROS message delay infrastructure
+-finish writing the Waypoint object infrastructure
+-confer with Chris and Afsoon
+-do more writing
+-write the code to automatically extract the logs from the ROS experiments into a format that can easily interface with my existing analysis code
+
+
+4-21-20 - to discuss with Claire
+--Finish the Waypoint object
+--meet with Chris and Afsoon
+--Devote some time to writing
+--Infrastructure to delay messages is nearly finished, I have a plan for the concrete steps needed
+--write code to pull the additional very simple QoS metrics that Chris and I discussed from the logs
+
+--writing finish methodology in next day or two
+
+
+Chris and Afsoon meeting:
+add the mission file to the yaml
+-add the mission instructions to work with follow_waypoints in mission_instructions in yml file for ROSRunner
+
+give Afsoon yaml file of mission and instructions on how to run, and Afsoon will test and add features. By THursday
+
+----------------------------------------------
+Questions for Chris
+-I have a delay node working but not as intended
+-It takes in a message, then delays it for X seconds and sends it along (publishes) (X=4 seconds, for the dummy example)
+-But it dosen't process them in parallel. the first message is delayed by 4 seconds (X), the second message is delayed by 8 (2X), the third by 12 (3X), etc. (I think there's a limit here based on the length of the buffer -- some get dropped)
+-Do I create a pool of callback functions? I'm not sure how that would work? something to go in parallel?
+
+
+In callback -- spawn a new thread that sends the delayed message
+
+#bb4b7d
+
+April 23
+Done:
+-Met with Chris and Afsoon about infrastructure to get arbitrary ROS robot to follow a set of waypoints.
+-Worked on developing input in YAML format for Afsoon's ROSRunner code
+-Developed ROS message delay node. Met with Chris about problems with the approach. Fixed the problems.
+-Some writing
+
+
+Todo:
+-get Afsoon a YAML file to feed into/test her infrastructure for following waypoints
+-Expand message delay node to work with additional systems, node, topics, and delay amounts.
+-More writing
+-Implement additional quality of service metrics in my data analysis
+-write code to transform ROS logs into a form that can easily interface with my existing data analysis code
+
+
+
+
+chris meeting
+-how to launch rviz with simulated world
+
+
+
+How to make Follow waypoints work with Fetch
+-build follow waypoints and smach in the same ros workspace as fetch
+-source /opt/ros/melodic/setup.bash and /ros_ws/devel/setup.bash in every terminal window opened
+-start roscore (terminal 1)
+-start fetch playground: $ roslaunch fetch_gazebo playground.launch (terminal 2)
+-start fetch nav: $ roslaunch fetch_navigation fetch_nav.launch (terminal 3)
+-start follow waypoints: $ roslaunch follow_waypoints follow_waypoints.launch (terminal 4)
+-send your waypoints to /initialpose by replaying a rosbag: $ rosbag play <name of rosbag> (terminal 5)
+--then if the waypoints aren't in the correct map bounds, you'll get errors in terminal 3
+
+
+Previously:
+-battled writers' block
+-battled Rviz, which seems intent on crashing VNCViewer
+-Struggled with generating missions (I can generate missions without reference to a specific map fairly easily, but there are lots of problems when I use the same strategies to try to generate missions that involve navigating a specific map, with or without obstacles in the map.) (Sorry, Afsoon)
+-Got a paper accepted (RIOT paper, DSN-industry), thoughts about camera-ready
+-Started outlining presentation for ICRA paper
+
+Coming up:
+-Get Afsoon at least one mission file implementing a mission I can generate, even if it doesn't work with the relevant map
+-Expand message delay node to work with additional systems, node, topics, and delay amounts.
+-More writing
+-Implement additional quality of service metrics in my data analysis
+-write code to transform ROS logs into a form that can easily interface with my existing data analysis code
+-Camera ready for RIOT paper
+-Start creating presentation for ICRA paper
+
+Create a file to fit with Afsoon's expectations, even though the waypoints are out of expected map
+
+Create a docker image that's just fetch modified to add smach and follow_waypoitns
+
+
+-----------------
+Really set aside 30 minutes every day for writing -- I think actually getting myself to face the writing each time is the hardest part. maybe if I get into a rhythm
+Really finish this ROS experiment setup --> I've been bogged down in technical difficulties, and I need to take a step back and figure out how to get around htem rather than keep being bogged down
+Really transform the ROS logs
+Really finish the data analysis code
+
+I talked to Cas and Milda about the camera ready -- shouldn't take much time
+ICRA presentation
+
+
+by 9 p.m each day, send claire a bunch of words related to dissertation
+shift at least a bit to data analsyis so htat I have tables to put into the writing
+
+Refocus effort to get analsyis of At least one robot written up!!!
+--put into LaTex
+--make script that'll be available to other robots
+
+
+
+try running rviz locally with just a map and no robot
+-go through whole roslaunch inside container
+
+
+4
+
+answered Apr 17 '11
+Eric Perko gravatar image
+Eric Perko
+8196 ●71 ●90 ●142 http://ericperko.com/
+
+What you are likely seeing is that, without the VGA connected, your graphics doesn't startup at all. On our robots, without a monitor plugged in on bootup, the discrete graphics cards don't get initialized and X never starts, so VNC with RViz wouldn't work so well.
+
+In either case, VNC or forwarding X is probably not the best way to work with rviz remotely. A much better plan would be to follow the directions on NetworkSetup to get your computer connected to the robot's rosmaster (setting the ROS_MASTER_URI and ROS_IP for both machines is what I do instead of setting up DNS). This way, you can run rviz locally on your computer, only sending ROS data across the network instead of forwarding X or VNC, both of which I found to be quite slow when working with a 3D application like rviz.
+https://answers.ros.org/question/9743/rviz-segfaults-unless-a-monitor-is-connected-any-way-to-prevent-this/
+
+set poses just using geometry?
+
+
+
+-----------------
+
+
+
+Previously:
+-battled writers' block
+-battled Rviz, which seems intent on crashing VNCViewer
+-Struggled with generating missions (I can generate missions without reference to a specific map fairly easily, but there are lots of problems when I use the same strategies to try to generate missions that involve navigating a specific map, with or without obstacles in the map.) (Sorry, Afsoon)
+-Got a paper accepted (RIOT paper, DSN-industry), thoughts about camera-ready
+-Started outlining presentation for ICRA paper
+Coming up:
+-Get Afsoon at least one mission file implementing a mission I can generate, even if it doesn't work with the relevant map
+-Expand message delay node to work with additional systems, node, topics, and delay amounts.
+-More writing
+-Implement additional quality of service metrics in my data analysis
+-write code to transform ROS logs into a form that can easily interface with my existing data analysis code
+-Camera ready for RIOT paper
+-Start creating presentation for ICRA paper
+
+
+5-4-20
+
+Previously:
+-gave up on rviz, discussed alternate strategies with Afsoon and Chris, chose a strategy and started working on using it for mission generation
+-submitted camera-ready for RIOT paper
+-wrote some dissertation text
+-did some organization on the dissertation document
+-lots of family obligations
+
+Coming up:
+-More dissertation text and organization
+-Get Afsoon a mission file implementing a mission I can generate
+-Expand the message delay node, working with Chris's improvments to the underlying infrastructure
+-Work on ICRA presentation
+-polish data analysis pipeline so that I can generate graphs from logs as soon as they come in
+-write code to transform ROS logs into a form  that can easily interface with my existing data analysis code
+-Implement additioanl quality of service metrics in my data analysis
+-Virtually attend grandmother's funeral and associated family events
+
+
+------------
+corresponding yaml file
+resolution meters per pixel
+
+
+fork follow_waypoints, strip out the things we don't need
+-use the simpler version
+-follow path state -- reuse it
+-but rewrite the get path state
+--remove the whole poseArray_publisher
+-get rid of the wait for path reset
+
+-change the interface slightly
+--simply accept a pose array
+
+-simplify the horrible getpath
+--no multiple threads
+-wait for a message on a specific topic
+--that will be a pose array -- sequence of waypoints
+--rather than waiting for messages
+
+
+
+
+---------------------
+Plan for today and tomorrow:
+-Adapt text of ICRA paper to dissertation chapter
+-While thinking about ICRA paper, start to outline video presentation for virtual ICRA
+-finish up fiddly bits for running experiments (in conjunction with Chris and Afsoon): waypoint maps, fork and simplify waypoint running code
+-work on completing data analysis pipeline and adding ArduCopter data analysis to the dissertation
+
+
+-----------------------------------------
+Steps on follow waypoints
+
+
+run follow_waypoints
+rosrun
+roslaunch fetch_gazebo_demo fetch_nav.launch
+
+start move base. tell the robot to go to a single waypoint. see what happens.
+
+
+need to specify a frame
+\
+
+
+start over
+-launch vnc to begin with
+-check with gazebo
+-launch pose stamped message to move base simple goal
+-check to see if robot moves
+
+
+once that works, get it to work with an action server
+
+then finally run follow waypoints
+
+as soon as i find out if move base simple goal works or doesn't work on fetch, let chris and afsoon know on slack
+
+if navigation stack isn't working for fetch
+-share with afsoon
+-and then move to any other robot
+
+-spot the difference between a robot on which the nav stack works
+
+How to reproduce follow_waypoints
+$ roscore (window 1)
+$ roslaunch fetch_gazebo playground.launch (window 2)
+$ roslaunch fetch_gazebo_demo fetch_nav.launch (window 3)
+$ rosrun follow_waypoints follow_waypoints.py (window 4)
+
+
+
+-----------------------------------------------------------
+
+Done:
+-Some dissertation brainstorming and actual dissertation writing
+-consult with Afsoon and Chris about waypoint generation issues
+-diagnose issues with Fetch's following waypoints
+-work on data analysis pipeline
+
+Todo:
+-more dissertation writing (and/or brainstorming)
+-finish the waypoint code
+-test data analysis pipeline on ArduPilot data to ensure it does what I think it does
+-put some of the ArduPilot results into LaTeX and write up the associated analysis text
+
+---------------------------------------
+
+experiments need to be running by the end of this week, or we move the defense date
+half-ass the icra video
+
+
+
+---------------------------------
+spin up husky and try to do a waypoint in its environment
+
+
+
+
+
+make sure the waypoints I'm generating for fetch are actual real waypoints
+generate waypoints for the racetrack map
+
+
+
+======
+Fetch waypoints that work
+386_320 (winds up in front of the door instead of where I'd expect, a little way away)
+64_299 (again, this isn't exactly where I'd expect. Am I computing the conversions properly?)
+
+
+
+
+
+----------------------------
+Chris meeting 5-13
+
+Record state of two topics
+-ground truth position as reported by Gazebo
+-look at the robot's believed pose
+/odom
+/amcl_pose
+
+If I can get /move_base/goal_simple working
+-can work with those robots
+
+
+husky
+turtlebot 3
+f1 tenth
+
+get move_base working
+
+inherently have nondeterminisim
+-count number of weird failures in nominal vs experimental case
+
+---------------------
+What's wrong with the waypoint generation on map as opposed to real life?
+-print out map coordinates vs real world vs image
+
+
+
+
+
+Larger tasks
+-Dissertation Writing
+-ICRA video presentation
+-Experiments
+--reproducable executions in controlled environments
+--adding delays to ROS systems
+---proof of concept
+---choose which experiments to run
+---execute experiments
+--data analysis
+---Build pipeline
+---Analyze arducopter data
+---put arducopter graphs in document
+---pipeline to convert ROS logs to the same kinds of logs you analyzed with ArduCopter
+---run analysis on ROS results
+
+
+Done:
+-met with Chris and Afsoon about robot simulation experiment reliability and approaches
+-encountered and analyzed problems with navigation in ROS systems
+-with Chris, traced problems to unreliable robot localization in simulation
+-tried alternate approach involving f1tenth robot to try to get around localization issue
+-Dissertation brainstorming, text, and other elements of the dissertation document (citations, figures, etc.)
+
+Todo:
+-logistical admin stuff
+-meet with Milda about ICRA presentation
+-With Afsoon and Chris, work around the localization issues (try to find systems that don't exhibit those issues to begin with)
+-More dissertation text, etc.
+-more integration of data analysis of latest work into dissertation text.
+
+
+----------------------------------------
+Chris meeting 5-13
+
+Record state of two topics
+-ground truth position as reported by Gazebo
+-look at the robot's believed pose
+/odom
+/amcl_pose
+
+If I can get /move_base/goal_simple working
+-can work with those robots
+
+
+husky
+turtlebot 3
+f1 tenth
+
+get move_base working
+
+inherently have nondeterminisim
+-count number of weird failures in nominal vs experimental case
+
+
+
+----------
+map_world_link -- publishes static transform from robot to map
+--source of problem?
+base_link to map is not being published on tf
+
+Husky -- how do we get it to respond to poses in the map frame?
+-we got it to respond to a pose in the odom frame
+
+-we want to use the tutorials
+--AMCL
+
+we need to learn more about how move_base actually works
+-what are its requirements? what nodes/topics? how you specify coordinates?
+-what transforms it needs?
+
+update readme to reflect that AMCL is needed to provide the transform from the map frame to odometry frame. without AMCL can't run move_base in the map frame
+-give the series of commands we did
+--or anything else that transforms between the two --localization
+---AMCL w/r/t known map
+---SLAM when don't know what map looks like
+
+
+---------------------------------------------------
+Done:
+-met with Milda on ICRA presentation
+-got ICRA presentation first draft done (with Milda)
+-Got husky to follow move_base_simple goals (with Chris)
+-started to diagnose the problem with F1tenth robot following move_base_simple goals and conveyed the information to Afsoon
+-dissertation writing
+
+
+Todo:
+-talk with Milda about edits to and script for ICRA presetnation
+-write up a README with howtos on how to make move_base_simple goals work with Husky
+-take next steps in making Husky follow waypoints
+-confer with Afsoon on the F1tenth issues to make sure we're on the same page
+-admin stuff
+-more disseration writing
+-record and submit ICRA video
+
+
+----------------------------------------
+Claire meeting:
+just heard from Paula for Phil scheduling -- need to cross reference for option times
+--she gave times in week of July 20. If we want the following week, we have to wait
+
+--progress on experiments -- husky goes
+--need to finish ICRA thing with Milda
+
+get the timing experiments into the closer to final form so that claire can read it
+
+
+For f1tenth racer:
+sending it most poses causes it to fail to make a plan. But sending it this command is wild:
+rostopic pub -f RACETRACK_400_584.yml /car_1/move_base_simple/goal geometry_msgs/PoseStamped
+
+
+
+----------------------------------------------
+Done:
+-got my internet fixed!
+-finished and uploaded the video for the ICRA presentation, with help from Milda
+-worked on the dissertation chapter on the overhead timing experiments
+-coordinated with Chris and Afsoon on robotics simulation waypoint following, including writing up a readme on how to make move_base_simple goals work with Husky
+-got more complex waypoint following working with Husky
+-nearly got waypoint following working with f1tenth robot in simulation but found some wacky behaviors in that simulation
+-admin stuff
+
+Todo:
+-get a draft of the dissertation chapter on the overhead timing experiments
+-add the more complex waypoint following functionality to the docker image for Husky and write up a corresponding readme
+-check that I can run the same kinds of experiments headless with Husky as I can run interactively with VNC and Gazebo
+-check to make sure I'm correcting logs correctly with Husky, especially when running headless
+-launch Husky baseline experiments
+-admin stuff
+
+
+-----------
+Figure out follow waypoints with Rosrunner
+
+
+
+Ok, new docker image for husky_waypoints
+-need to use catkin_make_isolated to get smach working (why? I don't know) maybe both? I don't know how to do both... is it as simple as listing both as build keywords?
+-but doing that changes the file that needs to be sourced from /ros_ws/devel/setup.bash to /ros_ws/devel_isolated/setup.bash
+-the path seems to be hardcoded into entrypoint.sh, and I don't know where to change it
+
+running things headless does not seem to work?
+-or is it because I didn't build properly?
+
+[ WARN] [1590170131.507131838]: No laser scan received (and thus no pose updates have been published) for 1590170131.507054 seconds.  Verify that data is being published on the /scan topic.
+[ WARN] [1590170134.020880628]: Timed out waiting for transform from base_link to map to become available before running costmap, tf error: canTransform: target_frame map does not exist. canTransform: source_frame base_link does not exist.. canTransform returned after 0.100381 timeout was 0.1.
+
+
+
+does rosrunner have capabilities for rostopic pub?
+
+
+
+
+--------------------------------------------
+Ask Chris to read the methodology section and for feedback?
+-practicalities of delaying the topics
+
+
+
+realtime factor is below 1
+-means that the simulation is running slower than the rate it was doing in the real world
+-warning control loop missed its desired rate of 20Hz
+
+vnc is bad for CPU usage
+zoom is bad for CPU usage
+lack of hardware acceleration
+robot running much slower than it's designed to
+
+to check if running correctly headless, warnings
+
+
+
+gazebo plugin for the camera isn't working
+-
+
+$ Xvfb :1 -screen 0 1600x1200x16  &
+$ export DISPLAY=:1.0
+
+--need to set display variables in any and all shells using
+
+$ roslaunch husky_gazebo husky_playpen.launch gui:=false headless:=true
+$ roslaunch husky_navigation amcl_demo.launch
+
+-then send it a waypoint or two
+rostopic pub -f HUSKY_968_1133.yml /move_base_simple/goal geometry_msgs/PoseStamped
+
+
+=======
+catkin_make_isolated -- source separately
+alternative: catkin_tools -- just call catkin instead
+
+make a new dockerfile for my purposes
+FROM christimperley/robots:husky
+-with additional instructions
+
+
+
+dockerfile template
+ARG base_image (refers to whatever robot)
+FROM ${base_image}
+
+-and then install follow_waypoints on top
+
+write my own makefile on top.
+
+try turtlebot3
+
+(see if f1tenth issues are because of too much overhead )
+
+roslaunch husky_gazebo husky_playpen.launch gui:=false headless:=true &
+
+
+-=====================
+waypoint following that seems to work, headless:
+
+root@b90fc37eb92b:/ros_ws# history
+    1  ls
+    2  source devel/setup.bash
+    3  cd src/
+    4  ls
+    5  git clone https://github.com/ros/executive_smach.git
+    6  ls
+    7  git clone https://github.com/squaresLab/follow_waypoints.git
+    8  cd ..
+    9  catkin
+   10  catkin_make_isolated
+   11  source devel/setup.bash
+   12  roslaunch husky_gazebo husky_playpen.launch gui:=false headless:=true &
+   13  fg
+   14  roslaunch husky_gazebo husky_playpen.launch gui:=false headless:=true
+   15  ps aux
+   16  Xvfb :1 -screen 0 1600x1200x16  &
+   17  export DISPLAY=:1.0
+   18  roslaunch husky_gazebo husky_playpen.launch gui:=false headless:=true
+   19  ps aux
+   20  bg
+   21  ps aux
+   22  kill 6092
+   23  ps aux
+   24  roslaunch husky_gazebo husky_playpen.launch gui:=false headless:=true
+   25  bg
+   26  roslaunch husky_navigation amcl_demo.launch &
+   27  rostopic echo
+   28  rostopic list
+   29  rosrun follow_waypoints follow_waypoints.py &
+   30  cd src/
+   31  ls
+   32  cd executive_smach/
+   33  ls
+   34  cd smach
+   35  ls
+   36  pip install .
+   37  cd ../../
+   38  cd ..
+   39  rosrun follow_waypoints follow_waypoints.py &
+   40  ls
+   41  rostopic list
+   42  rostopic info /positions
+   43  rostopic pub -f husky_poses.yaml /positions geometry_msgs/PoseArray
+   44  history
+
+---------------------
+steps that should go into docker file
+    3  cd src/
+    5  git clone https://github.com/ros/executive_smach.git
+    7  git clone https://github.com/squaresLab/follow_waypoints.git
+   10  catkin_make_isolated
+   30  cd src/
+   32  cd executive_smach/
+   34  cd smach
+   36  pip install .
+
+setps that should be in the entrypoint script
+    2  source devel/setup.bash
+       source devel_isolated/setup.bash
+   16  Xvfb :1 -screen 0 1600x1200x16  &
+   17  export DISPLAY=:1.0
+steps that should be executed at runtime
+   24  roslaunch husky_gazebo husky_playpen.launch gui:=false headless:=true
+   26  roslaunch husky_navigation amcl_demo.launch &
+   29  rosrun follow_waypoints follow_waypoints.py &
+   43  rostopic pub -f husky_poses.yaml /positions geometry_msgs/PoseArray
+
+
+=======================
+To talk with Claire about:
+-Husky experiments -- expect to be running later today, most of the pieces are in place
+-Dissertation chapter -- feedback? Organization? Evaluation too ambitious?
+-What to work on next on dissertation?
+
+
+=====================
+to get husky working:
+-dockerfile with waypoint following in it.
+-set it up to go with one of the structures, either roswire or rosrunner
+
+===
+frustrating -- can't get husky working reliably headless
+fresh husky container
+$ source devel/setup.bash
+$ Xvfb :1 -screen 0 1600x1200x16 &
+$ export DISPLAY=:1.0
+$ roslaunch husky_gazebo husky_playpen.launch gui:=false headless:=true
+
+gets error message:
+
+[ WARN] [1590505886.623603561, 1298.480000000]: Failed to meet update rate! Took 1298.4800000000000182
+[ WARN] [1590505886.624709665, 1298.480000000]: Failed to meet update rate! Took 1298.4600000000000364
+[ERROR] [1590505886.627287, 1298.480000]: Spawn service failed. Exiting.
+Warning [parser_urdf.cc:1119] multiple inconsistent <gravity> exists due to fixed joint reduction overwriting previous value [true] with [false].
+[spawn_husky_model-9] process has died [pid 422, exit code 1, cmd /opt/ros/melodic/lib/gazebo_ros/spawn_model -x 0.0 -y 0.0 -z 0.0 -Y 0.0 -unpause -urdf -param robot_description -model / __name:=spawn_husky_model __log:=/root/.ros/log/1ed363e8-9f63-11ea-9626-0242ac110002/spawn_husky_model-9.log].
+log file: /root/.ros/log/1ed363e8-9f63-11ea-9626-0242ac110002/spawn_husky_model-9*.log
+
+-->will sometimes work the second time I try it in the same container
+
+
+
+
+
+
+----------------------------------------------------------
+source devel_isolated/setup.bash
+source devel/setup.bash
+
+instead of pip install
+
+
+shell call to call Xvfb and set DISPLAY variable
+-using ROSWIRE or rosrunner
+
+Listen to when it claims to finish
+-listen to move_base action server
+-know when each waypoitn in the sequence is marked as completed
+
+first milestone -- run with timeout
+-then check for termination
+
+separate script that checks whatever you're checking
+-finishes when the mission is done
+-termination condition -- use non-blocking
+--"monitoring" -- specify
+
+-------------------------
+Ok, I tried to diagnose the husky entrypoint issue. I think the only thing I changed was adding three alternate entrypoints to the filesystem.
+-this failed to build, but nondeterministically?
+
+Alternate entrypoints:
+entrypoint.sh  entrypoint_no_opt_source.sh  entrypoint_no_source.sh  entrypoint_no_ws_source.sh
+
+$ docker run --entrypoint /ros_ws/entrypoint_no_source.sh -it --rm debug_husky
+$ echo $?
+0
+$ docker run --entrypoint /ros_ws/entrypoint_no_opt_source.sh -it --rm debug_husky
+$ echo $?
+1
+$ docker run --entrypoint /ros_ws/entrypoint_no_ws_source.sh -it --rm debug_husky
+$ echo $?
+1
+$ docker run --entrypoint /ros_ws/entrypoint.sh -it --rm debug_husky
+$ echo $?
+1
+-------------
+test it out in roswire for what I want to do with it.
+
+
+gazebo is takign longer than thetimeout in the spawn script
+-that may be why it's failing
+-need to warm up gazebo -- call a command to try to warm up gazebo. not sure what command that would be
+
+by friday
+-running baseline husky experiments
+
+script on running husky experiments
+-to do this, need script that polls whether it's achived the goal
+-also need something to warm up gazebo
+
+-------------------------------------
+(last time)
+Done:
+-got my internet fixed!
+-finished and uploaded the video for the ICRA presentation, with help from Milda
+-worked on the dissertation chapter on the overhead timing experiments
+-coordinated with Chris and Afsoon on robotics simulation waypoint following, including writing up a readme on how to make move_base_simple goals work with Husky
+-got more complex waypoint following working with Husky
+-nearly got waypoint following working with f1tenth robot in simulation but found some wacky behaviors in that simulation
+-admin stuff
+Todo:
+-get a draft of the dissertation chapter on the overhead timing experiments
+-add the more complex waypoint following functionality to the docker image for Husky and write up a corresponding readme
+-check that I can run the same kinds of experiments headless with Husky as I can run interactively with VNC and Gazebo
+-check to make sure I'm correcting logs correctly with Husky, especially when running headless
+-launch Husky baseline experiments
+-admin stuff
+
+(new)
+Done:
+-Worked more on dissertation writing, including getting draft of chapter on overhead timing experiments to Claire and work on intro
+-Added more complex waypoint following functionality to Husky
+-Debugged Husky docker container/experiment issues with Chris and Afsoon
+-Put together scripts for running Husky experiments headless
+-admin stuff
+-started to organize DSN video presentation
+
+Todo:
+-slide presentation for tomorrow's group meeting
+-more dissertation writing, possibly finish a draft of intro for Claire to look at
+-Scale up Husky baseline experiments on a server
+-sanity check the data coming out of the Husky baseline experiments and make adjustements if needed
+-write the scripts needed to run the Husky experiments with artificial delays
+-coordinate collaboration on DSN video presentation
+-possibly attend some of the "virtual ICRA" conference (and figure out if they properly converted my registration)
+
+TODO
+find a minimal example where husky run manually diverges from what should be equivalent in rosrunner script and show afsoon and chris
+
+
+
+
+debugging timeout issue on rosrunner:
+running with --timeout 2 is ok
+running with --timeout 50 is not
+
+ok: 2, 5, 25, 35, 45, 50, 250, 350, 350
+not ok: 50, 500, 500, 400, 350
+
+
+----------------------------------------------------------------
+Separate todos:
+-Use create waypoints to make (at least) 10 routes that husky will take on its own
+-Try these routes on an interactive gazebo run in vnc (and pick 10 that work)
+-figure out what topics you want to record. Just hte bare ones that give you enough info for the measurements proposed in the paper
+-write monitor script to poll whether the execution has finished and exit if it has (exit condition for rosrunner)
+-launch exepriemnts, running each 100 times, recording the bag
+-make sure bags are recording in a way we can find them again
+
+
+----
+Hello! I am Deby Katz, a Ph.D. candidate at Carnegie Mellon University (planning to graduate this summer). I primarily work on software quality for robotics and autonomous systems. This is my first time at ICRA, and I am excited to share my work with the robotics community. You can find my paper, Detecting Execution Anomalies As an Oracle for Autonomy Software Robustness, in #wea25_3. I look forward to discussing the paper and related topics there.
+\
+
+
+----------------------
+Job searching
+
+CIC fellows
+-look at this
+-pretend to be academic
+-postdoc positions
+-not ideal solution
+
+Apply for everything
+
+Reach out to Mike
+-Claire will ask him too
+-any chance Edge Case is still hiring? if not, do you know anyone else who is
+
+Duolingo -- Karin
+
+Cadence
+Mmobil? (in Sqhill -- acquired by 3M)
+database company
+
+look remote-first
+-even in Bay Area
+
+
+
+--------------------
+Separate todos:
+-Use create waypoints to make (at least) 10 routes that husky will take on its own (five waypoints each, not counting return to first waypoint)
+-Try these routes on an interactive gazebo run in vnc (and pick 10 that work)
+-figure out what topics you want to record. Just the bare ones that give you enough info for the measurements proposed in the paper
+-write monitor script to poll whether the execution has finished and exit if it has (exit condition for rosrunner)
+-launch exepriemnts, running each 100 times, recording the bag
+-make sure bags are recording in a way we can find them again
+
+Missions:
+-HUSKY_pose_array_5_156109eab4cc4c1f9432690d0b6e6ca9.yaml (got stuck going from -1.1, -3.55 to 7.55, -8.0, I think; worked on second try)
+-HUSKY_pose_array_5_2ce0b4fa2a4249b4b5057913b8c3d9ec.yaml gets suck on 9.55, -6.6 (reaches it eventually)-- then fails completely later
+
+
+(follow_waypoints declares success anyway)
+
+
+Take the bag from the headless run
+playback gazebo topics interactively with gui
+
+
+-
+
+
+Run the same mission a lot of times
+-find the sources of nondeterminisim
+
+TODO:
+send Afsoon the mission files
+upload the docker images
+send the yaml file to afsoon
+
+
+roswire -topics restriction
+
+-------------
+Metrics: what are they, and what do you need?
+
+Whether each execution executes each waypoint and returns home
+-The physical position of the robot at all times.
+-The physical positions and order of the waypoints.
+-A way to determine whether the robot got close enough to each waypoint (and in order) --> write this as a function
+
+
+
+Euclidean distance metrics: these metrics are based on the position in 3d space of the deformed execution versus the nominal executions.
+-The Euclidean distance between the final position of the robot in the representative nominal and each deformed execution
+-Given aligned time series between the representative nominal execution and each deformed execution, the greatest and the average Euclidean difference between each position on the path
+-Metrics based on the closest distance from each waypoint
+
+--The sum of closest distances from each waypoint
+--The average of the closest distances from each waypoint
+--The greatest closest distance from any waypoint
+
+Physical position of the robot at all times and the physical positions of each waypoint
+-also relevant is the distribution of trajectories for the nominal case -- how much of an outlier?
+
+\end{itemize}
+\item Timeliness metrics
+\begin{itemize}
+
+\item The amount of time before completion (either successfully or unsuccessfully)
+-Timestamps on the ros messages?
+\item Total amount of time taken to reach each waypoint (`reach' defined as when the system issues the instruction to go to the next waypoint)
+-Timestamps on the goal reached messages?
+\end{itemize}
+
+
+Ok, so what topics do we need?
+/move_base/result
+/move_base/status
+/amcl_pose
+
+/gazebo_ground truth
+
+To be safe, use this regex:
+rosrunner --bag husky_waypoints_test_5_5_a.bag --verbose --timeout 2000 --topics "((.*)/move_base/(result|status|parameter(.*)|goal(.*))|(.*)/amcl(.*))" /usr0/home/dskatz/Documents/overhead-timing-effects-in-ROS/ROSRunner/husky_waypoints.yml
+
+---------------------------------------------------------
+Yesterday:
+-coordinated on DSN presentation
+-worked on the experiments -- interpreting the data on the baseline Husky experiments -- filtering and making sure I'm collecting the right data without overwhelmign with too many uninterpretable gigs
+-wrote more on dissertation
+-job searching
+-virtually attend parts of ICRA
+-Attended a seminar on software quality in Robotics
+
+Today
+-continue to work on experiments -- data pipeline and setting up the delay runs for the experiments -- concrete tasks
+-more virtual ICRA
+-more job searching
+-more writing (prepare intro to request feedback on)
+
+
+Potential mentors (based on stated interests)
+Alex Orso, Georgia Tech
+Andre van der Hoek, UC Irvine
+Heng Yin, UC Riverside
+Iftekhar Ahmed, UC Irvine
+Jeff Foster, Tufts
+Laurie Williams, NC State
+Luis Pina, University of Illinois at Chicago
+Manu Sridharan
+Raffi Khatchadourian, CUNY Hunter
+Reyhaneh Jabbarvand, UIUC
+Stephanie Forrest, ASU
+Steven Reiss, Brown
+Xinyu Wang, UMich
+Yuriy Brun, UMass
+
+---------------------
+how to organize the case study systems?
+-might require some modification
+
+overhead timing experiments chapter
+
+work also on overall intro
+
+----
+Make a short list of potential mentors and ask Claire about them
+
+
+
+Networking
+
+
+Ask Mau if ABB is hiring
+
+Dave is at Virginia Commonwealth in Richmond
+
+
+
+
+--------------------------------------------------
+-----------------------------------------
+rosrunner --bag husky_waypoints_test_5_5_a.bag --verbose --timeout 2000 --topics "((.*)/move_base/(result|status|parameter(.*)|goal(.*))|(.*)/amcl(.*))" /usr0/home/dskatz/Documents/overhead-timing-effects-in-ROS/ROSRunner/husky_waypoints.yml
+
+
+topics to delay
+-camera
+-/husky_velocity_controller/odom (into move_base)
+-/husky_velocity_controller/cmd_vel (out of move_base)
+-/imu/data
+-/imu/data/bias
+-/navsat/fix -- unrealistic to do constant delay -- better to vary it
+any message where have a lot (I'm going to do constant delay because of the premise of my work and to eliminate additional variables.)
+
+--topics separately.
+
+
+rosnode info with node
+-delay everything it subscribes to
+-delay everything it publishes
+--->two different nodes -- separately
+/move_base/
+
+--------------------------------------------------
+Mechanics of delaying topics
+-do it by passing environment variables to the Docker image or by creating new images for each? (using roswire's patch functionality?)
+-how many different images? (different images for what changes?) which environment variables to pass? names of topics? source and destiation nodes? length of delay?
+
+the `delay.py` file is the basis for the delay node. What do I need to put in there to make it compatible with using environment variables... is that the right question? do I need to rebuild after?
+-or do the environment variables get used in the launch file? add the new launch file to each docker container?
+
+
+Chris meeting 6-10-20
+simplest approach
+-relatively simple forwarding node
+-takes two arguments (command line variables) topic that it subscribes to, maps the output onto something else
+-remapping via launchfiles
+-in roswire --remap rather than write to the normal topic, write to the _delay
+
+for every one of the topic remappings, have one node responsible for taking content on X and putting it onto X_delay
+sys.argv (or any normal python thng) to get the runtime arguments
+-name of topic subscribing to.
+-paramaterize delay script to accept command line arguments
+
+bulk of the work is the remapping at the launch level
+-real challenge is the remapping step
+
+roswire - launch- node - remappings
+-first use the read method in roslaunch manager `launch_config = ros.roslaunch.read(filename, package=package)`
+-look through the individual node configs
+-add the remappings that I need to add to each particular node
+-e.g. remap odom to _odom_orig
+-take the node config, produce a modified version of the node config with the remappings -- put everything together into a new launch config
+
+use rosrun to launch a delay node for each topic I'm delaying
+
+------------
+launch system, give remappings as a dictionary
+-then launch individual delay nodes with rosrun
+
+ping Afsoon tomorrow mornign about compatibility with rosrunner for Chris's remapping changes
+
+
+---------------------------------------
+Gail Kaiser and Baishakhi Ray
+
+Postdoctoral inquiry (CIFellows program)
+
+Dear Gail,
+
+My name is Deby Katz. We spoke several years ago when I was considering doing my Ph.D. work at Columbia. Although Columbia and your lab were very tempting, I ultimately decided on the Computer Science Department at Carnegie Mellon University, where Claire Le Goues advises me. My dissertation defense is scheduled for next month, when I expect to graduate. I've been working on software quality, especially as applied to autonomous and robotics systems, including the application of techniques based in machine learning.
+
+I hope to apply for the CIFellows program (https://cifellows2020.org/), which provides funding for a two-year postdoctoral position. The program requires each applicant to identify a mentor who is willing to advise the postdoc and that the mentor write a letter in support of the application.
+
+I was wondering if you have any interest in being a mentor for this program. It looks like we have a significant overlap in research interests, and I am excited about possibly having another chance to work with you. If you'd like more information about my work, my list of publications and my CV are available at https://www.cs.cmu.edu/~dskatz. I would also be happy to schedule a time to meet (by video or phone) if you would like to discuss my work, possible projects on which we could collaborate, or any other aspects related to this program.
+
+Please let me know if you have thoughts.
+
+Best,
+Deby
+
+
+-------------------
+Introduction: Deby Katz -- Inquiry regarding CIFellows program
+
+Dear Baishakhi,
+
+My name is Deby Katz. I am a Ph.D. candidate in the Computer Science Department at Carnegie Mellon University, where Claire Le Goues advises me.  My dissertation defense is scheduled for next month, when I expect to graduate. I've been working on software quality, especially as applied to autonomous and robotics systems, including the application of techniques based in machine learning.
+
+I hope to apply for the CIFellows program (https://cifellows2020.org/), which provides funding for a two-year postdoctoral position. The program requires each applicant to identify a mentor who is willing to advise the postdoc and that the mentor write a letter in support of the application.
+
+My advisor, Claire, suggested that I contact you to see if you have any interest in being a mentor for me in this program. It looks like we have a significant overlap in research interests, and I have deep connections to NYC. If you'd like more information about my work, my list of publications and my CV are available at https://www.cs.cmu.edu/~dskatz. I would also be happy to schedule a time to meet (by video or phone) if you would like to discuss my work, possible projects on which we could collaborate, or any other aspects related to this program.
+
+Please let me know if you would like to discuss further.
+
+Best,
+Deby
+
+
+-----------------------------
+6-11-20 claire slack checkin
+
+Thursday morning update:
+-Husky experiments are proceeding well. Baseline experiments are continuing to run, en masse, and I expect to be able to launch the delay experiments by the end of tomorrow or (possibly) over the weekend.
+-I hope to have a (rough) dissertation intro chapter for you to look at by tomorrow night.
+-After I finish the dissertation intro chapter, I plan to go back to the overhead timing chapter to (a) incorporate your comments, (b) make it more polished, and (c) start adding results.
+-I heard back from Eric, who forwarded my info to the GrammaTech recruiter. They have two open positions (which were not listed on their web site), and I've applied to them both. They seem enthusiastic about my application. I have a coding pre-screen test I need to do for them, which should take about a half hour. (I've continued sending networking emails to others.)
+-I met with Cas and Milda on the DSN presentation, which is coming along well.
+-I started making a list of potential mentors for the CIF fellows program. I'll send that to you sometime later today for your feedback and start contacting some of them.
+
+
+=============
+Command run for husky baseline experiments:
+python3 ros_experiment_runner.py --db_fn 6_10_20_bag.db --log_fn 6_10_20_experiment.log --baseline_iterations 20 --rosrunner_yaml husky_waypoints_mission_1561.yml --rosrunner_yaml husky_waypoints_mission_2ce0.yml --rosrunner_yaml husky_waypoints_mission_3500.yml --rosrunner_yaml husky_waypoints_mission_5f31.yml --rosrunner_yaml husky_waypoints_mission_722b.yml --rosrunner_yaml husky_waypoints_mission_865a.yml --rosrunner_yaml husky_waypoints_mission_865a.yml --rosrunner_yaml husky_waypoints_mission_a4d2.yml --rosrunner_yaml husky_waypoints_mission_c787.yml --rosrunner_yaml husky_waypoints_mission_c862.yml --rosrunner_yaml husky_waypoints_mission_cdc8.yml --rosrunner_yaml husky_waypoints_mission_de68.yml
+
+
+Potential CIF mentors from the list (based on stated interests)
+Potential mentors (based on stated interests)
+Alex Orso, Georgia Tech
+Andre van der Hoek, UC Irvine
+Heng Yin, UC Riverside
+Iftekhar Ahmed, UC Irvine
+Jeff Foster, Tufts
+Laurie Williams, NC State
+Luis Pina, University of Illinois at Chicago
+Manu Sridharan, UC Riverside
+Raffi Khatchadourian, CUNY Hunter
+Reyhaneh Jabbarvand, UIUC
+Stephanie Forrest, ASU
+Xinyu Wang, UMich
+Yuriy Brun, UMass
+
+
+
+
+/gazebo_ground truth -- collect this too just in case
+
+
+
+-----------------
+self-driving car project
+-deep test project
+-test deep learning models
+-icse paper
+--without adversary/change of images -- how do you test ML models
+--if you have a classifier that can detect cat/dog/other elements
+--types of mistakes e.g. cat vs. dog / cat vs. tiger
+--fairness bias -- e.g. outside, model classifies human as man outside
+
+Large sections of projects
+(1) ML testing, self-driving car
+(2) Using ML for building models that analyze programs
+--working on binary for
+
+
+group info
+-5 ph.d. students (incl. one joint)
+-one post-doc (possibly finishing)
+-half working on buidling ml models for software engineering applications
+--mostly care about robustness
+-other two -- analyzing machine learning models
+-used to have a very collaborative group with meeting a lot
+--active discussion-oriented group, comments/feedback/paper reading
+
+regular meetings -- at least twice a week
+-she's very informal
+--meet as needed, often more than twice a week
+--meet pretty often at least twice a week
+--at least two students involved in each project (except self driving car which is just starting)
+
+Current students
+-two students from UVa -- first will graduate next year, second 2022
+-two students are new (from last year)
+-joint student -- in the middle (With Suman Jana???) -- fuzz testing
+
+
+TODO:
+I will write up my versions of the fellowship documents and send them for feedback
+--get them to her over the weekend.
+
+--------------------------------------------
+Talk with Chris
+--ask about recording ground truth vs amcl_pose
+-ground truth is not being published.
+--do I alter the image to publish the ground truth?
+Solution? https://www.sauravag.com/2017/06/how-to-get-ground-truth-pose-data-in-ros-gazebo/
+
+How to extract all of this for milda and cas
+-extract all the fix commit hashes using command line tools
+-xargs to fix commits list `git show` commit
+-pipe it to unified diff
+
+
+
+-------------------------------
+look into other funding sources for postdocs
+
+Companies:
+Galois
+Slack
+Semmle -- based in UK but office in NYC
+
+Mozilla -- hiring approach -- difficult but Chris thinks it's more likely to get good engineers
+--more sitting down and talking to people
+
+
+to relearn for progrraming interviews:
+-dynamic programming questions
+-system design questions
+--materials online to learn this stuff
+--google/amazon/facebook will have one of these questions
+--focus on how to put the heterogenus components together, what are the bottlenecks. talk through the tradeoffs
+
+--------------------------------------------------------
+
+modify the xacro file
+-probably find an example in the f1tenth xacro file
+
+--record gazebo in the map frame
+
+record both the robot's position and the gazebo ground truth in hte world frame and hte map frame
+
+------------------------------------------------------------------
+
+Email from Gail
+I looked at the CIFellow program.  It appears you need to finish through "task 2" of your materials before midnight Friday, and then the rest by midnight on Wednesday.   Then after that they send me a link for the reference letter, so I'd presumably have a few days.  But since what you say in the final application should match what I would say, we should talk before your Wednesday deadline.  Instead of Friday, how about meeting Monday anywhere within 12 to 4?
+
+I think I've previously read the SANER 2018 paper listed on your website.  I've been doing some work on binary analysis and rewriting, so far for testing candidate bug repairs (the manual kind, not particularly APR), and we've started looking a bit at binary decompilation.  At first glance, your linked detecting execution anomalies paper sounds sort of like metamorphic testing, which I've been working in off and on for 15ish years; unsure about connections to the other paper you linked.  I haven't been doing anything relevant to robotics, but that does not mean I can't or won't, I'm always interested in pursuing new directions if I have someone to work with already grounded in the topic.  For example, I just submitted a grant proposal based on what my first year PhD student was doing before he started here even though its quite a departure from my other work - he had a former life working as a DHS research contractor before returning to school for phd, so he's a much more mature researcher than typical 'first year phd student'.  If you plan to continue pursing SE for robotics, it would probably be best to involve one of our robotics faculty in some way, most likely Shuran Song (who is new this semester, I haven't even met her yet since I was on sabbatical when the lockdown started) or Matei Ciocarlie (he's actually MechEng faculty here but was a PhD student in my CS dept a few years back and is officially an "affiliate" of the CS dept now).  That aspect could be worked out if you get the funding, but might be something you mention in some way without committal.
+
+Reply
+
+Gail,
+
+Yes, that sounds good. I am fairly flexible Monday afternoon. How about 12:30?
+
+I do think there are connections between my work on finding execution anomalies and metamorphic testing. They both take the approach of trying to find software failures without the need for an explicit oracle. I have enjoyed working in SE for robotics because of the interesting challenges posed by robotics systems. They are distributed, cyber-physical, and noisy, which qualities often lead to challenges, such as in reproducibility, establishing a baseline for expected behavior, and exploring the potential input space. I further find these problems interesting because the uptake of SE techniques in the robitics community is anecdotally slow, which suggests that there is work to be done in bridging the needs of the robotics community with the work coming out of the SE community. I think it might be interesting to apply metamorphic testing techniques to robotics systems. I see that you've worked on applications of metamorphic testing in other systems that involve nondeterminism (such as in Testing and Validating Machine Learning Classifiers by Metamorphic Testing), and I think it would be natural to extend those techniques. I agree that it would be a good idea to involve the robotics faculty and mention possible collaboration in my materials.
+
+Best,
+Deby
+
+-----------------------------------------------------
+Done:
+-I worked on fellowship materials, talked to first potential mentor
+-Husky experiments
+-intro
+-job applications
+-networking
+
+Today:
+-test afsoon's improvements
+-finish launching experiments
+-finish intro draft, get to claire
+-finish fellowship materials
+-talk to another potential mentor
+-more networking
+
+
+------------------------------------------------
+Gail
+ failure can automatically be reproduced solely by relaying network packets to replicas of suspect services
+-similaritites to the RIOT work
+
+Code relatives
+-similaraties to the classification of behavior to find bugs
+
+FARE paper -- should cite in thesis?
+--evaluation of cyber-physical systems
+
+Want to take further the idea of quality control on robots or more similarly-complex systems
+-develop pseudo-oracles
+
+metamorphic testing? developing baselines?
+
+---------------------------------------
+Notes from talk with Gail Kaiser
+
+-Metamorphic testing - include it in the proposal
+SE on nondeterministic systems
+--see if I can get a way to include actual program analysis
+
+Binary analysis?????
+-transformations
+-> mutations on the actual robot software
+
+-----
+build on mutation testing -- Insert something that should be anomalous
+-do our techniques detect it?
+Improve the state of the art in record/replay
+
+she has a server farm of old machines -- may be sufficient for running robotics simulations
+
+Me: write the proposal by tonight. Send to Gail for feedback
+
+Working relationship
+-maybe long working meeting twice a week (join existing meeting with everyone)
+SHe prefers slack conversations
+
+---------------------------------------------------
+roswire - launch- node - remappings
+-first use the read method in roslaunch manager `launch_config = ros.roslaunch.read(filename, package=package)`
+-look through the individual node configs
+-add the remappings that I need to add to each particular node
+-e.g. remap odom to _odom_orig
+-take the node config, produce a modified version of the node config with the remappings -- put everything together into a new launch config
+
+
+<gazebo>
+  <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
+    <alwaysOn>true</alwaysOn>
+    <updateRate>50.0</updateRate>
+    <bodyName>base_link</bodyName>
+    <topicName>ground_truth/state</topicName>
+    <gaussianNoise>0.01</gaussianNoise>
+    <frameName>world</frameName>
+    <xyzOffsets>0 0 0</xyzOffsets>
+    <rpyOffsets>0 0 0</rpyOffsets>
+  </plugin>
+</gazebo>
+
+Add to src/husky/husky_description/urdf/husky.urdf.xacro
+-you got it working in the world frame (and also the update rate was perhaps faster than needed) Trying with updateRate of 20 and map frame
+
+
+----------------------
+To remap
+"/gazebo": {/husky_velocity_controller/odom: /husky_velocity_controller/_odom_orig}
+
+
+
+
+
+
+
+-------------------------------------
+To talk to Claire:
+-Thesis writing
+--get intro into a state where I can ask for Claire's feedback
+---aim for this evening or possibly tomororow
+--keep working on overhead timing section
+-what else needs updating?
+
+-experiments
+--a big batch is running
+--I'm getting another batch queued up. This is going well, but it involves work.
+(Actually...do you have a server that's not being used? I can do disjoint sets of experiments that don't involve comparison against each other at once.)
+
+
+-data analysis
+--I built the data analysis pipeline before. Now I need to apply it.
+---again, there's a bit of work in this just because I'm applying to new things and unanticipated problems come up.
+--I'm going to start putting some of the Ardu analysis into the dissertation (along with the rest of the overhead timing material)
+
+
+related work
+-add things that have been published in last two years
+
+-where to talk about systems
+-put them in their chapter and get that written
+
+read through each chapter and see what needs done
+
+step back and assess where it is --
+-get a holistic sense of todos
+
+keep same tense throughout all the document
+-just check the chapters to make sure they're consistent and integrated
+
+----------------------
+timebox the experiments
+-
+
+
+email deb about the implications of health insurance
+
+---------------------------------------------------
+add the delay node as a part of the dockerfile
+--just the one dockerfile with the source code for my package with my node
+--do catkin build for it -- it appears in the base
+
+launch the delay node as a separate rosrun process
+-need to make sure that the code is built as
+--delay nodes can be run paramaterized -- with the name of the topic
+
+-accept two command line arguments (from and to)
+use rosrun to make that run
+-iterate over the remapped topics
+
+run with rosrunner or roswire
+
+==========
+figure out the type of the message you're delaying and add that to delay
+
+
+
+
+
+
+
+-------------------------------------------------
+Claire dissertation writing convo 6/25/20
+-focus today on reviewing chapters 2-4
+
+Notes from review of chapter 2:
+-check for any new papers on DBI (especially things that cite pin or Valgrind)
+-add any new relevant novelty detection work
+-add at least one citation for "Clustering approaches for anomaly detection include: (1) and algorithm for organizing data into clusters, and (2) a metric for detrmining whether new data fits into hte existing clusters or is an anomaly. I think maybe I cited something for this in the ICRA paper
+-anything new that applies clustering to SE? did I cite anything in the ICRA paper?
+-anything new in intrusion detection? especially anything citing LuTiming or Cylance
+-Anything new in statistical bug identification? Look for things that cite
+LiblitScalable or LiblitIsolation
+-anything new in dynamic invariant identification? Look for things that cite
+PerkinsClearview2009 or ErnstDaikon2001, ErnstDaikon2007
+-probably nothing new/relevant in verification/formal methods, but check for
+formal methods in robotics/autonomous systems specifically and things that cite
+ZhengState2017, ZhengVerification2015, KleinVerification2010, KleinVerification2014 or SanwalVerification2013
+-I doubt there's anything more on fault classes and categorization, but
+look to make sure nothing new in \ac{ARS} cites Avizienis
+-Add DeepTest and the perception team's work. While this work is focused
+on a single subsystem (perception), the subsystem has some typical properties that also make it difficult.
+-cite RIOT paper
+-Anything new on self-driving simulation? Cite our simulation survey?
+
+
+------------------------------------------------------
+do a hardcoded dictionary of topics to msg types
+
+share the code for visualization of the routes that the rovers take
+-
+
+
+-----------------
+what are the features that correlate with nondetermisim
+-create the repo
+-use the readme to start outlining our ideas
+what are the features
+what are our initial hunches
+initial subject systems
+
+
+-------------------------------
+experiments are running. I'm happy with how they're going. I just need to check in on them once in a while
+--I can start doing serious data analysis and importing results into the thesis document
+
+Thesis document is
+
+
+finish chapter 2 today
+-three hour task, rather than all day task
+
+work on intro and chapters 6 and 7
+-
+
+
+
+-----------------------------
+Looking for industry in
+
+
+----
+tell Chris how to do Hello World in my system
+-send it over so that Chris can test it out on the ROS2 branch
+
+nsenter
+nsenter -U --preserve-credentials -n -m -t $(cat $XDG_RUNTIME_DIR/docker.pid)
+
+
+--update version of dockerblade
+after chris updates it
+
+give a quick test to Chris's changes
+--don't personally use it
+
+give Chris a few rote commands he can put in to get my code running.
+-e.g., ros_experiment_runner.py
+
+add tracking for log files -- which machine does it come from?
+
+Nostromo shut down by 6 p.m. on Sunday
+
+
+------------------------------------------------
+TODO:
+map all the trajectories traversed by HUSKY_pose_array_5_722ba706e1f34beca0bcaf193d7e0c4f.yaml in the experiments run on the isri VM, both with and without delays -- then expand from there
+
+Separate out the delays versus the not delays
+--figure out how to show each type of delay separately
+--figure out how to show each type of delay in a different color
+--separate by topic delayed
+--separate by amount delayed
+
+Ok which graphs do we want (For each mission):
+-nominal only (color to show timing)
+-nominal + all delays (color to show timing, use a different pallate for delays versus nominal? delays on top)
+-nominal + all delays to one topic
+--color to show timing
+--color to show amount of delay
+-nominal + delays of the same amount on different topics
+--color to show timing?
+--color to show different topics
+
+
+What numbers do we want?
+
+(1) Whether each execution executes each waypoint and returns to the first waypoint
+(2) Euclidean distance metrics: these metrics are based on the position in 3d space of the deformed execution versus the nominal executions.
+--the Euclidean distance between the final position of the robot in the representative nominal and each deformed execution
+--given aligned time series between the representative nominal execution and each deformed execution, the greatest and the average Euclidean difference between each position on the path
+--based on the closest distance from each waypoint
+---the sum of closest distances from each waypoint
+---the average of the closest distances from each waypoint
+---the greatest closest distance from each waypoint
+(3) Timeliness metrics
+--The amount of time before completion (either successfully or unsuccessfully)
+--Total amount of time taken to reach each waypoint (`reach' defined as when the system issues the instruction to go to the next waypoint)
+
+
+
+Claire meeting
+
+Aim for a full draft of Chapter 6 THursday, with numbers from the iterations that have been run so far
+-can update that later
+Draft by the end of the week
+
+
+Conclusions
+-section on limitations and scope of claims
+--e.g. limtations of simulation, scoping problems to software errors, what kinds of systems, what kidns of systems am i focusing on, what do people need if they want to reproduce the work, what do I expect it wouldnj't work on
+What would be the pros and cons of applying to real systems as opposed to simulated ones
+
+
+
+
+
+
+
+
+
+
+
+
+Sure. My dissertation and primary research is on Identification of Software Failures in Complex Systems Using Low-Level Execution Data.
+I combine instruction-level dynamic monitoring techniques with machine learning approaches to detect unusual behavior in robotics systems software. I observe that cyber-physical systems, such as autonomous and robotics systems, are well-positioned for this kind of monitoring, especially in simulation, because a large amount of  monitoring overhead can be absorbed into the cycles during which a system would have otherwise been idle while waiting for real world events. However, certain critical portions of these systems are especially sensitive to delays and out-of-order events. I analyze the effects of artifical timing delays inserted into ROS systems, to determine the amounts and kinds of overhead that the systems can absorb without deforming observable behavior.
+
+Alternately, the group might be interested in my work on robustness testing for robotics systems, an overview of which appeared in the Industry track at DSN this year. (https://www.cs.cmu.edu/~dskatz/riot_architecture.pdf) Our approach involves (a) finding a failure at the unit level of a robotics system, (b) extrapolating a rule that characterizes the unit-level inputs that induce the failure, (c) finding system-level input fields that can be maniputlated to affect the unit-level input fields that are relevant to the failure, and (d) determining values for the system-level inputs that can activate the failure. This approach produces artifacts useful for debugging at every level and has been applied to detecting bugs in ROS systems.
+
+
+
+
+Jiang, Hengle, Sebastian Elbaum, and Carrick Detweiler. "Reducing failure rates of robotic systems though inferred invariants monitoring." In 2013 IEEE/RSJ International Conference on Intelligent Robots and Systems, pp. 1899-1906. IEEE, 2013.
+
+Jiang, Hengle, Sebastian Elbaum, and Carrick Detweiler. "Inferring and monitoring invariants in robotic systems." Autonomous Robots 41, no. 4 (2017): 1027-1046
+
+
+two sub-figures
+-one for the nominal runs, one for the experimental runs
+-use same color gradient for both
+
+*** make sure i didn't flip the nominal and the experimental
+
+
+
+Ping Chris when I'd like him to take a look at the chapter
+
+--------------------------------------------------------------
+7-13-20
+
+Done:
+-finished a full draft of the dissertation
+-circulated draft of dissertation to committee
+-job searching (networking, applications, emails, interviews)
+
+Todo:
+-finish the additional data analysis and graphs that I want to include in Chapter 6 of the dissertation
+-update draft of dissertation in a few places that can be improved
+-update draft of dissertation in response to any comments from my committee
+-create presentation for defense
+-continue job search
+-taxes
+
+
+From Sam
+HRI
+transacdtions on HRI
+-gamble based on reviewers -- interaction bias
+better HRI than CHI
+--------------------------------------------------
+7-14-20
+Todos:
+-finish crashes table for husky
+-run all of the husky graphs on the full data set
+-run the missing missions for husky???
+-rerun the numbers on the full data set?
+-create the ardupilot tables
+-add explanatory text for ardupilot
+-expand explanatory text for husky
+
+-cover other todos in the thesis
+
+--------------------------------
+Chris's advice for Waymo interview
+-mention simulation -=that i've read about their simulation
+--that i've published papers on simulation
+-and quality control
+
+demonstrate familiarity with non-traditional compute platforms
+-appreciate that there is a difference between them
+
+talk about DBI and analysis -- pitch it as analyzing monitoring tools for their appropriateness for situations
+-talk about didn't do -- measure performance analysis instead of "correctness"
+
+Demonstrate technical depth -- worked with Valgrind and Pin
+-talk about being aware of problems and how to deal with trade offs
+--demonstrate understanding of limitations in real world problems
+-everything is about tradeoffs
+
+Systems design part of the interviews
+--get a feel for systems design part of the interview
+--e.g. tradeoff analysis
+
+---------------
+
+Thursday morning update:
+-I'm working on my slides. I have a presentation, but it's too long, and it's missing content related to the most recent set of experiments.
+--so today's priorities include (a) creating the content for the most recent set of experiments for the slides; (b) cutting down some of the other content; and (c) making the story more coherent
+-I've been working on filling in the remaining holes in the dissertation
+-I have a technical interview with GrammaTech later today.
+-I have a recruiter call with Waymo.
+-Our idea for getting me into the health insurance for the upcoming academic year may not work, based on an additional email I got. Email is reproduced below, but the relevant sentence is here: "Students must be engaged in coursework for the first 31 days of the semester, whether remote or in person, to be eligible for the plan."
+
+
+-----------------------
+Ciera Jaspan convo
+
+Ciera Jaspan  5:53 PM
+Ok, so, I found two teams that looked like they might be interesting to you
+5:53
+One of them is going to get back to me about which position you should send your application to. They're in Pittsburgh. I know the manager, he seems pretty good and is also open to publishing.
+5:54
+The second one though: how does Waymo sound to you?
+5:54
+- https://waymo.com/joinus/1542831/
+- https://waymo.com/joinus/2168779/
+- https://waymo.com/joinus/1791462/
+- https://waymo.com/joinus/1232222/
+WaymoWaymo
+Software Engineer - Optimization, Benchmark and Tooling, Compute  – Waymo (268 kB)
+https://waymo.com/static/images/waymo_banner.jpg
+WaymoWaymo
+Software Engineer, Planner Evaluation – Waymo (268 kB)
+https://waymo.com/static/images/waymo_banner.jpg
+WaymoWaymo
+Software Engineer, Simulation – Waymo (268 kB)
+https://waymo.com/static/images/waymo_banner.jpg
+WaymoWaymo
+Software Engineer, Simulation Realism – Waymo (268 kB)
+https://waymo.com/static/images/waymo_banner.jpg
+5:54
+I was told those are the teams that might be interested in your skillset. Apparently they are hiring in NYC.
+
+Deby Katz  5:54 PM
+That's interesting. I hadn't considered Waymo specifically. But I do have considerable experience with software for autonomous vehicles.
+
+Ciera Jaspan  5:55 PM
+These aren't robotics teams precisely; Waymo has lots of software engineers now.
+5:55
+(my spouse is one of them)
+5:55
+I know several software engineers on the simulation and planning teams.
+5:56
+They're the type of teams where someone with a more atypical background can also fit in well; they'll value your past experience.
+
+Deby Katz  5:56 PM
+That sounds very appealing, actually.
+
+Ciera Jaspan  5:57 PM
+Take a look and see what you think.
+5:57
+And if you end up there, my Waymo friends all owe me one. :slightly_smiling_face:
+
+Deby Katz  5:58 PM
+Ha. I'm just reading this one, and it looks like it's right up my alley. https://waymo.com/joinus/1542831/
+
+Ciera Jaspan  5:58 PM
+Yup.
+5:58
+I hadn;t really put it tigether until I read your resume in full.
+
+Deby Katz  5:59 PM
+And the others look interesting too.
+6:00
+But that one especially.
+6:02
+For https://waymo.com/joinus/1232222/, I definitely have, "Desire to learn and validate the self driving car software and root cause issues."
+
+Ciera Jaspan  7:23 PM
+Ok, here's the link for the Google position too
+7:23
+https://careers.google.com/jobs/results/103951271917953734-software-engineer-engineering-productivity/?company=Google&employment_type=FULL_TIME&hl=en_US&jlo=en_US&location=Pittsburgh,%20PA,%20USA&q=&skills=software%20engineering&sort_by=relevance&src=Online%2FHouse%20Ads%2FBKWS
+7:23
+That's a general opening for EngProd in PIT, but I know the specific manager who is hiring.
+7:24
+Their team is more specific than this posting.
+
+Deby Katz  7:38 PM
+Ah, very good. Yes, this posting is not very specific.
+
+Ciera Jaspan  7:38 PM
+Most Google postings are not.
+
+Deby Katz  7:38 PM
+That makes sense given what you and others have said about the team matching process.
+
+Ciera Jaspan  7:38 PM
+I think the posting for mine looks identical, but says "Sunnyvale" instead.
+
+Deby Katz  7:39 PM
+Fair enough :slightly_smiling_face:
+
+
+
+
+
+------------------------------------------------------------------
+Todo:
+Make a list of changes that need to be made to thesis document
+change presentation in accordance with comments
+-make the missing tables and graphics for thesis
+
+
+
+
+Thesis document list of changes
+Intro
+-in intro emphasize role of simulation to search for faults in ARS
+-in intro bit about how autonomous system quality is so difficult that every little bit helps -- focusing on a piece of it (unusual behavior)
+-last part of the thesis statement. I don't like it. What does claire think?
+RW
+-Expand description of Jiang's work on applying specification mining to ARS
+-cross reference oracle problem language in the RW with varied chapter
+Overhead chapter
+-more detail in experimental methodology
+-reinstate mentions of Ardu
+-check the numbers for number of nominal runs per mission
+-finish the paragraph on characteristics of interest
+-experimental executions: add more about the experimental executions and how they're compared to the nominal baseline and why
+-add more about the experimental executions and how they're compared to the nominal baseline and why
+-Edit the ROS architecture diagram to show topics and message types traveling
+along those topics.
+-include diagram of topic interception
+-finish Ardu tables -- which ones do we want?
+-text discussing Ardu results
+-update the one mission tables for Husky
+-figure out reasonable way to add standard deviation to husky tables/ charts / graphics
+-box plot or something to better make comparisions between nominal and experimental for husky first table
+-more results discussion
+-Graph: Final Euclidean distance of robot, vs waypoint vs representative nominal for various delay groups
+-Graph: subgraph1: Trajectories of nominal runs; subgraph2: trajectories of experimental runs
+-Clarify why not reaching all the waypoints is a proxy for crashing
+-cite something about testing techniques at large companies doing autonomous driving
+--Add citations. Leveson?
+
+
+Presentation list of changes:
+-make missing graphics and tables
+-change the future work section
+-condense defintitions section & reorder intro
+-more structure
+-what are the gaps in related work and how does my work fill them?
+-make it clear that my work isn't about joining the related work techniques but about creating a new technique that can be used in conjunction with others
+-remove redundant labels from diagram in motivating example in intro
+-make motivating example story more about finding bugs in simulation
+-elimiate redundancey Herb vs. Mars
+-sig figs in metrics -- keep at 2 decimal places across all experiments
+-Clarify why not reaching all the waypoints is a proxy for crashing
+
+
+
+
+
+
+
+
+===============================================
+To talk to Deb
+-Claire is willing to keep me on through the end of September (or whenever I start a new job) to finish up writing papers on the previously unpublished parts of my dissertation (e.g., not get the revisions certified until then)
+-is this ok?
+-Health insurance is a first order concern for me. I want to make sure I have continuity of coverage.
+--I can pay for the full year of student health insurance full price if I need to. The most important thing is that I have the insurance and it doesn't get taken away from me before I have new insurance with a new job
+-I've gotten conflicting messages from the student health people about how long I'd need to stay enrolled in order to qualify for the full year's health insurance
+
+
+First ten days of class
+--keep the it pay in full
+certify before the end of september
+--clarie will only be responsible for the fees, not the tuitition
+
+
+certify after 10 days into classes but 2 business days before the end of september
+--stipend ends the day you push the button
+--get it to her that monday or the tuesday 28 or 29
+and last date for stipend is 30
+
+
+-if I get a job that starts beforehand
+--would have to end the stipend
+--but it wouldn't affect the health insurance if we still certify in hte end of september.
+
+
+Let her know when I get a job
+
+FOr the exit form, if I don't know when I fill out the form, let Deb know when it happens
+
+Upgrade the computer to the most recent version before I retire it.
+
+-------------------------------------------------------------------
+Overall plan:
+-Revisions
+-Job search
+-paper(s) on dissertation work
+-resubmit simulation paper
+-variation in robotics work with Chris and Afsoon
+-admin stuff -- get computer upgraded
+
+Job search:
+Google --prepare for technical interview which is next
+GrammaTech -- prepare for "debugging" interview -- review C++
+Edge Case -- contact Mike and apply
+ORF -- follow up on introduction
+Other companies -- submit or shepherd application
+
+Draft of edits to Claire in two weeks
+
+
+-waymo letter
+-waymo application
+-email mike about edge case
+-email Mary Kay about scheduling debugging test
+-study C basics
+
+
+-----------------------------------------------
+
+
+I have successfully defended my Ph.D. dissertation (Identification of Software Failures in Complex Systems Using Low-Level Execution Data) in Carnegie Mellon University's Computer Science Department. My Ph.D. advisor is Claire Le Goues in SquaresLab, and I work with her on
+
+I study the applications of low-level (machine code and binary) analysis in software engineering, specifically focusing on robotics applications for software quality techniques. Broadly, my research interests include software quality assurance, binary analysis, and software for autonomous and robotics systems. More specifically, I've focused on applying dynamic binary instrumentation to software quality assurance; using low-level software engineering techniques in the domains of robotics and autonomous vehicles; assessing factors that affect behavior in robotics and autonomous systems; studying robotics simulation; and developing new approaches to decompilation.
+
+
+--------------------
+Try again with:
+Fetch -- with Bradley's modifications
+TurtleBot3*
+F1Tenth -- with wall following -- Afsoon's docker container from UVa
+
+Send Chris a rough abstract on the contents of the paper
+--help to decide conference vs. journals
+
+WRite an abstract or intro for the overhead timing paper
+-
+Maybe ICRA?
+
+---------------
+Chris meeting 8-5-20
+Software-based simulation is already a thing
+-one of the difficulties in simulation testing is the oracle problem
+-there are simple oracles -- but they don't capture all the unintended behaviors
+-cite the anomaly detection as oracle for these systems
+
+--we detect things in simulation
+-here's why it's reasonable to detect things in simulation
+-cite the ICRA paper
+
+set up straw man:
+-you might think that the dynamic monitoring overhead is too much because every dynamic monitoring overhead paper says it's unacceptable in other systems
+-but here, let me tell you why this is different
+
+
+if I have DBI -- what does the profile look like?
+-in the control loop, etc, this is the amount of delay it adds
+--plot as a distribution
+--say something about the nature of the delays that the solution imposes on the software
+--why the artificial delays accurately reflect it
+---to what extent does it have negative effect
+
+-they're all control loop systems
+--some has multiple control loops
+
+even ardupilot has inner control loops at a lower frequency
+
+What are the control loop frequencies?
+-rates at which camera info is published
+
+---message publishing rates as proxy for control loop frequencies?
+
+navigation control loop will be in move base
+
+-have something in the drivers that take twist commands into motor commands
+--e.g. in turtlebot kubuki base
+
+--find the control loop frequencies of each of the pieces
+---what the pieces are
+twist messages
+
+could do an ICRA paper and then submit to a software engineering journal with a more extensive treatment on the SE side
+--e.g. journal associated with ISSRE
+
+Start fleshing the paper out next week
+
+-------------------------------------------------------------------
+
+8-11-20 TODOS
+Revisions
+-Discussion: move the brainstorming and start incorporating it into the document
+-Follow up on a few of the smaller things that are left
+Paper:
+-look back at last summer's submission and the reviews to see what I want to turn that into. There may be significant overlap with the ICRA paper from last year?
+-start fleshing out what I want that to be
+Job search:
+-keep going
+-study for Google interview
+
+------------------------
+Bloomberg Job Ads
+https://careers.bloomberg.com/job/detail/81822 -- Systems Reliability Engineer - Bloomberg Law
+https://careers.bloomberg.com/job/detail/84241 -- Senior Software Engineer
+
+
+------------------------------
+Special issue
+
+
+===
+
+write a few versions of the intro, framed for different audiences
+-what the research questions are
+-what the claims are
+-dtermine if the experiments I have and the evaluations support the claims
+
+
+---------------
+Speakers for ROSCon
+-people in York  -- Assuring Autonomy
+
+
+Look at paper cited for ROS
+-Sara Ljungblad
