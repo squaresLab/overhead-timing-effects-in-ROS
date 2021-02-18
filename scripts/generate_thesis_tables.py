@@ -24,18 +24,35 @@ mission_num_to_fn_husky = {
 10: "HUSKY_pose_array_5_de68abeac0924afc938d17e5acd1b825.yaml",
 11: "HUSKY_pose_array_5_a4d27db27974459a97a696b7d98cb403.yaml"}
 
+#mission_num_to_fn_ardu = {
+#1: 'missions/auto/3f9c851f75a4421690482d330d496e09.wpl',
+#2: 'missions/auto/42adb8a3b23c41649b348767b1372095.wpl',
+#3: 'missions/auto/5839c2a439e64653bbf8d75088f2b11e.wpl',
+#4: 'missions/auto/70f96678dda24bf9b5520c0c1b9b13d9.wpl',
+#5: 'missions/auto/a33b9119fd0d4bd0a307bd0b516aa0fe.wpl',
+#6: 'missions/auto/c288ab429d1d4b8a813ce76612c74764.wpl',
+#7: 'missions/auto/ca9ce16f7a044203926a69d82f63b048.wpl',
+#8: 'missions/auto/d009e94f7c044147973d129f33d4d0a3.wpl',
+#9: 'missions/auto/d7cbe848579a44879651444bf3c29900.wpl',
+#10: 'missions/auto/f3a59206b2674e14b50d3bfb2b5ea63b.wpl',
+#11: 'missions/auto/f57767682748498caee204d6903018b0.wpl'}
+
 mission_num_to_fn_ardu = {
-1: 'missions/auto/3f9c851f75a4421690482d330d496e09.wpl',
-2: 'missions/auto/42adb8a3b23c41649b348767b1372095.wpl',
-3: 'missions/auto/5839c2a439e64653bbf8d75088f2b11e.wpl',
-4: 'missions/auto/70f96678dda24bf9b5520c0c1b9b13d9.wpl',
-5: 'missions/auto/a33b9119fd0d4bd0a307bd0b516aa0fe.wpl',
-6: 'missions/auto/c288ab429d1d4b8a813ce76612c74764.wpl',
-7: 'missions/auto/ca9ce16f7a044203926a69d82f63b048.wpl',
-8: 'missions/auto/d009e94f7c044147973d129f33d4d0a3.wpl',
-9: 'missions/auto/d7cbe848579a44879651444bf3c29900.wpl',
-10: 'missions/auto/f3a59206b2674e14b50d3bfb2b5ea63b.wpl',
-11: 'missions/auto/f57767682748498caee204d6903018b0.wpl'}
+1: 'missions/auto/lines_8/3f9c851f75a4421690482d330d496e09.wpl',
+2: 'missions/auto/lines_8/42adb8a3b23c41649b348767b1372095.wpl',
+3: 'missions/auto/lines_8/5839c2a439e64653bbf8d75088f2b11e.wpl',
+4: 'missions/auto/lines_8/70f96678dda24bf9b5520c0c1b9b13d9.wpl',
+5: 'missions/auto/lines_8/a33b9119fd0d4bd0a307bd0b516aa0fe.wpl',
+6: 'missions/auto/lines_8/c288ab429d1d4b8a813ce76612c74764.wpl',
+7: 'missions/auto/lines_8/ca9ce16f7a044203926a69d82f63b048.wpl',
+8: 'missions/auto/lines_8/d009e94f7c044147973d129f33d4d0a3.wpl',
+9: 'missions/auto/lines_8/d7cbe848579a44879651444bf3c29900.wpl',
+10: 'missions/auto/lines_8/f3a59206b2674e14b50d3bfb2b5ea63b.wpl',
+11: 'missions/auto/lines_8/f57767682748498caee204d6903018b0.wpl'}
+
+
+
+
 
 
 
@@ -76,9 +93,10 @@ def print_table(dict_by_label_mission, graph_type, log_type):
             for i in range(1, len(mission_num_to_fn)):
                 str_to_print = f"M{i} & "
                 #logging.debug(f"mission_fn_dict: {mission_fn_dict}")
-                value_dict = [x[1] for x in mission_fn_dict.items() if
+                mission_fn_dict_items = mission_fn_dict.items()
+                value_dict = [x[1] for x in mission_fn_dict_items if
                               mission_num_to_fn[i] in x[0]]
-                logging.debug(f"value_dict: {value_dict}")
+                #logging.debug(f"value_dict: {value_dict}")
                 if len(value_dict) == 0:
                     continue
                 value_dict = value_dict[0]
@@ -333,6 +351,8 @@ def waypoint_distance(args):
 
     for label in ("nominal", "experimental"):
 
+        logging.info(f"Analzying data for {label}")
+
         # bag_data is a list of Tuples.
         # Each tuple is bag_fn, delay_fn, mission_fn, log_data
         # log_data is an np.array of [time_elapsed, x_pos, y_pos, z_pos
@@ -357,22 +377,29 @@ def waypoint_distance(args):
                 log_type=args.log_type,
                 alt_mission_base=args.alt_mission_base)
             mission_data = [x for x in bag_data if x[2] == mission_fn]
-            #logging.debug(f"*"*80)
-            #logging.debug(f"\n\nlabel: {label}, mission: {mission_fn}:\n {mission_data}")
+            logging.debug(f"*"*80)
+            # logging.debug(f"\n\nlabel: {label}, mission: {mission_fn}:\n {mission_data}")
+            logging.debug(f"\n\nlabel: {label}, mission: {mission_fn}")
 
             dists_list = []
 
             for bag_fn, delay_fn, mission_fn_loc, log_data in mission_data:
                 assert(mission_fn.strip() == mission_fn_loc.strip()), f"{mission_fn} {mission_fn_loc}"
+                if label == "nominal":
+                    logging.debug(f"Delay_fn should be None: {delay_fn}")
+                else:
+                    pass
+                    # logging.debug(f"Delay_fn should *not* be None: {delay_fn}")
                 if len(log_data) == 0:
                     logging.error(f"log data missing for bag: {bag_fn}")
                     continue
+                logging.debug(f"log data found for bag: {bag_fn}")
                 dists = log_analysis.distance_to_each_waypoint(
                     log_data,
                     mission_as_list,
                     log_type=args.log_type,
                     final_dist=args.final_distance)
-                #logging.debug(f"waypoint_distance: dists: {dists}")
+                logging.debug(f"waypoint_distance: dists: {dists}")
 
                 dists_list.append(dists)
 
@@ -387,24 +414,30 @@ def waypoint_distance(args):
             std_dict = dict()
 
             if args.graph == "waypoint_distance":
-                for waypoint in dists_list[0].keys():
-                    vals = [x[waypoint] for x in dists_list]
-                    mean = statistics.mean(vals)
-                    mean_dist_dict[waypoint] = mean
-                    std = statistics.stdev(vals)
-                    std_dict[waypoint] = std
-                if label not in mean_by_label_mission:
-                    mean_by_label_mission[label] = dict()
-                mean_by_label_mission[label][mission_fn] = mean_dist_dict
-                if label not in std_by_label_mission:
-                    std_by_label_mission[label] = dict()
-                std_by_label_mission[label] = std_dict
+                if len(dists_list) != 0:
+                    for waypoint in dists_list[0].keys():
+                        vals = [x[waypoint] for x in dists_list]
+                        mean = statistics.mean(vals)
+                        mean_dist_dict[waypoint] = mean
+                        try:
+                            std = statistics.stdev(vals)
+                        except statistics.StatisticsError as e:
+                            logging.warn("Not computing standard deviation")
+                            logging.warn(f"Only {len(vals)} data points")
+                            std = 0
+                        std_dict[waypoint] = std
+                    if label not in mean_by_label_mission:
+                        mean_by_label_mission[label] = dict()
+                    mean_by_label_mission[label][mission_fn] = mean_dist_dict
+                    if label not in std_by_label_mission:
+                        std_by_label_mission[label] = dict()
+                    std_by_label_mission[label] = std_dict
 
     print("Mean \\\\")
     print_table(mean_by_label_mission, args.graph, args.log_type)
     logging.debug("Std deviation doesn't work yet")
-    # print("Standard Deviation \\\\")
-    # print_table(std_by_label_mission, args.graph, args.log_type)
+    #print("Standard Deviation \\\\")
+    #print_table(std_by_label_mission, args.graph, args.log_type)
 
 
 def waypoint_distance_by_topic(args):
@@ -629,13 +662,13 @@ def crashes_time(args: argparse.Namespace):
             #logging.debug(pass_times)
             #logging.debug(fail_times)
             try:
-                pass_mean = (statistics.mean(pass_times))
+                pass_mean = (statistics.mean(pass_times))/ 10e8
                 to_print += f" {pass_mean/60:.2f} & "
             except statistics.StatisticsError:
                 pass_mean = ""
                 to_print += "n/a & "
             try:
-                fail_mean = statistics.mean(fail_times)
+                fail_mean = (statistics.mean(fail_times)) / 10e8
                 to_print += f" {fail_mean/60:.2f} & "
             except statistics.StatisticsError:
                 fail_mean = ""

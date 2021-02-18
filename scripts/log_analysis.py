@@ -1,5 +1,6 @@
 import argparse
 import datetime
+from geopy.distance import geodesic
 import hashlib
 import json
 import logging
@@ -42,6 +43,20 @@ def euclidean_distance(a: Tuple[float, float, float],
 
     return dist
 
+def lat_long_dist(a: Tuple[float, float, float],
+                  b: Tuple[float, float, float],
+                  log_type: str = "ardu") -> float:
+    pos_a = (a[0] / 10000000, a[1] / 10000000)
+    assert (pos_a[0] <= 90 and pos_a[0] >= -90), pos_a[0]
+    assert (pos_a[1] <= 180 and pos_a[1] >= -180), pos_a[1]
+    try:
+        dist = geodesic(pos_a, (float(b[0]), float(b[1]))).meters
+    except Exception as e:
+        logging.error(f"{e}")
+        logging.error(f"point a: {a}, point b: {b}")
+
+    return dist
+
 
 def reaches_waypoints(dist_dict: Dict[int, float],
                       mission: List[Tuple[float, float, float]],
@@ -80,8 +95,10 @@ def distance_to_each_waypoint(one_log: np.array,
     waypoint_dict = dict()
     #logging.debug(f"distance_to_each_waypoint mission: {mission}")
     for waypoint, index in zip(mission, range(len(mission))):
-        #print(f"waypoint: {waypoint} index: {index}, one_log: {one_log}")
+        # print(f"waypoint: {waypoint} index: {index}, one_log: {one_log}")
+        #logging.debug(f"waypoint: {waypoint} index: {index}")
         dist = waypoint_to_log_dist(one_log, waypoint, log_type=log_type)
+        logging.debug(f"waypoint_to_log_dist: {dist}")
         waypoint_dict[index] = dist
 
     #logging.debug(f"waypoint_dict before: {waypoint_dict}")
@@ -92,7 +109,7 @@ def distance_to_each_waypoint(one_log: np.array,
         max_waypoint_num = max(waypoint_dict.keys())
         last_dist = end_dist_from_waypoint(one_log, mission[max_waypoint_num],
                                            log_type=log_type)
-        #logging.debug(f"last_dist: {last_dist}")
+        logging.debug(f"last_dist: {last_dist}")
         waypoint_dict[max_waypoint_num] = last_dist
 
         # pick a distance to the first waypoint from the first half
@@ -102,7 +119,7 @@ def distance_to_each_waypoint(one_log: np.array,
         min_waypoint_num = min(waypoint_dict.keys())
         first_dist = waypoint_to_log_dist(half_log, mission[min_waypoint_num],
                                           log_type=log_type)
-        #logging.debug(f"first_dist: {first_dist}")
+        logging.debug(f"first_dist: {first_dist}")
         waypoint_dict[min_waypoint_num] = first_dist
     #logging.debug(f"waypoint_dict after: {waypoint_dict}")
 
@@ -150,9 +167,14 @@ def waypoint_to_log_dist(log: np.array,
     #logging.debug(f"log: {log}")
     #logging.debug(f"type(log): {type(log)}")
     #logging.debug(f"len(log): {len(log)}")
-    min_dist = min([euclidean_distance((x[1], x[2], x[3]), waypoint,
-                                       log_type=log_type)
-                    for x in log])
+    if log_type == "husky":
+        min_dist = min([euclidean_distance((x[1], x[2], x[3]), waypoint,
+                                           log_type=log_type)
+                        for x in log])
+    elif log_type == "ardu":
+        min_dist = min([lat_long_dist((x[1], x[2], x[3]), waypoint,
+                                      log_type=log_type)
+                        for x in log])
     return min_dist
 
 
@@ -204,6 +226,7 @@ def get_fns_from_rows(cursor: sqlite3.Cursor, log_dir: str,
 
 def get_from_db(log_db: str, log_dir: str = "../bags",
                 log_type: str = "ardu") -> Dict[str, List[Tuple[str, str, str]]]:
+    logging.debug(f"log_analysis.get_from_db. log_db: {log_db}")
     log_fns: Dict[str, List[np.array]] = dict()
     cursor, conn = access_bag_db(log_db)
 
@@ -359,6 +382,7 @@ def memoize_ardu_data(one_field_lists: List[Tuple[str, str, str, np.array]],
 def get_memoized_logs_ardu(log_fns: List[Tuple[str, str, str]],
                            field_type,
                            alt_bag_base = None) -> List[Tuple[str, str, str, np.array]]:
+    logging.debug("get_memoized_logs_ardu")
 
     memoized_log_fn = get_ardu_memoized_fn(log_fns, field_type, alt_bag_base)
 
@@ -437,6 +461,7 @@ def convert_logs_husky(log_fns: List[Tuple[str, str, str]],
 def convert_logs_ardu(log_fns: List[Tuple[str, str, str]],
                       field_type: str="GLOBAL_POSITION_INT",
                       alt_bag_base = None) -> List[Tuple[str, str, str, np.array]]:
+    logging.debug("convert_logs_ardu")
     memoized_data = get_memoized_logs_ardu(log_fns, field_type,
                                            alt_bag_base=alt_bag_base)
     if len(memoized_data) > 0:
@@ -515,7 +540,7 @@ def logs_to_np(log_fns: Dict[str, List[Tuple[str, str, str]]], log_type="ardu",
             logs_data = convert_logs_husky(log_fns_subset, alt_bag_base=alt_bag_base)
         all_logs[label] = logs_data
 
-    # logging.debug(f"all_logs: {all_logs}")
+    logging.debug(f"all_logs.keys(): {all_logs.keys()}")
     return all_logs
 
 
@@ -556,6 +581,7 @@ def memoize_log_db(log_db: str, log_type="ardu",
     logging.debug(memoized_fn)
 
     if not os.path.isfile(memoized_fn):
+        logging.debug(f"Memoized fn {memoized_fn} does not exist.")
         logging.debug(f"Getting from db in file: {log_db}")
         log_fns = get_from_db(log_db, log_type=log_type)
         all_logs = logs_to_np(log_fns, log_type=log_type,
@@ -564,6 +590,7 @@ def memoize_log_db(log_db: str, log_type="ardu",
             json_ready_logs = to_json_ready(all_logs)
             json.dump(json_ready_logs, memoized_file)
     else:
+        logging.debug(f"Memoized fn {memoized_fn} does exist. Getting memoized data.")
         with open(memoized_fn, 'r') as memoized_file:
             json_logs = json.load(memoized_file)
             all_logs = json_to_np(json_logs)
@@ -590,6 +617,7 @@ def get_logs(args: argparse.Namespace) -> Dict[str, List[Tuple[str, str, str, np
     elif args.log_db:
         #TODO: This assumes all the logs in the database have the same
         # mission, which isn't always a good assumption. Fix it.
+        logging.debug(f"Getting logs from database: {args.log_db}.")
         all_logs = memoize_log_db(args.log_db, args.log_type,
                                   alt_bag_base=args.alt_bag_base)
 
@@ -656,7 +684,7 @@ def mission_to_list(mission_fn: str,
         long_lines_list = [x for x in lines_split if len(x) > 10]
         pos_list = [(x[8], x[9], x[10]) for x in long_lines_list if
                      x[3] == str(16) or x[3] == str(22)]
-        logging.debug(f"pos_list: {pos_list}")
+        #logging.debug(f"pos_list: {pos_list}")
     else:
         logging.error(f"unsupported log_type: {log_type}")
         raise NotImplementedError
